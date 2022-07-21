@@ -1,2 +1,2 @@
-# xomudalpha0.0
+# xomudalpha
 mud-moduleA0.0
