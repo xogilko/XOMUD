@@ -1,2 +1,3 @@
-# xomudalpha
-mud-moduleA0.0
+###### <i>XOINC 2022</i>
+# XOMUD
+XRG Emulator & Liminal Internet Gateway
