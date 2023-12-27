@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>urlmud</title>
+	<link rel="stylesheet" type="text/css" href="static/style.css">
+<!--<script type="importmap">
+    {
+     "imports": {    {{range .rootmap}}{{range $importKey, $importValue := .import}}{{range $innerKey, $innerValue := $importValue}}
+            "{{$innerKey}}": "{{$innerValue}}",{{end}}{{end}}{{end}}
+     }
+    }
+</script>--> 
+<script src="static/main.js"></script>
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+{{ range .rootmap }}{{ range $key, $value := . }}{{  $value }}{{ end }}{{ end }}
+<script>
+    const scriptKey = document.querySelector('[data-import]').getAttribute('data-import');
+    const scriptPath = document.currentScript.importMap[scriptKey];
+    const script = document.createElement('script');
+    script.src = scriptPath;
+    script.defer = true;
+    document.head.appendChild(script);
+    console.log(scriptKey);
+</script>
