@@ -7,23 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // and then replaces the tag with itself (or something else based on the context) so that the functionality is initialized properly
 // ACTUALLY they're telling me that i don't need to initialize explicitly and the import tags will work after append on their own
 // need to create ways for the user to control what happens here , using the guide var
-//  look at unpoly compiler
-// iwth unpoly we could use classes and up-data to achieve the functionality of data-import
-// htmx is dropping swoops if the server cant keep up. only reset stick on arrival
-/*
-    standard js with a loadjs for handling  up-data='{"library": "address.js"}' attribute
-    // Load the library if not already loaded
-  if (!window[data.library]) {
-    loadJS(data.library);
-  }
-  // Initialize the div with the library
-  window[data.library](element);
-  // Return a destructor function to clean up[^5^][5]
-  return function() {
-    // Remove any global effects or memory leaks
-    window[data.library].destroy(element);
 
-*/
+//fix:
+// htmx is dropping swoops if the server cant keep up. only reset stick on arrival
+
 ///////////////// IMPORT MAP HANDLING
 
 const getImportMap = () => { //need to have two import maps, one for session and one in local storage to dispose of unwanted keys automatically
@@ -51,6 +38,30 @@ return importMap; // one way or another we return an import map to use
 }
 
 ////////////////// DATA-IMPORT ATTRIBUTE HANDLING
+
+/*
+demo:
+<div class="enhanced" data-library="lightboxify.js" data-method="init">...</div>
+improgload is for figuring out how to initialize based on the div
+needs loadJS
+*/
+const improgload = () => {
+    // Select the div
+var element = document.querySelector('.enhanced');
+
+// Get the library name and method from the data attributes
+var library = element.getAttribute('data-library');
+var method = element.getAttribute('data-method');
+
+// Load the library if not already loaded
+if (!window[library]) {
+  loadJS(library);
+}
+
+// Initialize the div with the library
+window[library][method]();
+
+}
 
 const improgger = (mutationsList) => { //needs compatibility with guide concept
     for (const mutation of mutationsList) {
