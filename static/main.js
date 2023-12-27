@@ -10,7 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
 //  look at unpoly compiler
 // iwth unpoly we could use classes and up-data to achieve the functionality of data-import
 // htmx is dropping swoops if the server cant keep up. only reset stick on arrival
+/*
+    standard js with a loadjs for handling  up-data='{"library": "address.js"}' attribute
+    // Load the library if not already loaded
+  if (!window[data.library]) {
+    loadJS(data.library);
+  }
+  // Initialize the div with the library
+  window[data.library](element);
+  // Return a destructor function to clean up[^5^][5]
+  return function() {
+    // Remove any global effects or memory leaks
+    window[data.library].destroy(element);
 
+*/
 ///////////////// IMPORT MAP HANDLING
 
 const getImportMap = () => { //need to have two import maps, one for session and one in local storage to dispose of unwanted keys automatically
