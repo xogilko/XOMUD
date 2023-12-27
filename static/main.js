@@ -7,7 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // and then replaces the tag with itself (or something else based on the context) so that the functionality is initialized properly
 // ACTUALLY they're telling me that i don't need to initialize explicitly and the import tags will work after append on their own
 // need to create ways for the user to control what happens here , using the guide var
-//push
+//  look at unpoly compiler
+// iwth unpoly we could use classes and up-data to achieve the functionality of data-import
+// htmx is dropping swoops if the server cant keep up. only reset stick on arrival
 
 ///////////////// IMPORT MAP HANDLING
 
