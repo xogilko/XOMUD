@@ -9,7 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // need to create ways for the user to control what happens here , using the guide var
 
 //fix:
+// set up guide
 // htmx is dropping swoops if the server cant keep up. only reset stick on arrival
+//connect improg load with improg init so we can load a pkg off just a div and have the div work
+// set up telemetry for requests or content map
+
 
 ///////////////// IMPORT MAP HANDLING
 
@@ -41,7 +45,7 @@ return importMap; // one way or another we return an import map to use
 
 /*
 demo:
-<div class="enhanced" data-library="lightboxify.js" data-method="init">...</div>
+<div class="enhanced" data-library="htmx.js" data-method="window.htmx.process(element)">...</div>
 improgload is for figuring out how to initialize based on the div
 needs loadJS
 */
