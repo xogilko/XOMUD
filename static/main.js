@@ -45,6 +45,30 @@ return importMap; // one way or another we return an import map to use
 
 ////////////////// DATA-IMPORT ATTRIBUTE HANDLING
 
+/*
+demo:
+<div class="enhanced" data-library="htmx.js" data-method="window.htmx.process(element)">...</div>
+improgload is for figuring out how to initialize based on the div
+needs loadJS
+*/
+const improgload = () => {
+    // Select the div
+var element = document.querySelector('.enhanced');
+
+// Get the library name and method from the data attributes
+var library = element.getAttribute('data-library');
+var method = element.getAttribute('data-method');
+
+// Load the library if not already loaded
+if (!window[library]) {
+  loadJS(library);
+}
+
+// Initialize the div with the library
+window[library][method]();
+
+}
+
 const improgger = (mutationsList) => { //needs compatibility with guide concept
     for (const mutation of mutationsList) {
         if (mutation.type === 'attributes' && mutation.attributeName === 'data-import') {
