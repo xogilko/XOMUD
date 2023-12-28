@@ -45,13 +45,14 @@ return importMap; // one way or another we return an import map to use
 
 ////////////////// DATA-IMPORT ATTRIBUTE HANDLING
 
-/*
+
+const improgload = () => {
+    /*
 demo:
 <div class="enhanced" data-library="htmx.js" data-method="window.htmx.process(element)">...</div>
 improgload is for figuring out how to initialize based on the div
 needs loadJS
 */
-const improgload = () => {
     // Select the div
 var element = document.querySelector('.enhanced');
 
