@@ -3,13 +3,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 ///////////////////PENDING NOTES:
-// it looks like after the script tag is appended to the dom for the relevant data-import , there should be a script that takes the tag,
-// and then replaces the tag with itself (or something else based on the context) so that the functionality is initialized properly
-// ACTUALLY they're telling me that i don't need to initialize explicitly and the import tags will work after append on their own
-// need to create ways for the user to control what happens here , using the guide var
-//  look at unpoly compiler
-// iwth unpoly we could use classes and up-data to achieve the functionality of data-import
-// htmx is dropping swoops if the server cant keep up. only reset stick on arrival
+/*
+
+the data-import tag will have an optional key value pair for initializing the element once the script is secured
+
+is it possile that the initialization statement is unique for each library, if so, then we can replace the name of the package
+with the initialization step and keep one value pair/name of package is sufficient to know initialization
+
+htmx is dropping swoops if the server cant keep up. only reset stick on arrival
+find an alternative to timeout() for discovering 1 ping of a request<?>
+
+pull improgging formula out into its own function
+
+*/
 
 ///////////////// IMPORT MAP HANDLING
 

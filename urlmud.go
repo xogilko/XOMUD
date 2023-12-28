@@ -9,11 +9,13 @@ import (
 	"net/http"
 )
 
-//root represent server-side renderings , the fibers are designed by the overlay network
-// HTML(SSR) + JAVASCRIPT(CSR)
-// use an import map on the html page to import javascript modules
+/*
 
-// web interface
+pending quests:
+
+fracture server into multiple modules
+
+*/
 
 // recieves set-message and returns a new form of tmpl containing only the log of set-msg . from there htmx adds it to the end of the cli list
 func stem(w http.ResponseWriter, r *http.Request) {
@@ -62,50 +64,3 @@ func main() {
 	fmt.Println("xomud is active")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
-
-/*
-
-	import map setup:
-
-	remove imports from the head map
-
-	all import maps will be stored as json on the servermesh
-
-		import maps are hashed and are referenced by their nonce
-
-
-	put both import maps into the <head> the first one is rendered and the second is from local storage, local will override.
-
-		put a header in client->server http request containing serialized list of import keys the client has
-			if the list is missing the returning hypertext data-key then include the key in the response header
-
-	create cookie on client detailing dependencies / local demands
-
-	the client needs to prioritize the local storage import map over the returned one
-
-	then the client uses the import map to append the relevant scripts matching the data-script attributes in the divs
-
-	//////////// THIS CODE IS FOR TAKING A KEY FROM DATA-IMPORT ATTRIBUTE AND ADDING IT TO AN IMPORT MAP
-
-					<!-- Assuming you have an existing import map in JavaScript -->
-				<script>
-				let importMap = {
-				lodash: '',
-				axios: '',
-				};
-
-				// Access the element with the data-import attribute
-				const element = document.querySelector('[data-import]');
-
-				// Parse the JSON-encoded string into a JavaScript object
-				const importData = JSON.parse(element.dataset.import);
-
-				// Add new key-value pairs to the import map based on the data-import attribute
-				Object.keys(importData).forEach(key => {
-				importMap[key] = importData[key];
-				});
-
-				console.log(importMap);
-				</script>
-
-*/
