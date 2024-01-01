@@ -19,10 +19,20 @@ pull improgging formula out into its own function
 
 ///////////////// IMPORT MAP HANDLING
 
-const getImportMap = () => { //need to have two import maps, one for session and one in local storage to dispose of unwanted keys automatically
-//Attempt to retrieve the import map string from local storage
-let importMapString = localStorage.getItem('importMap');
-// initialize new empty import map (incase this fails somewhere)
+const getImportMap = () => { 
+// <local map> <---> <session map> <--- <hyper map>
+
+let sessionImportMap = {};
+
+//local
+
+let localImportMapString = localStorage.getItem('localImportMap'); //get native local map as string
+
+let localImportMap = {}; //virtual local map
+
+    //if there is no NATIVE local map stringify VIRTUAL local map and SURFACE it
+    if (!localImportMapString){ localImportMapString = JSON.stringify(localImportMap)} //stringify VIRTUAL local map
+    localStorage.setItem('localImportMap', localImportMapString); //SURFACE it
 let importMap = {};
 //if doesn't exist in local storage then:
 if (!importMapString) {
