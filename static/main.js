@@ -5,56 +5,153 @@ document.addEventListener('DOMContentLoaded', () => {
 ///////////////////PENDING NOTES:
 /*
 
-the data-import tag will have an optional key value pair for initializing the element once the script is secured
+make getimportmap a global var?
 
-is it possile that the initialization statement is unique for each library, if so, then we can replace the name of the package
-with the initialization step and keep one value pair/name of package is sufficient to know initialization
+the data-import tag will have an optional key value pair for initializing the element once the script is secured
 
 htmx is dropping swoops if the server cant keep up. only reset stick on arrival
 find an alternative to timeout() for discovering 1 ping of a request<?>
 
 pull improgging formula out into its own function
 
+the virtual world is a double cup
+
+no more getnativemap auto creation
+
+write a map handler for getting the src or method off of a attribute
+
 */
 
-///////////////// IMPORT MAP HANDLING
+///////////////// JSON MAP HANDLING
 
-const getImportMap = () => { 
-// <local map> <---> <session map> <--- <hyper map>
-
-let sessionImportMap = {};
-
-//local
-
-let localImportMapString = localStorage.getItem('localImportMap'); //get native local map as string
-
-let localImportMap = {}; //virtual local map
-
-    //if there is no NATIVE local map stringify VIRTUAL local map and SURFACE it
-    if (!localImportMapString){ localImportMapString = JSON.stringify(localImportMap)} //stringify VIRTUAL local map
-    localStorage.setItem('localImportMap', localImportMapString); //SURFACE it
-let importMap = {};
-//if doesn't exist in local storage then:
-if (!importMapString) {
-    // Step 2b: Convert the import map to a JSON string
-    importMapString = JSON.stringify(importMap);
-    // Step 2c: Store the empty import map string in local storage
-    localStorage.setItem('importMap', importMapString);
+const getNativeMap = () => {
+let nativeMap = {};
+let nativeMapString = localStorage.getItem('nativeMap');
+if (!nativeMapString) {//if doesn't exist
+    console.log('native map from local storage not found');
 }
-// if it does exist then try to parse it , if that works, then return it
-else {
-    try {
-    importMap = JSON.parse(importMapString);
-    } catch (error) {
-    console.error('Error parsing import map from local storage:', error);
-    // if it fails to parse then return the empty import map
-    }
+else {// if it does exist then try to parse it
+    try { nativeMap = JSON.parse(nativeMapString);} 
+    catch (error) { console.error('Error parsing native map from local storage:', error);}
+    
+return nativeMap;
 }
-return importMap; // one way or another we return an import map to use
 }
+
+const setNativeMap = (virtualMap) => { //save/replace local map
+localStorage.setItem('nativeMap', JSON.stringify(virtualMap));
+}
+
+
 
 ////////////////// DATA-IMPORT ATTRIBUTE HANDLING
 
+/* PROG-
+
+improg vs scrape
+    improg is not prepared to initialize scripts for elements only append them and observe further
+    keep improg's key value pair, split the value with source and init via |
+    need a map to keep track of what scripts/dep are live to understand which scripts to load (keys)
+
+//guide variable is not global
+
+improg init
+
+@render (render and create observer)
+
+    get import map as guide
+    check page for data import
+    for each element w data import
+        get the key(libName)
+        get the value for key from guide
+        create script tag
+            tag source is value from guide
+        append to <head>
+        log the libName
+    create an improgger observer
+        observes <body>
+        attributes + tree changes
+    activates improgger observer
+
+improgger (observer callback function)
+
+@live
+
+    recieves list of notifications for observer
+        for each mutation
+            if its an attribute mutation and its an data import
+                then get the name of the key
+                get the value for the key from the import map
+                    create script tag
+                        script src from value
+                        defer true
+                    append to <head>
+                log the libName
+
+improgload (initialize for the element dynamically)
+
+@load <?>
+if window doesn't have library
+    loadJS library
+window[library][initialization]();
+
+*/
+const loadscript = (virtualMap, ) => {
+
+}
+const majestic = () => {
+    const virtualMap = new Map();
+    var elementsToInitialize = document.querySelectorAll('[data-import]');
+        elementsToInitialize.forEach(function (element) {
+            var libraryData = element.getAttribute('data-import').split(':');
+                var libraryName = libraryData[0];
+                var libraryDetails = libraryData[1].split('|');
+                    var srcAddress = libraryDetails[0];
+                    var initFunction = libraryDetails[1] || '';
+            const libObject = {src: srcAddress, init: initFunction};
+            virtualMap.set(libraryName, libObject);
+            var script = document.createElement('script');
+            script.src = srcAddress;
+            script.onload = function () {
+                if (initFunction) {
+                    window.eval(initFunction)(element);
+                }
+            };
+            document.head.appendChild(script);
+        });
+}
+
+const scrape = () => {
+    /*
+    <div data-import="htmx:path/to/htmx.js|window.htmx.process"></div>
+    */
+    
+        // Find all elements with the data-import attribute
+        var elementsToInitialize = document.querySelectorAll('[data-import]');
+    
+        // Loop through each element and perform the initialization
+        elementsToInitialize.forEach(function (element) {
+            var libraryInfoData = element.getAttribute('data-import').split(':');
+            var libraryName = libraryInfoData[0];
+            var libraryDetails = libraryInfoData[1].split('|');
+            var srcAddress = libraryDetails[0];
+            var initFunction = libraryDetails[1] || ''; // Optional initialization function
+    
+            // Create a script element and set its source attribute
+            var script = document.createElement('script');
+            script.src = srcAddress;
+    
+            // Dynamically load the script and perform the initialization
+            script.onload = function () {
+                if (initFunction) {
+                    window.eval(initFunction)(element);
+                }
+            };
+    
+            // Append the script to the document
+            document.head.appendChild(script);
+        });
+}
 
 const improgload = () => {
     /*
@@ -84,7 +181,7 @@ const improgger = (mutationsList) => { //needs compatibility with guide concept
     for (const mutation of mutationsList) {
         if (mutation.type === 'attributes' && mutation.attributeName === 'data-import') {
             const scriptKey = mutation.target.getAttribute('data-import');
-            const scriptPath = getImportMap()[scriptKey];
+            const scriptPath = getNativeMap()[scriptKey];
             const script = document.createElement('script');
             script.src = scriptPath;
             script.defer = true;
@@ -96,7 +193,7 @@ const improgger = (mutationsList) => { //needs compatibility with guide concept
 
 const improg_init = () => {
 
-const guide = getImportMap(); // implement: if data-import key not in guide, option to add to guide, option to http request key pair, write manually etc.
+const guide = getNativeMap(); // implement: if data-import key not in guide, option to add to guide, option to http request key pair, write manually etc.
 const elementsWithDataImport = document.querySelectorAll('[data-import]');
     elementsWithDataImport.forEach(element => {
         const scriptKey = element.getAttribute('data-import');
