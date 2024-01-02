@@ -5,20 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
 ///////////////////PENDING NOTES:
 /*
 
-make getimportmap a global var?
-
-the data-import tag will have an optional key value pair for initializing the element once the script is secured
-
 htmx is dropping swoops if the server cant keep up. only reset stick on arrival
 find an alternative to timeout() for discovering 1 ping of a request<?>
 
-pull improgging formula out into its own function
-
-the virtual world is a double cup
-
-no more getnativemap auto creation
-
-write a map handler for getting the src or method off of a attribute
+trying virtual map as a global map for loadscript and majestic
 
 */
 
@@ -42,7 +32,7 @@ const setNativeMap = (virtualMap) => { //save/replace local map
 localStorage.setItem('nativeMap', JSON.stringify(virtualMap));
 }
 
-
+const virtualMap = new Map(); //GLOBAL VIRTUAL MAP ((( <native> <virtual> <hyper> )))
 
 ////////////////// DATA-IMPORT ATTRIBUTE HANDLING
 
@@ -96,11 +86,23 @@ if window doesn't have library
 window[library][initialization]();
 
 */
-const loadscript = (virtualMap, ) => {
-
+const loadScript = (key, element) => {
+  /*
+    <div data-import="htmx:path/to/htmx.js|window.htmx.process"></div>
+    */
+    var script = document.createElement('script');
+    script.src = virtualMap[key].src;
+    script.defer = true;
+    script.onload = function () {
+        if (initFunction) {
+            window.eval(virtualMap[key],init)(element);
+        }
+    };
+    document.head.appendChild(script);
 }
-const majestic = () => {
-    const virtualMap = new Map();
+// mutations arent yet wired up with adding to virtual map and instead going straight to load
+// virtualMap/native is not set up to allow user guided loading/priority
+const hyperMap = () => {
     var elementsToInitialize = document.querySelectorAll('[data-import]');
         elementsToInitialize.forEach(function (element) {
             var libraryData = element.getAttribute('data-import').split(':');
@@ -110,107 +112,19 @@ const majestic = () => {
                     var initFunction = libraryDetails[1] || '';
             const libObject = {src: srcAddress, init: initFunction};
             virtualMap.set(libraryName, libObject);
-            var script = document.createElement('script');
-            script.src = srcAddress;
-            script.onload = function () {
-                if (initFunction) {
-                    window.eval(initFunction)(element);
-                }
-            };
-            document.head.appendChild(script);
         });
 }
-
-const scrape = () => {
-    /*
-    <div data-import="htmx:path/to/htmx.js|window.htmx.process"></div>
-    */
-    
-        // Find all elements with the data-import attribute
-        var elementsToInitialize = document.querySelectorAll('[data-import]');
-    
-        // Loop through each element and perform the initialization
-        elementsToInitialize.forEach(function (element) {
-            var libraryInfoData = element.getAttribute('data-import').split(':');
-            var libraryName = libraryInfoData[0];
-            var libraryDetails = libraryInfoData[1].split('|');
-            var srcAddress = libraryDetails[0];
-            var initFunction = libraryDetails[1] || ''; // Optional initialization function
-    
-            // Create a script element and set its source attribute
-            var script = document.createElement('script');
-            script.src = srcAddress;
-    
-            // Dynamically load the script and perform the initialization
-            script.onload = function () {
-                if (initFunction) {
-                    window.eval(initFunction)(element);
-                }
-            };
-    
-            // Append the script to the document
-            document.head.appendChild(script);
-        });
-}
-
-const improgload = () => {
-    /*
-demo:
-<div class="enhanced" data-library="htmx.js" data-method="window.htmx.process(element)">...</div>
-improgload is for figuring out how to initialize based on the div
-needs loadJS
-*/
-    // Select the div
-var element = document.querySelector('.enhanced');
-
-// Get the library name and method from the data attributes
-var library = element.getAttribute('data-library');
-var method = element.getAttribute('data-method');
-
-// Load the library if not already loaded
-if (!window[library]) {
-  loadJS(library);
-}
-
-// Initialize the div with the library
-window[library][method]();
-
-}
-
-const improgger = (mutationsList) => { //needs compatibility with guide concept
-    for (const mutation of mutationsList) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'data-import') {
-            const scriptKey = mutation.target.getAttribute('data-import');
-            const scriptPath = getNativeMap()[scriptKey];
-            const script = document.createElement('script');
-            script.src = scriptPath;
-            script.defer = true;
-            document.head.appendChild(script);
-            console.log(scriptKey);
+const liveRenderScript = () => {
+    const improgger = (mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-import') {
+                loadScript(mutation.target.getAttribute('data-import'), mutation.target)
+            }
         }
     }
-}
-
-const improg_init = () => {
-
-const guide = getNativeMap(); // implement: if data-import key not in guide, option to add to guide, option to http request key pair, write manually etc.
-const elementsWithDataImport = document.querySelectorAll('[data-import]');
-    elementsWithDataImport.forEach(element => {
-        const scriptKey = element.getAttribute('data-import');
-        const scriptPath = guide[scriptKey];
-        const script = document.createElement('script');
-        script.src = scriptPath;
-        document.head.appendChild(script);
-        console.log(scriptKey);
-    });
-// Create a MutationObserver instance
 const observer = new MutationObserver(improgger);
-
-// Define the target node and options for the observer
-const targetNode = document.body; // You can adjust this to observe a specific element or subtree
-const config = { attributes: true, subtree: true }; //still dont quite get this
-
-// Start observing the target node for attribute changes
+const targetNode = document.body;
+const config = { attributes: true, subtree: true };
 observer.observe(targetNode, config);
 }
 
