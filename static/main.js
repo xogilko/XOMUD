@@ -8,59 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
     {
         domain - contract/policy
         +
-        resource - XML config (drm policies) {object namespace}
+    }
+*/
+
+/* DRAGGABLE        resource - XML config (drm policies) {object namespace}
         +
         hyper - custom rom config (handler policies/xslt, userscripts, css, import map for modules/dom scripting)
         +
         agent - custom rom config (handler policies/xslt, userscripts, css, import map for modules/dom scripting)
-    }
-*/
 
-/* DRAGGABLE
         htmx is dropping swoops if the server cant keep up. only reset stick on arrival
-        find an alternative to timeout() for discovering 1 ping of a request<?>
+        find an alternative to timeout() for discoveing 1 ping of a request<?>
 */
 
-///////////////// JSON MAP HANDLING
+///////////////////////////////
 
-// rather than pile a map into one slice of localstorage, use the default map pairing
-
-// this might be entirely deprecated bc fuck json 
-//NATIVE -> NAVI :
-const getnativebook = () => {
-    let nativebook = new Map();
-    let nativebookString = localStorage.getItem('nativebook');
-    if (!nativebookString) {
-        console.log('native map from local storage not found');
-    }
-    else {
-        try { nativebook = new Map(JSON.parse(nativebookString));} 
-        catch (error) { console.error('Error parsing native map from local storage:', error);
-    }
-    return nativebook;
-    }
-}
-//NAVI -> NATIVE :
-const setnativebook = (book) => {
-    localStorage.setItem('nativebook', JSON.stringify(book));
-}
-//VIRTUAL :
-const bookmark = () => {
-    const book = new Map();
-    const read = (romkey) => {
-        try { 
-            let rom = book[romkey];
-            return new Map(JSON.parse(rom));
-        }catch (error) {
-            console.error('failed loading rom')
-            return new Map();
-        }
-    }
-    const write = (romkey, rom) => {
-        book.set(romkey, JSON.stringify(Array.from(rom.entries())))
-    }
-    return { book, read, write }
-}
 /*  BLUEPRINT
 
     policy pecking order ascending=
@@ -92,7 +54,9 @@ const bookmark = () => {
 
 */
 
-const virtualMap = bookmark(); //temporary global book of roms
+
+
+
 
 /* THIS IS THE OUTDATED DATA-IMPORT MODEL OF JUDGEMENT
 
