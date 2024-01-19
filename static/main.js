@@ -2,21 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
     dream(); cli_init(); drag_init(); 
 });
 
-/* PENDING QUESTS: */
+//////* PENDING QUESTS *///////
 
 /* DEEP REWRITE
-    {
-        domain - contract/policy
-        +
-    }
+
+    write userscript manager
+        dynamic element init (copy dream)
+        syntax for script indexing
 */
 
-/* DRAGGABLE        resource - XML config (drm policies) {object namespace}
-        +
-        hyper - custom rom config (handler policies/xslt, userscripts, css, import map for modules/dom scripting)
-        +
-        agent - custom rom config (handler policies/xslt, userscripts, css, import map for modules/dom scripting)
-
+/* DRAGGABLE REPL
         htmx is dropping swoops if the server cant keep up. only reset stick on arrival
         find an alternative to timeout() for discoveing 1 ping of a request<?>
 */
@@ -25,93 +20,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /*  BLUEPRINT
 
-    policy pecking order ascending=
-    browser user-agent defaults
-    server side render policy
-    user defined render policy
-    resource defined render policy
+the uniform interface is a system that emerges from constraints
+these ensure that the state is navigated via representations of hypermedia
+<server> <hypermedia> <client>
+hypermedia = media that expresses its own context w/ explicit controls
+a hypermedia client is a general interface that can interpret hypermedia,
+without prior understanding of the intent of the media it is interpreting
+the web browser is a hypermedia client that interprets HTML
+XML = cross-compatible generic extensible markup language for arbitrary media
 
-<script> userscript manager [observer]
-    localstorage
-    cache storage
-    uri db
-*/
-/* THIS IS STORAGE SOLUTIONS:
+using the web browser as the core architecture,
+for the generic rendering of arbitrary hypermedia;
+to create an extension-oriented (XML) uniform interface:
+    z   the web browser may be extended (by proxy) to interpret XML
+    y   XML may be transformed (XSLT etc) before injection into the dom (HTML)
+    x   dependency libraries may be initiated dynamically in the dom
+in-context cascading priority of rendering policy/method:
+    1    server (domain conditions)
+    2    resource (digital rights)
+    3    client (user-agent preferences)
+    4    browser (user-agent defaults)
+hypermedia must identify its scripting dependencies(x)
+dynamic scripting may be handled using an index that contains:
+    import identifier (in-context)
+    import src address
+    element init function
+for modules, fetch may be intercepted and interpreted based on cache and index
+elements may be intercepted to inject relevant <script> prior to swap into dom
 
-    the first key in local storage will be an import map which keeps track of the following keys
-    directly inject to dom to prevent parse step of strings.
-    following keys may include
-        css
-        xslt preferences
-        case preferences
-        userscripts
-        corpus
-        misc
-
-    service worker may extend a cache for general resource/request files temporarily.
-
-    third option is persistent alternate storage (chain/providers/cloud/export/download/upload)
-
-*/
-
-
-
-
-
-/* THIS IS THE OUTDATED DATA-IMPORT MODEL OF JUDGEMENT
-
-// EXAMPLE HYPERTEXT: <div data-import="htmx:path/to/htmx.js|window.htmx.process"></div>
-                //    <div data-import="htmx from 'path/to/htmx.js' with window.htmx.process">
-                //    <div data-import="htmx from 'path/to/htmx.js'" data-init="window.htmx.process">
-
-const dream = () => {
-
-// NEW ROM :
-    const rom = new Map(); 
-
-// ROM -> DOM :
-    const burn = (key, element = null) => {
-        if (rom.has(key) && rom.get(key).src) {
-            var script = document.createElement('script');
-            script.src = rom[key].src;
-            script.defer = true;
-                script.onload = function () { //append callback to initialize element scripting
-                    const initFunction = rom.get(key).init;
-                    if (element && initFunction && typeof initFunction === 'function') { // ADD SOME PROVENANCE
-                        initFunction(rom.get(key).element);
-                    }
-                };
-            document.head.appendChild(script);
-        }
-        else {
-            console.log('failed to burn with ' + key)
-        }
-    }
-// DOM -> ROM :
-    const collect = (element) => {
-        var [libraryName, libraryDetails] = element.getAttribute('data-import').split(':');
-        var [srcAddress, initFunction] = libraryDetails.split('|');
-        const libObject = {src: srcAddress, init: initFunction};
-        rom.set(libraryName, libObject);
-    }
-    const detect = () => {
-        const improgger = (mutationsList) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'data-import') {
-                collect(mutation.target);
-                }
-            }
-        }
-        var elementsToInitialize = document.querySelectorAll('[data-import]');
-        elementsToInitialize.forEach(collect);
-        const observer = new MutationObserver(improgger);
-        const targetNode = document.body;
-        const config = { attributes: true, subtree: true };
-        observer.observe(targetNode, config);
-    }
-// RETURN
-    return { rom , detect, collect, burn }
-}
+basic client anatomy:
+    <xo template>
+        conditional preferences, corpus
+        xslt, css, userscripts
+    </xo>
+    <html>
+    <head/> <script> userscript manager [observer]
+    <body/> <hypermedia>
+    </html>
+    [uri]   
+    [cache]
+    [localstorage]
 */
 
 ////////////////// COMMAND LINE INTERFACE HANDLING
