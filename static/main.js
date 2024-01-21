@@ -4,7 +4,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //////* PENDING QUESTS *///////
 
+/* PUBLISH
+
+    combine main site with a demo
+    upload program to hosting
+*/
+
 /* DEEP REWRITE
+
+    put draggables in context
+        figure out the semantics
+        create an example for dynamic scripting
+            dropdown - based on inputs and events
+            requires tom-select.js + plugins OR select2 based on user preference
+                import a script and css
+        generating unique IDs for element ids? vs classes?
+            xslt templating for indexed constructor?
+    need to map out step by step of possible scenario
+        static typing ? --> default namespace (markup method)
+
+    custom markup / annotations / overlapping connections upon the same media
+        how to embed markup indirectly and stack ?
+            flowchart of cascading markup
+
+    integrate rama
+    design overlay demo
 
     write userscript manager
         dynamic element init (copy dream)
@@ -32,7 +56,7 @@ XML = cross-compatible generic extensible markup language for arbitrary media
 using the web browser as the core architecture,
 for the generic rendering of arbitrary hypermedia;
 to create an extension-oriented (XML) uniform interface:
-    z   the web browser may be extended (by proxy) to interpret XML
+    z   the web browser may be extended (by proxy) to interpret anything (XML)
     y   XML may be transformed (XSLT etc) before injection into the dom (HTML)
     x   dependency libraries may be initiated dynamically in the dom
 in-context cascading priority of rendering policy/method:
@@ -43,7 +67,7 @@ in-context cascading priority of rendering policy/method:
 hypermedia must identify its scripting dependencies(x)
 dynamic scripting may be handled using an index that contains:
     import identifier (in-context)
-    import src address
+    import src address / library contents
     element init function
 for modules, fetch may be intercepted and interpreted based on cache and index
 elements may be intercepted to inject relevant <script> prior to swap into dom
