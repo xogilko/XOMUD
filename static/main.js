@@ -22,6 +22,28 @@ document.addEventListener('DOMContentLoaded', () => {
             xslt templating for indexed constructor?
     need to map out step by step of possible scenario
         static typing ? --> default namespace (markup method)
+        <NAMESPACE> --> <SNIPPET> --> <USERSCRIPT> --> <DOM>
+
+        USERSCRIPT LOGIC:
+            ACCOMODATE CONTEXT POLICY CASCADE
+        MARKET LOGIC:
+        X    <HYPERMEDIA>
+        A    <INDEX>
+        Y        NAMESPACE      <language>
+        Y            TYPE           <element> <select>
+        Y                STYLE          <libraries> <tomSelect>
+        Y                    FUNCTION       <userscripts, css> <conversion>
+        Y                        <TRANSFORMATION>
+        Y                             [PRESENTATION]
+
+    EXAMPLE MARKUP
+
+    J    this is the <i>essential</i> media of the piece that is <a href="overthere">subject to</a> markup. 
+    G        <a>                            </a>         <b>                                </b>
+    JG      ?
+
+    what happens to the media that is embedded with markup? does it collapse into the markup? is it abstracted out of origin?
+    is it to the right? is it nested? how do you parse overlap ? these and more we may learn from studying XML.
 
     custom markup / annotations / overlapping connections upon the same media
         how to embed markup indirectly and stack ?
