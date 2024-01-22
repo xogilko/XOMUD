@@ -3,68 +3,55 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 //////* PENDING QUESTS *///////
+/*XANIFICATION OF THE ARCHITECTURE
+    god says:
+        J spades, 6 diamonds, 2 clubs = 2
+        4 spades, 2 spades, J clubs = 8
+        8 clubs, 4 clubs, 6 diamonds = 9 aka roadmap dis shit
+    triple layer interface:
+    interactive
+        scripting and beyond
+    structure
+        notation parsing
+    content
+        addressible octet anarchy
 
+enfilade?
+
+ */
 /* PUBLISH
-
     combine main site with a demo
     upload program to hosting
 */
-
-/* DEEP REWRITE
-
-    put draggables in context
-        figure out the semantics
+/* HYPERMEDIA EXAMPLE CASE
+        put draggables in context
         create an example for dynamic scripting
-            dropdown - based on inputs and events
+        dropdown - based on inputs and events
             requires tom-select.js + plugins OR select2 based on user preference
-                import a script and css
-        generating unique IDs for element ids? vs classes?
-            xslt templating for indexed constructor?
-    need to map out step by step of possible scenario
-        static typing ? --> default namespace (markup method)
-        <NAMESPACE> --> <SNIPPET> --> <USERSCRIPT> --> <DOM>
-
-        USERSCRIPT LOGIC:
-            ACCOMODATE CONTEXT POLICY CASCADE
-        MARKET LOGIC:
-        X    <HYPERMEDIA>
-        A    <INDEX>
-        Y        NAMESPACE      <language>
-        Y            TYPE           <element> <select>
-        Y                STYLE          <libraries> <tomSelect>
-        Y                    FUNCTION       <userscripts, css> <conversion>
-        Y                        <TRANSFORMATION>
-        Y                             [PRESENTATION]
-
-    EXAMPLE MARKUP
-
-    J    this is the <i>essential</i> media of the piece that is <a href="overthere">subject to</a> markup. 
-    G        <a>                            </a>         <b>                                </b>
-    JG      ?
-
-    what happens to the media that is embedded with markup? does it collapse into the markup? is it abstracted out of origin?
-    is it to the right? is it nested? how do you parse overlap ? these and more we may learn from studying XML.
-
-    custom markup / annotations / overlapping connections upon the same media
-        how to embed markup indirectly and stack ?
-            flowchart of cascading markup
-
-    integrate rama
+            import a script and css
+            generating unique IDs for element ids? vs classes?
+*/
+/* INTEGRATE RAMA
     design overlay demo
-
-    write userscript manager
+        clusters interop via BVM
+*/
+/* DYNAMIC SCRIPT INIT
+        make userscript manager observer
         dynamic element init (copy dream)
         syntax for script indexing
 */
-
 /* DRAGGABLE REPL
         htmx is dropping swoops if the server cant keep up. only reset stick on arrival
         find an alternative to timeout() for discoveing 1 ping of a request<?>
 */
-
 ///////////////////////////////
+/*//////   BLUEPRINT   ///////
 
-/*  BLUEPRINT
+  << RESOURCE >>              (( POLICY ))                [[ TARGET ]]
+  
+    the default final target is the dom and the default namespace is xml
+  
+user --> <<userscript>> <--> [[navi(dom)]] <-- parser <-- hypermedia <-- query
 
 the uniform interface is a system that emerges from constraints
 these ensure that the state is navigated via representations of hypermedia
@@ -77,15 +64,16 @@ XML = cross-compatible generic extensible markup language for arbitrary media
 
 using the web browser as the core architecture,
 for the generic rendering of arbitrary hypermedia;
-to create an extension-oriented (XML) uniform interface:
-    z   the web browser may be extended (by proxy) to interpret anything (XML)
+to create an extension-oriented uniform interface~
+out-of-context parsing strategy based on target and resource
+    z   the web browser (target) may be extended (by proxy) to interpret anything (XML etc)
     y   XML may be transformed (XSLT etc) before injection into the dom (HTML)
-    x   dependency libraries may be initiated dynamically in the dom
+    x   dependency libraries may be initiated dynamically in the dom (navi target-proxy)
 in-context cascading priority of rendering policy/method:
     1    server (domain conditions)
     2    resource (digital rights)
     3    client (user-agent preferences)
-    4    browser (user-agent defaults)
+    3b   browser (user-agent defaults)
 hypermedia must identify its scripting dependencies(x)
 dynamic scripting may be handled using an index that contains:
     import identifier (in-context)
@@ -94,21 +82,48 @@ dynamic scripting may be handled using an index that contains:
 for modules, fetch may be intercepted and interpreted based on cache and index
 elements may be intercepted to inject relevant <script> prior to swap into dom
 
-basic client anatomy:
-    <xo template>
-        conditional preferences, corpus
-        xslt, css, userscripts
-    </xo>
-    <html>
-    <head/> <script> userscript manager [observer]
-    <body/> <hypermedia>
-    </html>
-    [uri]   
-    [cache]
-    [localstorage]
+    client:
+        <xo>
+        policy cascade convergence
+        parsing index
+        daemon network
+        </xo>
+        ++++++++++++++++<navi>++++++++++++++++++
+        <html>
+        <head/> <script> userscript manager [observer]
+        <body/> <hypermedia>
+        </html>
+        [uri]   
+        [cache]
+        [localstorage]
+
+    hypermedia:
+        map [key hierarchy][value octet set (plaintext)]
+        [parallel markup as set of objects][pemdas pluralism(hyperlinksfirst)]
+        editing must track precise changes between versions (number shift) otherwise markup will break
+
+    market:
+            parsing, communicate the resources to target (third eye)
+        Y      NAMESPACE      <language> 
+        Y      TYPE           <element> <select>
+        Y      STYLE          <libraries> <tomSelect>
+            userscript, contextualize recieved resources (first eye)
+        Y      FUNCTION       <userscripts, css> 
+        Y      PRESENTATION   <intent, usecase>
+        Y      UX
+            daemoncraft, architecture, utility, faculties (second eye)
+        Y      STORAGE         <cloud services>
+        Y      COMPUTE         <hardware, clusters>
+    
+    parser:
+        input -> data primitive (octet set etc)
+        (policy cascade identifies: target and delivery)
+        data -> target notation -> target
+    navi:
+        extends target (dom) to load dependencies before swapping html
 */
 
-////////////////// COMMAND LINE INTERFACE HANDLING
+///// COMMAND LINE INTERFACE HANDLING
 
 const swoop = () => {
     const scrollCli = document.getElementById('cli');
@@ -125,7 +140,7 @@ const cli_init = () => {
     });
 }
 
-////////////////// DRAGGABLE FRAMES HANDLING
+///// DRAGGABLE FRAMES HANDLING
 
 const draggin = (e) => {
     const element = e.target;
