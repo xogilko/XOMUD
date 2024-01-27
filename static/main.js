@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     interactive
         scripting and beyond
     structure
-        notation parsing
-    content
+        notation parsing hierarchy maps
+    resource
         addressible octet anarchy
 
 enfilade?
@@ -47,6 +47,22 @@ enfilade?
 ///////////////////////////////
 /*//////   BLUEPRINT   ///////
 
+    --- MATT-DOWN MARK-UP
+
+    user -> bitcache -> overlay -> chain
+
+    metadata is mark-up
+    pure data is matt-down - it has not hierarchical , it is (context free ?)
+
+    mark-up takes places either at the bitcache layer (schema) or beyond -> (overlay address)
+
+    the tx does not contain the mark up, this is added on by the context of the transaction (otherwise it is redundant)
+
+    hyperwheel composite matt-down UTXO + PUSHDATA
+
+
+    ---
+
   << RESOURCE >>              (( POLICY ))                [[ TARGET ]]
   
     the default final target is the dom and the default namespace is xml
@@ -63,7 +79,7 @@ the web browser is a hypermedia client that interprets HTML
 XML = cross-compatible generic extensible markup language for arbitrary media
 
 using the web browser as the core architecture,
-for the generic rendering of arbitrary hypermedia;
+for the parsing and rendering of arbitrary hypermedia;
 to create an extension-oriented uniform interface~
 out-of-context parsing strategy based on target and resource
     z   the web browser (target) may be extended (by proxy) to interpret anything (XML etc)
@@ -75,7 +91,7 @@ in-context cascading priority of rendering policy/method:
     3    client (user-agent preferences)
     3b   browser (user-agent defaults)
 hypermedia must identify its scripting dependencies(x)
-dynamic scripting may be handled using an index that contains:
+dynamic scripting may be handled using an index of components that contains:
     import identifier (in-context)
     import src address / library contents
     element init function
