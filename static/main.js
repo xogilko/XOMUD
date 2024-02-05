@@ -3,39 +3,57 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 //////* PENDING QUESTS *///////
-/*XANIFICATION OF THE ARCHITECTURE
-    god says:
-        J spades, 6 diamonds, 2 clubs = 2
-        4 spades, 2 spades, J clubs = 8
-        8 clubs, 4 clubs, 6 diamonds = 9 aka roadmap dis shit
-    triple layer interface:
-    interactive
-        scripting and beyond
-    structure
-        notation parsing hierarchy maps
-    resource
-        addressible octet anarchy
-
-enfilade?
-
- */
+/* CONCEPT
+        man/outline
+        dynamic identification based on origin
+            if i swap in from a particular source it is enclosed programatically
+*/
 /* PUBLISH
     combine main site with a demo
-    upload program to hosting
 */
 /* HYPERMEDIA EXAMPLE CASE
-        put draggables in context
-        create an example for dynamic scripting
+
+    SYNOPTIC PRINCIPLE
+    an ideal uniform distributed information system is agnostic towards its elements
+    it uses abstraction and extensibility to pursue an unopinionated generic interface
+
+    HYPERMEDIATRIX INTERCESSION
+    by negotiating the mediation of a session against the state of a trusted proxy, latency is made equitable
+
+    SURFER PARADOX
+    in reality only movement is real and state is an illusion
+    in virtuality only state is real and movement is an illusion
+
+    RESTFUL POSTULATE
+    its impossible to know where on the web anyone is
+    we can only infer based on the actions that are made
+
+    ALICE ZERO SUM{
+        overlay network simpage
+            for a grid of a room via scrypt
+                then arrays of objects in simpage
+                    passing around tx vs trust
+                    u pass a tx to the overlay which inits a websocket
+
+    }
+    base content + 2 markup options
+    overlay network + query
+        user preferences
+        custom schema
+        representor
+            ordfs
+        custom css   
+    put draggables in context
+        wiki
+            a series of pages
+            text would be marked up with hyperlinks to other pages
         dropdown - based on inputs and events
             requires tom-select.js + plugins OR select2 based on user preference
-            import a script and css
-            generating unique IDs for element ids? vs classes?
-*/
-/* INTEGRATE RAMA
-    design overlay demo
-        clusters interop via BVM
+                import a script and css
+                generating unique IDs for element ids? vs classes?
 */
 /* DYNAMIC SCRIPT INIT
+    is this a true deep feature or a function
         make userscript manager observer
         dynamic element init (copy dream)
         syntax for script indexing
@@ -44,99 +62,41 @@ enfilade?
         htmx is dropping swoops if the server cant keep up. only reset stick on arrival
         find an alternative to timeout() for discoveing 1 ping of a request<?>
 */
-///////////////////////////////
 /*//////   BLUEPRINT   ///////
 
-    --- MATT-DOWN MARK-UP
+<< RESOURCE >>        (( POLICY ))        [[ TARGET ]]
 
-    user -> bitcache -> overlay -> chain
+uniform interface   system that emerges from constraint where state 
+                    is transfigured through the representation of hypermedia
+hypermedia          media that produces intersecting patterns w/ explicit controls
+hypermedia client   general interface that can interpret any hypermedia without context
+                    the web browser is a hypermedia client that interprets via HTML
 
-    metadata is mark-up
-    pure data is matt-down - it has not hierarchical , it is (context free ?)
+a schema-agnostic client may be extended out by proxy 
+the web browser (DOM, XML) may be used as a temporary footstool
 
-    mark-up takes places either at the bitcache layer (schema) or beyond -> (overlay address)
+cascading selection constraints:
+    domain (proxy policy/technical conditions)
+    resource (digital rights management)
+    client (user defined preferences)
+    native (hardware/user-agent defaults)
 
-    the tx does not contain the mark up, this is added on by the context of the transaction (otherwise it is redundant)
+SYNOPTIC WEB: mattdown, markup, lukewrite;
+    ordinal inscriptions attest bits of data and notation
+    bytes are addressed as index.utxo on the public ledger
+    parallel controls point to address spans
+    user queries overlay network with constraints
+    proxy transfigures output using content-negotiation algorithms
 
-    hyperwheel composite matt-down UTXO + PUSHDATA
+Go4 STRATEGY + Fowler TRANSFORM VIEW
+scripts may be cached and initialized in the browser real-time by proxy;
+fetched http responses may be intercepted and dependencies pre-injected into the dom.
 
+the market may be permitted to specialize:
+    1) interface: userscripts, style, structures and applications
+    2) daemon: compute, storage, middleware, constraints, and other faculties
+    3) representor: interpretable namespaces and transformations for rendering
 
-    ---
-
-  << RESOURCE >>              (( POLICY ))                [[ TARGET ]]
-  
-    the default final target is the dom and the default namespace is xml
-  
-user --> <<userscript>> <--> [[navi(dom)]] <-- parser <-- hypermedia <-- query
-
-the uniform interface is a system that emerges from constraints
-these ensure that the state is navigated via representations of hypermedia
-<server> <hypermedia> <client>
-hypermedia = media that expresses its own context w/ explicit controls
-a hypermedia client is a general interface that can interpret hypermedia,
-without prior understanding of the intent of the media it is interpreting
-the web browser is a hypermedia client that interprets HTML
-XML = cross-compatible generic extensible markup language for arbitrary media
-
-using the web browser as the core architecture,
-for the parsing and rendering of arbitrary hypermedia;
-to create an extension-oriented uniform interface~
-out-of-context parsing strategy based on target and resource
-    z   the web browser (target) may be extended (by proxy) to interpret anything (XML etc)
-    y   XML may be transformed (XSLT etc) before injection into the dom (HTML)
-    x   dependency libraries may be initiated dynamically in the dom (navi target-proxy)
-in-context cascading priority of rendering policy/method:
-    1    server (domain conditions)
-    2    resource (digital rights)
-    3    client (user-agent preferences)
-    3b   browser (user-agent defaults)
-hypermedia must identify its scripting dependencies(x)
-dynamic scripting may be handled using an index of components that contains:
-    import identifier (in-context)
-    import src address / library contents
-    element init function
-for modules, fetch may be intercepted and interpreted based on cache and index
-elements may be intercepted to inject relevant <script> prior to swap into dom
-
-    client:
-        <xo>
-        policy cascade convergence
-        parsing index
-        daemon network
-        </xo>
-        ++++++++++++++++<navi>++++++++++++++++++
-        <html>
-        <head/> <script> userscript manager [observer]
-        <body/> <hypermedia>
-        </html>
-        [uri]   
-        [cache]
-        [localstorage]
-
-    hypermedia:
-        map [key hierarchy][value octet set (plaintext)]
-        [parallel markup as set of objects][pemdas pluralism(hyperlinksfirst)]
-        editing must track precise changes between versions (number shift) otherwise markup will break
-
-    market:
-            parsing, communicate the resources to target (third eye)
-        Y      NAMESPACE      <language> 
-        Y      TYPE           <element> <select>
-        Y      STYLE          <libraries> <tomSelect>
-            userscript, contextualize recieved resources (first eye)
-        Y      FUNCTION       <userscripts, css> 
-        Y      PRESENTATION   <intent, usecase>
-        Y      UX
-            daemoncraft, architecture, utility, faculties (second eye)
-        Y      STORAGE         <cloud services>
-        Y      COMPUTE         <hardware, clusters>
-    
-    parser:
-        input -> data primitive (octet set etc)
-        (policy cascade identifies: target and delivery)
-        data -> target notation -> target
-    navi:
-        extends target (dom) to load dependencies before swapping html
 */
 
 ///// COMMAND LINE INTERFACE HANDLING
