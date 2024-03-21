@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    dream(); cli_init(); drag_init(); 
+    cli_init(); drag_init(); 
 });
 
 //////* PENDING QUESTS *///////
