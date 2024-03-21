@@ -2,14 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     cli_init(); drag_init(); 
 });
 
+//index.html is importing this in the head
+
 //////* PENDING QUESTS *///////
 /* CONCEPT
-        man/outline
+        man/outline/manager
         dynamic identification based on origin
-            if i swap in from a particular source it is enclosed programatically
-*/
-/* PUBLISH
-    combine main site with a demo
+            if i swap in from a particular source it encloses programatically
 */
 /* HYPERMEDIA EXAMPLE CASE
 
@@ -53,9 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 generating unique IDs for element ids? vs classes?
 */
 /* DYNAMIC SCRIPT INIT
-    is this a true deep feature or a function
+
+    implement dynamic-importmap and contain hypermedia in js modules OR
+
+    final) move everything into the sideload js
+
+    old:
+    is this a true deep feature or a function?
         make userscript manager observer
-        dynamic element init (copy dream)
+        dynamic element init
         syntax for script indexing
 */
 /* DRAGGABLE REPL
@@ -107,7 +112,6 @@ const swoop = () => {
     document.getElementById('embediframe').src = document.getElementById('entry-message').value;
     setTimeout(() => { document.getElementById('entry-message').value = 'https://'; }, 0);
 };
-
 const cli_init = () => {
     var command = document.getElementById("command-feed");
     const stringArray = ["this is the default cli log", "overlay cache and all that", "i forgot the old log", "this uses http requests and responses"];
@@ -118,6 +122,8 @@ const cli_init = () => {
 
 ///// DRAGGABLE FRAMES HANDLING
 
+const drag_init = () => {
+    
 const draggin = (e) => {
     const element = e.target;
     if (element.closest('.dragged_content')) return;
@@ -140,7 +146,6 @@ const draggin = (e) => {
     document.addEventListener('mouseup', dragEnd);
 };
 
-const drag_init = () => {
 const draggableElements = Array.from(document.getElementsByClassName('draggable'));
 draggableElements.forEach(element => {
     element.addEventListener('mousedown', draggin);

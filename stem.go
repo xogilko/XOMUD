@@ -12,3 +12,5 @@ func stem(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.New("t").Parse(log)
 	tmpl.Execute(w, nil)
 }
+
+//cli and etc. sample component

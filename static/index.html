@@ -3,15 +3,15 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>urlmud</title>
 	<link rel="stylesheet" type="text/css" href="static/style.css">
-<!--<script type="importmap">
-    {
-     "imports": {    {{range .rootmap}}{{range $importKey, $importValue := .import}}{{range $innerKey, $innerValue := $importValue}}
-            "{{$innerKey}}": "{{$innerValue}}",{{end}}{{end}}{{end}}
-     }
-    }
-</script>--> 
-<script src="static/main.js"></script>
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script type="importmap">
+        {
+        "imports": {    {{range .rootmap}}{{range $importKey, $importValue := .import}}{{range $innerKey, $innerValue := $importValue}}
+                "{{$innerKey}}": "{{$innerValue}}",{{end}}{{end}}{{end}}
+        }
+        }
+    </script>
+    <script src="static/main.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
 <body>
 {{ range .rootmap }}{{ range $key, $value := . }}{{  $value }}{{ end }}{{ end }}
@@ -24,3 +24,4 @@
     document.head.appendChild(script);
     console.log(scriptKey);
 </script>
+
