@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 //////* PENDING QUESTS *///////
 /* CONCEPT
         man/outline/manager
+            import library vs place in dom
         dynamic identification based on origin
             if i swap in from a particular source it encloses programatically
 */
@@ -52,13 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 generating unique IDs for element ids? vs classes?
 */
 /* DYNAMIC SCRIPT INIT
-
-    implement dynamic-importmap and contain hypermedia in js modules OR
-
-    final) move everything into the sideload js
-
-    old:
-    is this a true deep feature or a function?
         make userscript manager observer
         dynamic element init
         syntax for script indexing
@@ -109,12 +103,13 @@ the market may be permitted to specialize:
 const swoop = () => {
     const scrollCli = document.getElementById('cli');
     scrollCli.scrollTop = scrollCli.scrollHeight;
-    document.getElementById('embediframe').src = document.getElementById('entry-message').value;
+    bios(man, document.getElementById('entry-message').value);
+    //document.getElementById('embediframe').src = document.getElementById('entry-message').value; OLD IFRAME TEST
     setTimeout(() => { document.getElementById('entry-message').value = 'https://'; }, 0);
 };
 const cli_init = () => {
     var command = document.getElementById("command-feed");
-    const stringArray = ["this is the default cli log", "overlay cache and all that", "i forgot the old log", "this uses http requests and responses"];
+    const stringArray = ["xotestkit_in = activate interpreter", "htmx_import = turn on htmx in js", "i forgot the old log", "this uses http requests and responses"];
     stringArray.forEach(item => {
         command.insertAdjacentHTML('beforeend', `<li>${item}</li>`);
     });
@@ -151,3 +146,107 @@ draggableElements.forEach(element => {
     element.addEventListener('mousedown', draggin);
 });
 }
+
+// dyanamic scripting
+/*
+navi.js
+    imports
+    functions
+scripts
+hypermedia
+
+inbox , register, deploy
+*/
+
+const his = () => {
+    let urn = [];
+    let imports = ["htmx"];
+    let functions = ["cli", "swoop", "drag"]
+    let scripts = [];
+    let media = [];
+    
+    return{
+        imports: imports,
+        functions: functions,
+        scripts: scripts,
+        media: media,
+        urn: urn
+    }
+}
+
+
+
+const bios = (navi, input) => {
+
+    const interpretor_init = (input) => {
+        if (input.kind === "interpreter") {
+            try{
+                eval(input.media);
+                console.log(input.urn, "interpreter live");
+            }
+            catch(error){console.log("failed to initialize interpretor:", input.urn)}
+        }
+    }
+
+    if (navi.urn.indexOf(input.urn) == -1){
+        console.log("mounting urn", input.urn);
+        try {
+            //it should try to fetch urn interpretor
+                let response = xotestkit_in;
+            interpretor_init(response);
+            navi.urn.push({[input.urn]:input.name}); 
+            console.log("urn", input.urn , "mounted")
+        }
+        catch (error) {console.log("failed to mount")};
+    }
+    else {
+        console.log("tf??"); // interpret input
+    }
+    return {
+        navi: navi
+    } 
+}
+
+let xotestkit_in =
+{
+    "uri": "xo:hash",
+    "urn": "xotestkit",
+    "kind": "interpreter",
+    "name": "xotestkit_handler",
+    "media": `
+    const xotestkit_handler= {
+        import: (media) => {
+            eval(media);
+        },
+        script: () => {
+            console.log("Function 2");
+        },
+        function3: () => {
+            console.log("Function 3");
+        }
+    };`
+}
+let htmx_import =
+{
+    "uri": "xo:hash",
+    "urn": "xotestkit",
+    "kind": "import",
+    "name": "htmx",
+    "media": `
+        import('https://unpkg.com/htmx.org@1.9.11')
+        .then(htmx => {
+            // Now the htmx library is available, and you can use it
+            console.log('htmx imported');
+        })
+        .catch(error => {
+            // Handle error
+            console.error('Failed to load htmx library:', error);
+        });`
+}
+let man = his();
+
+console.log(man.imports);
+man.imports.push("test5");
+console.log(man);
+
+bios(man, xotestkit_in);
