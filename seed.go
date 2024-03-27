@@ -26,7 +26,7 @@ func seed(w http.ResponseWriter, r *http.Request) {
 	`)},
 		//		{"xomud_iframe": template.HTML(`<div class="draggable damnable" style="left: 50%;"><iframe src="https://www.wikipedia.com" id="embediframe" width="600" height="400" frameborder="0"></iframe></div>
 		//	`)},
-		{"iteration_test": template.HTML(`<div class="draggable"><div class="dragged_content" style="background-color: rgb(102, 19, 19);"><i>boom</i></div></div>
+		{"iteration_test": template.HTML(`<div class="draggable"><div class="dragged_content"><i>boom</i></div></div>
 	`)},
 	}
 

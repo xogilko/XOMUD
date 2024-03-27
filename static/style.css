@@ -7,7 +7,7 @@ cursor: move;
 }
 .dragged_content {
   padding: 10px;
-  background-color: #fff;
+  background-color: #fafafa;
   cursor: auto;
   user-select: text;
 }
