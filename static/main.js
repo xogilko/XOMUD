@@ -1,170 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
-    cli_init(); drag_init(); 
+//    cli_init(); drag_init(); 
 });
-
-//////* PENDING QUESTS *///////
-
 /*
 
-*/
-
-/* LEGACY
-
-    CONCEPT
-        man/outline/manager
-            import library vs place in dom
-        dynamic identification based on origin
-            if i swap in from a particular source it encloses programatically
-    DRAGGABLE REPL
-        htmx is dropping swoops if the server cant keep up. only reset stick on arrival
-        find an alternative to timeout() for discoveing 1 ping of a request<?>
-    DYNAMIC SCRIPT INIT
-        make userscript manager observer
-        dynamic element init
-        syntax for script indexing
-*/
-
-/*//////   BLUEPRINT   ///////
-
-<< RESOURCE >>        (( POLICY ))        [[ TARGET ]]
-
-uniform interface   system that emerges from constraint where state 
-                    is transfigured through the representation of hypermedia
-hypermedia          media that produces intersecting patterns w/ explicit controls
-hypermedia client   general interface that can interpret any hypermedia without context
-                    the web browser is a hypermedia client that interprets via HTML
-
-a schema-agnostic client may be extended out by proxy 
-the web browser (DOM, XML) may be used as a temporary footstool
-
-cascading selection constraints:
-    domain (proxy policy/technical conditions)
-    resource (digital rights management)
-    client (user defined preferences)
-    native (hardware/user-agent defaults)
-
-SYNOPTIC WEB: mattdown, markup, lukewrite;
-    ordinal inscriptions attest bits of data and notation
-    bytes are addressed as index.utxo on the public ledger
-    parallel controls point to address spans
-    user queries overlay network with constraints
-    proxy transfigures output using content-negotiation algorithms
-
-Go4 STRATEGY + Fowler TRANSFORM VIEW
-scripts may be cached and initialized in the browser real-time by proxy;
-fetched http responses may be intercepted and dependencies pre-injected into the dom.
-
-the market may be permitted to specialize:
-    1) interface: userscripts, style, structures and applications
-    2) daemon: compute, storage, middleware, constraints, and other faculties
-    3) representor: interpretable namespaces and transformations for rendering
-
-//////////HYPERMEDIA EXAMPLE CASE
-
-    SYNOPTIC PRINCIPLE
-    an ideal uniform distributed information system is agnostic towards its elements
-    it uses abstraction and extensibility to pursue an unopinionated generic interface
-
-    HYPERMEDIATRIX INTERCESSION
-    by negotiating the mediation of a session against the state of a trusted proxy, latency is made equitable
-
-    SURFER PARADOX
-    in reality only movement is real and state is an illusion
-    in virtuality only state is real and movement is an illusion
-
-    RESTFUL POSTULATE
-    its impossible to know where on the web anyone is
-    we can only infer based on the actions that are made
-
-    ALICE ZERO SUM{
-        overlay network simpage
-            for a grid of a room via scrypt
-                then arrays of objects in simpage
-                    passing around tx vs trust
-                    u pass a tx to the overlay which inits a websocket
-
-    }
-    base content + 2 markup options
-    overlay network + query
-        user preferences
-        custom schema
-        representor
-            ordfs
-        custom css   
-    put draggables in context
-        wiki
-            a series of pages
-            text would be marked up with hyperlinks to other pages
-        dropdown - based on inputs and events
-            requires tom-select.js + plugins OR select2 based on user preference
-                import a script and css
-                generating unique IDs for element ids? vs classes?
+cache view
+box view
+bios button + 3rd arg
 
 */
-
-///// COMMAND LINE INTERFACE HANDLING
-
-const swoop = () => {
-    const scrollCli = document.getElementById('cli');
-    scrollCli.scrollTop = scrollCli.scrollHeight;
-    let cli_msg = document.getElementById('entry-message').value;
-    bios(man, eval(cli_msg));
-    setTimeout(() => { document.getElementById('entry-message').value = 'https://'; }, 0);
-};
-
-const cli_init = () => {
-    var command = document.getElementById("command-feed");
-    const stringArray = ["xotestkit_in = activate interpreter", "htmx_import = turn on htmx in js", "currently this immediately evals bios(man, input)", "ooo watch out"];
-    stringArray.forEach(item => {
-        command.insertAdjacentHTML('beforeend', `<li>${item}</li>`);
-    });
-}
-
-///// DRAGGABLE FRAMES HANDLING
-
-const drag_init = () => {
-    
-    const draggin = (e) => {
-        const element = e.target;
-        if (element.closest('.dragged_content')) return;
-
-        e.preventDefault();
-        const offsetX = e.clientX - element.getBoundingClientRect().left;
-        const offsetY = e.clientY - element.getBoundingClientRect().top;
-
-        const dragMove = (moveEvent) => {
-            element.style.left = moveEvent.clientX - offsetX + 'px';
-            element.style.top = moveEvent.clientY - offsetY + 'px';
-        };
-
-        const dragEnd = () => {
-            document.removeEventListener('mousemove', dragMove);
-            document.removeEventListener('mouseup', dragEnd);
-        };
-
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-    };
-
-    const draggableElements = Array.from(document.getElementsByClassName('draggable'));
-    draggableElements.forEach(element => {
-        element.addEventListener('mousedown', draggin);
-    });
-}
-
-////////////////
 
 const his = () => {
     let rom = {};
-    let cache = [];
-    
+    let cache = [];  
     return{
         rom: rom,
         cache: cache
     }
 }
 
-const bios = (navi, input) => {
+const bios = (navi, input, context) => {
     console.log("bios called");
 
     const initInterpreter = (interpreter) => {
@@ -184,7 +38,7 @@ const bios = (navi, input) => {
             const functionHandler = navi.rom[handler][input.kind];
             if (typeof functionHandler === "function") {
                 try {
-                    functionHandler(input);
+                    functionHandler(input, context);
                     navi.cache.push(input);
                     console.log(`${input.name} handled`);
                 } catch (error) {
@@ -215,7 +69,7 @@ const bios = (navi, input) => {
         if (!canInterpret) {
             console.log(`Interpreter for ${input.urns} not found. Attempting to mount...`);
             try {
-                let interpreter = xotestkit_in; // Simulate fetching urns interpreter
+                let interpreter = box.xotestkit_in; // Simulate fetching urns interpreter
                 initInterpreter(interpreter);
                 console.log(`Interpreter for urns ${input.urns} mounted`);
             } catch (error) {
@@ -233,54 +87,245 @@ const bios = (navi, input) => {
     return { navi };
 };
 
-let htmx_import =
-{
-    "uri": "xo:hash",
-    "urns": "xotestkit",
-    "kind": "import",
-    "name": "htmx 1.9.11",
-    "media": `
-        import('https://unpkg.com/htmx.org@1.9.11')
-        .then(htmx => {
-            // Now the htmx library is available, and you can use it
-            console.log('htmx imported');
-        })
-        .catch(error => {
-            // Handle error
-            console.error('Failed to load htmx library:', error);
-        });`
-}
-let xotestkit_in =
-{
-    "uri": "xo:hash",
-    "urns": "xotestkit",
-    "kind": "interpreter",
-    "name": "xotestkit_handler",
-    "media": `
-    navi.rom.xotestkit_handler= {
-        import: (input) => {
-            if (navi.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){
-                try{    
-                    eval(input.media);
-                }
-                catch (error) {
-                    console.log('failed to evaluate import', input.name, 'due to error:', error)
-                }
+let box = {
+    "xotestkit_in":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "interpreter",
+        "name": "xotestkit_handler",
+        "media": `
+        navi.rom.xotestkit_handler= {
+            js: (input) => {
+                if (navi.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){
+                    try {eval(input.media);}
+                    catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
+                } else {console.log('function(s) already cached')}
+            },
+            html: (input, target) => {
+                var container = document.createElement("div");
+                container.innerHTML = input.media;
+                while (container.firstChild){target.appendChild(container.firstChild);}
             }
-            else {
-                console.log('this import is already cached!!')
-            }
-        },
-        function: (input) => {
-            eval(input.media);
-        },
-        script: () => {
-            console.log("Function 3");
+        };`
+    },
+    "htmx_observe":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "htmx dynamic processor",
+        "media": `
+        navi.rom.htmx_processor = () => {
+            console.log("live processor");
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    console.log("mutation detected")
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1 && node.querySelectorAll('[hx-trigger]') !== null) {
+                            console.log(node, "processing");
+                            htmx.process(node);
+                        }
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
         }
-    };`
+        `
+    },
+    "htmx_import":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "htmx import 1.9.11",
+        "media": `
+            import('https://unpkg.com/htmx.org@1.9.11')
+            .then(htmx => {
+                // Now the htmx library is available, and you can use it
+                console.log('htmx imported');
+            })
+            .catch(error => {
+                // Handle error
+                console.error('Failed to load htmx library:', error);
+            });`
+    },
+    "htmx_script":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "htmx script 1.9.11",
+        "media": `
+        <script src="https://unpkg.com/htmx.org@1.9.11"></script>`
+    },
+    "xomud_dragtest":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "xomud_dragtest",
+        "media": `
+        <div class="draggable">Drag me 1</div>
+	    <div class="draggable">Drag me 2</div>
+	    <div class="draggable">Drag me 3</div>
+        <div class="draggable"><div class="dragged_content"><i>boom</i></div></div>`
+    },
+    "xomud_cmd":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "xomud_cmd",
+        "media": `
+        <div id="cli" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
+        <ul id="command-feed">
+        </ul>
+        </div>				
+        <form onsubmit="man.rom.swoop()" hx-post="/command/" hx-trigger="submit" hx-target="#command-feed" hx-swap="beforeend">
+        <input type = "text" name = "set-message" id = "entry-message">
+        <input type = "submit" value = "send">
+        </form>`
+    },
+    "xomud_cmd_func":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "xomud_cmd_func w/ bios call",
+        "media": `
+        navi.rom.swoop = () => {
+            console.log("swoop activated");
+            const scrollCli = document.getElementById('cli');
+            scrollCli.scrollTop = scrollCli.scrollHeight;
+            setTimeout(() => { document.getElementById('entry-message').value = 'https://'; }, 0);
+        };
+        
+        navi.rom.cli_init = () => {
+            var command = document.getElementById("command-feed");
+            const stringArray = ["xotestkit_in = activate interpreter", "htmx_import = turn on htmx in js", "currently this immediately evals bios(man, input)", "ooo watch out"];
+            stringArray.forEach(item => {
+                command.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');
+            });
+        }`
+    },
+    "drag_functions":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "drag init",
+        "media": `
+        console.log("is anyone out there?")
+        navi.rom.drag_init = () => {
+            console.log("init dragification")
+            const draggin = (e) => {
+                console.log("init draggin", e)
+                const element = e.target;
+                if (element.closest('.dragged_content')) return;
+        
+                e.preventDefault();
+                const offsetX = e.clientX - element.getBoundingClientRect().left;
+                const offsetY = e.clientY - element.getBoundingClientRect().top;
+        
+                const dragMove = (moveEvent) => {
+                    element.style.left = moveEvent.clientX - offsetX + 'px';
+                    element.style.top = moveEvent.clientY - offsetY + 'px';
+                };
+        
+                const dragEnd = () => {
+                    document.removeEventListener('mousemove', dragMove);
+                    document.removeEventListener('mouseup', dragEnd);
+                };
+        
+                document.addEventListener('mousemove', dragMove);
+                document.addEventListener('mouseup', dragEnd);
+            };
+        
+            const addDragEventListener = (element) => {
+                console.log("dragginating", element)
+                element.addEventListener('mousedown', draggin);
+            };
+        
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    console.log("mutation detected")
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1 && node.classList.contains('draggable')) {
+                            addDragEventListener(node);
+                        }
+                    });
+                });
+            });
+        
+            observer.observe(document.body, { childList: true, subtree: true });
+        
+            const draggableElements = document.querySelectorAll('.draggable');
+            console.log("did we find any?", draggableElements)
+            draggableElements.forEach(addDragEventListener);
+        }`
+    },
+    "manager_html":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "manager_html",
+        "media": `
+        <div id="manager"></div><button id="managerButton">refresh</button>
+        <script>
+        document.getElementById('managerButton').addEventListener('click', function() {
+            navi.rom.manager(box, 'manager');
+        }
+        </script>`
+    },
+    "manager":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "process manager",
+        "media": `
+        navi.rom.manager = (obj, targetElementId) => {
+            const targetElement = document.getElementById(targetElementId);
+            if (!targetElement) {
+                console.error('Target element not found');
+                return;
+            }
+            targetElement.innerHTML = '';
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const value = obj[key];
+                const listItem = document.createElement('p');
+                listItem.textContent = key + ', Name: ' + value.name + ', kind: ' + value.kind;
+                targetElement.appendChild(listItem);
+                };
+            };
+        }
+        `
+    },
+    "encloseDrag":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "insert in draggable",
+        "media": `
+        navi.rom.encloseDrag = (originalObject) => {
+            newMedia = '<div class="draggable"><div class="dragged_content">' + originalObject.media + '</div></div>';
+            newName = 'draggable transform of ' + originalObject.name;
+            const modifiedObject = { ...originalObject, media: newMedia, name: newName };
+            return modifiedObject;
+        }
+        `  
+    },
+    "startupdragcli":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "cli setup statements",
+        "media": `
+        bios(man, box.drag_functions);
+        bios(man, box.encloseDrag);
+        man.rom.drag_init();
+        bios(man, box.htmx_observe);
+        man.rom.htmx_processor();
+        bios(man, man.rom.encloseDrag(box.xomud_cmd), document.body);
+        bios(man, box.xomud_cmd_func);
+        man.rom.cli_init();
+        man.rom.swoop();
+        `
+    },
 }
 
 let man = his();
 console.log(man);
-
-

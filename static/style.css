@@ -1,7 +1,7 @@
 .draggable {
 padding: 10px; 
 background-color: #0099ff;
-line-height: 50px;
+line-height: 3px;
 position: absolute;
 cursor: move;
 }
