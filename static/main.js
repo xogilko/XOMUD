@@ -107,7 +107,7 @@ const his = () => {
             <div id="testkit_cli" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
             <ul id="command-feed">
             </ul>
-            </div>				
+            </div>
             <form onsubmit="alice.rom.testkit_cli('callback')" hx-post="/command/" hx-trigger="submit" hx-target="#command-feed" hx-swap="beforeend">
             <input type = "text" name = "set-message" id = "entry-message">
             <input type = "submit" value = "send">
@@ -206,6 +206,7 @@ const his = () => {
             <option value = "cache">cache</option>
             <option value = "rom">rom</option>
             <option value = "box">box</option>
+            <option value = "local">local</option>
             </select>
             <button id="testkit_clerkButton">refresh</button>
             <br><p id="testkit_clerkSelectDesc"></p><hr>
@@ -213,7 +214,7 @@ const his = () => {
             
             `
         },
-        "testkit_clerk_func":{
+        "testkit_clerk_func": {
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "js",
@@ -235,17 +236,20 @@ const his = () => {
                     } else if (clerk_select.value === "rom") {
                         document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are activated functions!</i>';
                         itemsToDisplay = Object.entries(lain.rom)
-                        .filter(([key, value]) => value !== null)
-                        .map(([key, value]) => ({ name: key + '()', ...value }));
+                            .filter(([key, value]) => value !== null)
+                            .map(([key, value]) => ({ name: key + '()', ...value }));
                     } else if (clerk_select.value === "box") {
-                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>here are da available local components!</i>';
+                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>here are da available indexed components!</i>';
                         itemsToDisplay = Object.entries(lain.box).flatMap(([key, value]) => {
-                            if (value) {
-                                const summary = value.name + ' : ' + key;
+                            if (value !== undefined) {
+                                const summary = key + ' : ' + value.name;
                                 return [{ name: summary }];
                             }
                             return [];
                         });
+                    } else if (clerk_select.value === "local") {
+                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>keys placed in local storage:</i>';
+                        itemsToDisplay = Object.keys(localStorage).map(key => ({ name: key }));
                     }
                     itemsToDisplay.forEach(item => {
                         const listItem = document.createElement('p');
@@ -314,6 +318,74 @@ const his = () => {
                 const modifiedObject = { ...originalObject, media: newMedia, name: newName };
                 return modifiedObject;
             }
+            `  
+        },
+        "testkit_store_gate_html":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "html",
+            "name": "testkit move! widget",
+            "child": "testkit_store_gate_func",
+            "media": `
+            <div id="testkit_store_gate">
+            <input type = "text" id = "testkit_store_gate_Entry" placeholder = "box index / storage key">
+            <select id="testkit_store_gate_select">
+            <option value = "b2ls"> box -> local storage </option>
+            <option value = "ls2b"> local storage -> box </option>
+            </select>
+            <button id="testkit_store_gate_Button">move!</button>
+            <hr><i>cut not copy, will overwrite</i>
+            </div>
+            `
+        },
+        "testkit_store_gate_func":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "js",
+            "name": "testkit move! applet",
+            "media": `
+            lain.rom.store_gate = () => {
+                const gate = () => {
+                    console.log('move!');
+                    entryElement = document.getElementById("testkit_store_gate_Entry");
+                    let entry = entryElement.value;
+                    entryElement.value = '';
+                    let direction = document.getElementById("testkit_store_gate_select").value;
+                    if (direction === "b2ls" && lain.box.hasOwnProperty(entry)) {
+                        try {
+                            localStorage.setItem(entry, JSON.stringify(lain.box[entry]));
+                            delete lain.box[entry];
+                            lain.box[entry] = undefined;
+                        } catch (error) {
+                            console.log("failed to send to local storage");
+                        }
+                    } else if (direction === "ls2b") {
+                        let storedItem = localStorage.getItem(entry);
+                        if (storedItem) {
+                            try {
+                                lain.box[entry] = JSON.parse(storedItem);
+                                localStorage.removeItem(entry);
+                            } catch (error) {
+                                console.log("failed to parse from local storage, maybe its not json");
+                                console.log("putting a string in box ig :/");
+                                try {
+                                    lain.box[entry] = storedItem;
+                                    localStorage.removeItem(entry);
+                                } catch (error) {
+                                    console.log("that didn't work either so giving up");
+                                }
+                            }
+                        } else {
+                            console.log("item not found in local storage");
+                        }
+                    } else {
+                        console.log("something went wrong idk maybe its not in box");
+                    }
+                }
+                console.log("movement armed");   
+                document.getElementById('testkit_store_gate_Button').addEventListener('click', function() {gate();});
+            }
+            lain.rom.store_gate();
             `  
         },
         "demo_proc":{
@@ -474,10 +546,28 @@ const his = () => {
             "name": "reassign elements to export",
             "media": `
             lain.rom.testkit_reassign = (dom_new) => {
-                //this requires a dom report
-                let dom_old = lain.rom.reportDOM().domReport;
-                
-            }
+                // Create a map for quick access to elements by their 'data-set' value
+                const elementsMap = new Map();
+                document.querySelectorAll('[data-set]').forEach(element => {
+                    elementsMap.set(element.getAttribute('data-set'), element);
+                });
+            
+                dom_new.forEach(elementInfo => {
+                    const dataSetValue = elementInfo.attributes['data-set'];
+                    const element = elementsMap.get(dataSetValue);
+            
+                    if (element) {
+                        // Update the attributes of the matched element to match those in dom_new
+                        Object.entries(elementInfo.attributes).forEach(([attrName, attrValue]) => {
+                            element.setAttribute(attrName, attrValue);
+                        });
+            
+                        // Append the element to the end of its parent to reorder it
+                        const parentElement = element.parentElement;
+                        parentElement.appendChild(element); // Append the element to the end of its parent
+                    }
+                });
+            };
             `
         },
         "testkit_cssmod_html":{
@@ -525,9 +615,10 @@ const his = () => {
             "name": "testkit cssmod widget",
             "media": `
             <div id="testkit_regenerator">
-            <input type = "text" id = "IDKWHATGOESHEREFUCKU" value = "red">
+            <button id="testkit_exportButton">export navi 2 box</button>
+            <br><hr>
+            <input type = "text" id = "testkit_regenImport" value = "name of input">
             <button id="testkit_regenButton">regen navi</button>
-            <br><p></p><hr>
             </div>
             `
         },
@@ -629,8 +720,8 @@ let alice = his();
 /*
 quests:
 
-    figure out local storage
-    place an export there
-    seed the export access? or run a func that crosses death
+    then export to box and import from box as an object
+
+    place an export there, run a func that crosses death
 
 */
