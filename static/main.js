@@ -1,11 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => { /* phone home */ });
 
 const his = () => {
+    let sign = 'xo';
     let domset = 0;
     let rom = {}; 
     let cache = []; 
     let proc = [];
-    let box = {
+    let dir = {
         "xotestkit_in":{
             "uri": "xo:hash",
             "urns": "xotestkit",
@@ -20,21 +21,29 @@ const his = () => {
                     } else {console.log('function(s) already cached')}
                 },
                 html: (input, target) => {
+                    console.log(target);
                     var container = document.createElement("div");
                     container.innerHTML = input.media;
-                    input.domset = lain.domset;
-                    const processNode = (node) => {
+                    input.domset = [];
+                    Array.from(container.childNodes).forEach(node => {
                         if (node.nodeType === 1) {
-                            node.setAttribute("data-set", lain.domset++);
-                            Array.from(node.children).forEach(processNode);
+                            const currentDomSet = lain.domset++;
+                            node.setAttribute("data-set", currentDomSet);
+                            input.domset.push(currentDomSet);
+                            const assignDataSetsToChildren = (childNode) => {
+                                if (childNode.nodeType === 1) {
+                                    childNode.setAttribute("data-set", lain.domset++);
+                                    Array.from(childNode.children).forEach(assignDataSetsToChildren);
+                                }
+                            };
+                            Array.from(node.children).forEach(assignDataSetsToChildren);
                         }
-                    };
-                    Array.from(container.childNodes).forEach(processNode);
+                    });
                     while (container.firstChild) {
                         target.appendChild(container.firstChild);
-                    }
+                    } 
                     lain.cache.push(input);
-                    let kidfunc = lain.box[input.child];
+                    let kidfunc = lain.dir[input.child];
                     if (kidfunc !== undefined){
                         if (kidfunc){eiri(lain, kidfunc);}
                         else {console.log("child func of", input.name, "not found");}
@@ -77,6 +86,99 @@ const his = () => {
                     console.error('Failed to load htmx library:', error);
                 });`
         },
+        "padlock":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "js",
+            "name": "masterkey protection",
+            "media": `
+                
+            var setupLocalStorage = (function() {
+
+                // conditions met provides: ability to toggle lock, ability to bypass lock with prompting
+                var keysToWatch = ["specificKey1", "specificKey2", "specificKey3"];
+                // LOCKED
+                var processCompleted = false;
+                console.log("locked!");
+
+                // ORIGINAL LOCAL STORAGE METHODS 
+                var originalSetItem = localStorage.setItem;
+                var originalRemoveItem = localStorage.removeItem;
+
+                // BYPASS LOCK
+                function confirmModification(key, value) {
+                    // PROMPT TO BYPASS
+                    var confirmation = confirm("Are you sure you want to modify?", key);
+                    return confirmation; // Return true if confirmed, false otherwise
+                }
+
+                // UNLOCKING CONDITIONS
+                function conditionsMet() {
+                    
+                    var aliceLoggedIn = true; // Placeholder value for demonstration
+
+                    return aliceLoggedIn; // TRUE = CONDITIONS MET
+                }
+
+                // WRAPPER OF SET ITEM TO LOCAL STORAGE
+                localStorage.setItem = function(key, value) {
+                    // IF IN-SCOPE LOCK IS LOCKED
+                    if (keysToWatch.includes(key) && !processCompleted) {
+                        // IF CONDITIONS ARE NOT MET GTFO
+                        if (!conditionsMet()) {
+                            console.log("Conditions not met to unlock localStorage.");
+                            return; // Exit without modifying localStorage
+                        }
+
+                        // GIVEN CONDITIONS ARE MET, CONFIRM A BYPASS OF LOCK
+                        var confirmed = confirmModification(key, value);
+                        if (!confirmed) {
+                            console.log("Modification canceled."); // Log cancellation
+                            return; // Exit without modifying localStorage
+                        }
+                    }
+                    
+                    // OUTSIDE OF SCOPE OR UNLOCKED, DEFAULT LOCAL STORAGE METHOD
+                    originalSetItem.call(localStorage, key, value);
+                }
+
+                // WRAPPER OF REMOVE ITEM TO LOCAL STORAGE
+                localStorage.removeItem = function(key) {
+                    // IF IN-SCOPE LOCK IS LOCKED
+                    if (keysToWatch.includes(key) && !processCompleted) {
+                        // IF CONDITIONS ARE NOT MET GTFO
+                        if (!conditionsMet()) {
+                            console.log("Conditions not met to unlock localStorage.");
+                            return; // Exit without modifying localStorage
+                        }
+
+                        // GIVEN CONDITIONS ARE MET, CONFIRM A BYPASS OF LOCK
+                        var confirmed = confirmModification(key, "undefined");
+                        if (!confirmed) {
+                            console.log("Removal canceled."); // Log cancellation
+                            return; // Exit without modifying localStorage
+                        }
+                    }
+                    
+                    // OUTSIDE OF SCOPE OR UNLOCKED, DEFAULT LOCAL STORAGE METHOD
+                    originalRemoveItem.call(localStorage, key);
+                }
+
+                // EXPOSE THE TOGGLE LOCK
+                return function() {
+                    // CONDITIONS AINT MET THO? GTFO
+                    if (!conditionsMet()) {
+                        console.log("Conditions not met to unlock localStorage.");
+                        return; // Exit without toggling completion state
+                    }
+
+                    // GIVEN CONDITIONS ARE MET, TOGGLE LOCK
+                    processCompleted = !processCompleted;
+                    console.log("Process completed:", processCompleted);
+                };
+            })();
+            `
+        },
         "htmx_script":{
             "uri": "xo:hash",
             "urns": "xotestkit",
@@ -96,47 +198,91 @@ const his = () => {
             <div class="draggable">Drag me 3</div>
             <div class="draggable"><div class="dragged_content"><i>boom</i></div></div>`
         },
-        "testkit_cli_html":{
+        "testkit_atc_html":{
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "html",
-            "name": "testkit cli widget",
-            "child": "testkit_cli_func",
+            "name": "testkit atc widget",
+            "child": "testkit_atc_func",
             "media": `
             <span>
-            <div id="testkit_cli" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
-            <ul id="command-feed">
+            <div id="testkit_atc" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
+            <ul id="qomms">
             </ul>
             </div>
-            <form onsubmit="alice.rom.testkit_cli('callback')" hx-post="/command/" hx-trigger="submit" hx-target="#command-feed" hx-swap="beforeend">
-            <input type = "text" name = "set-message" id = "entry-message">
+            <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+            <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "contact server">
             <input type = "submit" value = "send">
             </form>
             </span>
             `
         },
-        "testkit_cli_func":{
+        "testkit_atc_func":{
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "js",
-            "name": "testkit cli applet",
+            "name": "testkit atc applet",
             "media": `
-            lain.rom.testkit_cli = (action = 'init_and_callback') => {
-                const commandFeed = document.getElementById("command-feed");
-                const scrollCli = document.getElementById('testkit_cli');
-                const entryMessage = document.getElementById('entry-message');
+            lain.rom.testkit_atc = (action = 'init_and_callback') => {
+                const commandFeed = document.getElementById("qomms");
+                const scrollCli = document.getElementById('testkit_atc');
+                const entryMessage = document.getElementById('qomms-entry');
                 if (action === 'init_and_callback' || action === 'init') {
-                    const stringArray = ["xomud test area", "alice = present state", "navi(alice, proc, ...rest)", "(っ◔◡◔)っ✩"];
+                    const stringArray = ["xomud test area", "alice = present state", "navi(alice, 'proc', ...rest)", "or navi(alice, 'eval:alice.proc', ...rest)", "(っ◔◡◔)っ✩"];
                     stringArray.forEach(item => {
                         commandFeed.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');
                     });
                 }
-                if (action === 'init_and_callback' || action === 'callback') {
+                if (action === 'callback') {
+                    commandFeed.insertAdjacentHTML('beforeend', '<li><i>' + lain.sign + '></i> ' + entryMessage.value + '</li>');
                     scrollCli.scrollTop = scrollCli.scrollHeight;
-                    setTimeout(() => { entryMessage.value = 'https://'; }, 0);
+                    setTimeout(() => { entryMessage.value = ''; }, 0);
                 }
             };
-            lain.rom.testkit_cli('init_and_callback');
+            lain.rom.testkit_atc('init_and_callback');
+            `
+        },
+        "testkit_destroy":{
+            "uri": "xo:01gh1085h01rij",
+            "urns": "xotestkit",
+            "kind": "js",
+            "name": "destroy via cache",
+            "media": `
+            lain.rom.removeCacheItem = (item) => {
+                try {
+                    const cacheItem = lain.cache[item.index];
+                    if (cacheItem) {
+                        if (cacheItem.kind === 'html'){
+                            cacheItem.domset.forEach(domset => {
+                                const element = document.querySelector('[data-set="' + domset + '"]');
+                                if (element) {
+                                    element.remove();
+                                    console.log('Element removed successfully');
+                                } else {
+                                    console.log('Element not found', element);
+                                }
+                            });
+                        }
+                        else if (cacheItem.kind === 'js' || cacheItem.kind === 'interpreter'){
+                            handler_match = cacheItem.media.match(/lain\.rom\.[a-zA-Z0-9_]+/g);
+                            if (handler_match) {
+                                eval(handler_match[0] + ' = null;');
+                                console.log(handler_match[0], eval(handler_match[0]));
+                            } else {
+                                console.log('no function to disable');
+                            }
+                        }
+                        else {
+                            console.log("cache type unrecognized? :O ", cacheItem);
+                        }
+                        lain.cache.splice(item.index, 1);
+                    } else {
+                        console.log('Cache item not found');
+                    }
+                } catch(error) {
+                    console.log('Failed to destroy bc', error);
+                }
+            };
             `
         },
         "drag_functions":{
@@ -205,7 +351,7 @@ const his = () => {
             <select id="testkit_clerkSelect">
             <option value = "cache">cache</option>
             <option value = "rom">rom</option>
-            <option value = "box">box</option>
+            <option value = "dir">dir</option>
             <option value = "local">local</option>
             </select>
             <button id="testkit_clerkButton">refresh</button>
@@ -228,82 +374,97 @@ const his = () => {
                 }
                 const clerk_select = document.getElementById('testkit_clerkSelect');
                 const reset = () => {
-                    targetElement.innerHTML = '';
-                    let itemsToDisplay = [];
+                    targetElement.innerHTML = ''; // Clear the current content
+                    let htmlString = '';
                     if (clerk_select.value === "cache") {
-                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>deez are cached as staged! (press X to destroy)</i>';
-                        itemsToDisplay = lain.cache.map((item, index) => ({ name: item.name, index }));
+                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are cached as staged! (X to destroy)</i>';
+                        lain.cache.forEach(function(item, index) {
+                            htmlString += '<p><a href="#" id="removeCache_' + index + '">X</a> ' + item.name + '</p>';
+                        });
                     } else if (clerk_select.value === "rom") {
                         document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are activated functions!</i>';
-                        itemsToDisplay = Object.entries(lain.rom)
-                            .filter(([key, value]) => value !== null)
-                            .map(([key, value]) => ({ name: key + '()', ...value }));
-                    } else if (clerk_select.value === "box") {
-                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>here are da available indexed components!</i>';
-                        itemsToDisplay = Object.entries(lain.box).flatMap(([key, value]) => {
+                        Object.entries(lain.rom).filter(function([key, value]) { return value !== null; })
+                            .forEach(function([key, value]) {
+                                htmlString += '<p>' + key + '()</p>';
+                            });
+                    } else if (clerk_select.value === "dir") {
+                        document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>heres what directory has indexed! (X to attempt build)</i>';
+                        Object.entries(lain.dir).forEach(function([key, value]) {
                             if (value !== undefined) {
-                                const summary = key + ' : ' + value.name;
-                                return [{ name: summary }];
+                                htmlString += '<p><a href="#" id="dir_' + key + '">X</a> ' + key + ' <i> - ' + value.name + '</i></p>';
                             }
-                            return [];
                         });
                     } else if (clerk_select.value === "local") {
                         document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>keys placed in local storage:</i>';
-                        itemsToDisplay = Object.keys(localStorage).map(key => ({ name: key }));
+                        Object.keys(localStorage).forEach(function(key) {
+                            htmlString += '<p>' + key + '</p>';
+                        });
                     }
-                    itemsToDisplay.forEach(item => {
-                        const listItem = document.createElement('p');
-                        if (item.hasOwnProperty('index')) {
-                            const removeLink = document.createElement('a');
-                            removeLink.href = "#";
-                            removeLink.textContent = 'X';
-                            removeLink.style.marginRight = '5px';
-                            removeLink.onclick = (event) => {
-                                event.preventDefault(); // Prevent the default anchor action
-                                try {
-                                    const cacheItem = lain.cache[item.index];
-                                    if (cacheItem) {
-                                        if (cacheItem.kind === 'html'){
-                                            const element = document.querySelector('[data-set="' + cacheItem.domset + '"]');
-                                            if (element) {
-                                                element.remove();
-                                                console.log('Element removed successfully');
-                                            } else {
-                                                console.log('Element not found');
-                                            } 
-                                        }
-                                        else if (cacheItem.kind === 'js'){
-                                            handler_match = cacheItem.media.match(/lain\.rom\.[a-zA-Z0-9_]+/g);
-                                            if (handler_match) {
-                                                eval(handler_match[0] + ' = null;');
-                                                console.log(handler_match[0], eval(handler_match[0]));
-                                            } else {
-                                                console.log('no function to disable');
-                                            }
-                                        }
-                                        else {
-                                            console.log("cache type unrecognized? :O ");
-                                        }
-                                        lain.cache.splice(item.index, 1);
-                                    } else {
-                                        console.log('Cache item not found');
-                                    }
-                                } catch(error) {
-                                    console.log('Failed to destroy bc', error);
-                                }
+                    targetElement.innerHTML = htmlString;
+
+                    // Attach event listeners after elements are added to the DOM
+                    if (clerk_select.value === "cache") {
+                        lain.cache.forEach(function(item, index) {
+                            document.getElementById('removeCache_' + index).onclick = function() {
+                                lain.rom.removeCacheItem({index: index});
                                 reset();
+                                return false;
                             };
-                            listItem.appendChild(removeLink);
-                        }
-                        const textNode = document.createTextNode(" " + item.name);
-                        listItem.appendChild(textNode);
-                        targetElement.appendChild(listItem);
-                    });
+                        });
+                    } else if (clerk_select.value === "dir") {
+                        Object.keys(lain.dir).forEach(function(key) {
+                            var element = document.getElementById('dir_' + key);
+                            if (element) {
+                                element.onclick = function() {
+                                    navi(alice, "alice.dir." + key, "document.body");
+                                    return false;
+                                };
+                            }
+                        });
+                    }
                 };
                 reset();
-                document.getElementById('testkit_clerkButton').addEventListener('click', function() {reset();});
+                document.getElementById('testkit_clerkButton').addEventListener('click', reset);
             }
             lain.rom.testkit_clerk();
+            `
+        },
+        "testkit_cssmod_html":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "html",
+            "name": "testkit cssmod widget",
+            "child": "testkit_cssmod_func",
+            "media": `
+            <div id="testkit_retouch">
+            <input type = "text" id = "retouchClass" value = ".draggable">
+            <input type = "text" id = "retouchProperty" value = "background-color">
+            <input type = "text" id = "retouchValue" value = "red">
+            <button id="testkit_retouchButton">retouch</button>
+            </div>
+            `
+        },
+        "testkit_cssmod_func":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "js",
+            "name": "testkit cssmod applet",
+            "media": `
+            lain.rom.testkit_cssmod = () => {
+                const targetElement = document.getElementById("testkit_retouch");
+                    if (!targetElement) {
+                        console.error('Target element not found');
+                    }
+                const retouch = () => {
+                    console.log('retouch');
+                    let retouch_class = document.getElementById("retouchClass").value;
+                    let retouch_property = document.getElementById("retouchProperty").value;
+                    let retouch_value = document.getElementById("retouchValue").value;
+                lain.rom.manageCSS().modifyCSSProperty(retouch_class, retouch_property, retouch_value);
+                }
+                document.getElementById('testkit_retouchButton').addEventListener('click', function() {retouch();});
+            }
+            lain.rom.testkit_cssmod();
             `
         },
         "enclose_draggable":{
@@ -328,13 +489,16 @@ const his = () => {
             "child": "testkit_store_gate_func",
             "media": `
             <div id="testkit_store_gate">
-            <input type = "text" id = "testkit_store_gate_Entry" placeholder = "box index / storage key">
+            <input type = "text" id = "testkit_store_gate_Entry" placeholder = "dir index / storage key">
+            <select id="testkit_store_gate_mode">
+            <option value = "cut"> cut </option>
+            <option value = "copy"> copy </option>
+            </select>
             <select id="testkit_store_gate_select">
-            <option value = "b2ls"> box -> local storage </option>
-            <option value = "ls2b"> local storage -> box </option>
+            <option value = "b2ls"> dir -> local storage </option>
+            <option value = "ls2b"> local storage -> dir </option>
             </select>
             <button id="testkit_store_gate_Button">move!</button>
-            <hr><i>cut not copy, will overwrite</i>
             </div>
             `
         },
@@ -351,11 +515,13 @@ const his = () => {
                     let entry = entryElement.value;
                     entryElement.value = '';
                     let direction = document.getElementById("testkit_store_gate_select").value;
-                    if (direction === "b2ls" && lain.box.hasOwnProperty(entry)) {
+                    if (direction === "b2ls" && lain.dir.hasOwnProperty(entry)) {
                         try {
-                            localStorage.setItem(entry, JSON.stringify(lain.box[entry]));
-                            delete lain.box[entry];
-                            lain.box[entry] = undefined;
+                            localStorage.setItem(entry, JSON.stringify(lain.dir[entry]));
+                            if (testkit_store_gate_mode.value === 'cut'){
+                                delete lain.dir[entry];
+                                lain.dir[entry] = undefined;
+                            }
                         } catch (error) {
                             console.log("failed to send to local storage");
                         }
@@ -363,14 +529,18 @@ const his = () => {
                         let storedItem = localStorage.getItem(entry);
                         if (storedItem) {
                             try {
-                                lain.box[entry] = JSON.parse(storedItem);
-                                localStorage.removeItem(entry);
+                                lain.dir[entry] = JSON.parse(storedItem);
+                                if (testkit_store_gate_mode.value === 'cut'){
+                                    localStorage.removeItem(entry);
+                                }
                             } catch (error) {
                                 console.log("failed to parse from local storage, maybe its not json");
-                                console.log("putting a string in box ig :/");
+                                console.log("putting a string in dir ig :/");
                                 try {
-                                    lain.box[entry] = storedItem;
-                                    localStorage.removeItem(entry);
+                                    lain.dir[entry] = storedItem;
+                                    if (testkit_store_gate_mode.value === 'cut'){
+                                        localStorage.removeItem(entry);
+                                    }
                                 } catch (error) {
                                     console.log("that didn't work either so giving up");
                                 }
@@ -379,7 +549,7 @@ const his = () => {
                             console.log("item not found in local storage");
                         }
                     } else {
-                        console.log("something went wrong idk maybe its not in box");
+                        console.log("something went wrong idk maybe its not in dir");
                     }
                 }
                 console.log("movement armed");   
@@ -395,15 +565,20 @@ const his = () => {
             "name": "testkit demo setup",
             "media": `
             lain.rom.demo_proc = () => {
-                eiri(lain, lain.box.drag_functions);
-                eiri(lain, lain.box.enclose_draggable);
+                //if (localStorage.getItem('default_navi')
+                eiri(lain, lain.dir.drag_functions);
+                eiri(lain, lain.dir.enclose_draggable);
                 lain.rom.drag_init();
-                eiri(lain, lain.box.css_manager);
-                eiri(lain, lain.box.dom_reporter);
-                eiri(lain, lain.box.htmx_observe);
-                eiri(lain, lain.rom.enclose_draggable(lain.box.testkit_cli_html), document.body);
-                eiri(lain, lain.rom.enclose_draggable(lain.box.testkit_cssmod_html), document.body);
-                eiri(lain, lain.rom.enclose_draggable(lain.box.testkit_clerk_html), document.body);
+                eiri(lain, lain.dir.css_manager);
+                eiri(lain, lain.dir.dom_reporter);
+                eiri(lain, lain.dir.dom_reassignment);
+                eiri(lain, lain.dir.navi_exporter);
+                eiri(lain, lain.dir.htmx_observe);
+                eiri(lain, lain.dir.testkit_destroy);
+                eiri(lain, lain.dir.testkit_regen_html, document.body);
+                eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_cssmod_html), document.body);
+                eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);
+                eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
             }
             lain.rom.demo_proc();
             `
@@ -425,36 +600,56 @@ const his = () => {
                     }
                     return customStyleSheet;
                 };
-    
+
                 const getCSSProperties = () => {
                     var styleProperties = {};
                     var styleSheets = document.styleSheets;
+            
                     for (var i = 0; i < styleSheets.length; i++) {
                         var styleSheet = styleSheets[i];
                         try {
+                            // Accessing cssRules might throw a SecurityError on cross-origin stylesheets
                             var cssRules = styleSheet.cssRules || styleSheet.rules;
                             for (var j = 0; j < cssRules.length; j++) {
                                 var rule = cssRules[j];
                                 if (rule instanceof CSSStyleRule) {
                                     var selectors = rule.selectorText.split(/\s*,\s*/);
                                     selectors.forEach(function(selector) {
+                                        // Initialize the selector's property object if it doesn't exist
                                         if (!styleProperties[selector]) {
                                             styleProperties[selector] = {};
                                         }
                                         var styleDeclaration = rule.style;
                                         for (var k = 0; k < styleDeclaration.length; k++) {
                                             var property = styleDeclaration[k];
+                                            // Store property values, overriding any previously stored value
+                                            // This mimics the cascade where the last rule wins
                                             styleProperties[selector][property] = styleDeclaration.getPropertyValue(property);
                                         }
                                     });
                                 }
                             }
                         } catch (error) {
-                            console.error('Access to stylesheet ' + styleSheet.href + ' is denied.');
+                            console.error('Access to stylesheet ' + styleSheet.href + ' is denied.', error);
                         }
                     }
+            
+                    // Attempt to capture inline styles and styles applied directly via JS
+                    // This is especially useful for elements like 'body' or those manipulated with JS
+                    document.querySelectorAll('*').forEach(element => {
+                        const selector = element.tagName.toLowerCase() + (element.id ? '#' + element.id : '') + (element.className ? '.' + element.className.split(/\s+/).join('.') : '');
+                        if (!styleProperties[selector]) {
+                            styleProperties[selector] = {};
+                        }
+                        var style = element.style;
+                        for (var i = 0; i < style.length; i++) {
+                            var property = style[i];
+                            styleProperties[selector][property] = style.getPropertyValue(property);
+                        }
+                    });
+            
                     return styleProperties;
-                }
+                };
             
                 const modifyCSSProperty = (selector, property, value) => {
                     let ruleFound = false;
@@ -480,7 +675,17 @@ const his = () => {
                         customSheet.insertRule(selector + ' { ' + property + ': ' + value + '; }', customSheet.cssRules.length);
                     }
                 };
+
+                const applyStylesheet = (stylesheetObject) => {
+                    Object.entries(stylesheetObject).forEach(([selector, styles]) => {
+                        Object.entries(styles).forEach(([property, value]) => {
+                            modifyCSSProperty(selector, property, value);
+                        });
+                    });
+                };
+
                 return {
+                    applyStylesheet,
                     modifyCSSProperty,
                     getCSSProperties
                 };
@@ -546,16 +751,14 @@ const his = () => {
             "name": "reassign elements to export",
             "media": `
             lain.rom.testkit_reassign = (dom_new) => {
-                // Create a map for quick access to elements by their 'data-set' value
-                const elementsMap = new Map();
+                console.log("reassigning dom based on:", dom_new);
+                const dom_current_map = new Map();
                 document.querySelectorAll('[data-set]').forEach(element => {
-                    elementsMap.set(element.getAttribute('data-set'), element);
-                });
-            
-                dom_new.forEach(elementInfo => {
-                    const dataSetValue = elementInfo.attributes['data-set'];
-                    const element = elementsMap.get(dataSetValue);
-            
+                    dom_current_map.set(element.getAttribute('data-set'), element);
+                });            
+                dom_new.forEach(elementInfo => { 
+                    const entry_domset_value = elementInfo.attributes['data-set'];
+                    const element = dom_current_map.get(entry_domset_value); //element is live match
                     if (element) {
                         // Update the attributes of the matched element to match those in dom_new
                         Object.entries(elementInfo.attributes).forEach(([attrName, attrValue]) => {
@@ -567,86 +770,113 @@ const his = () => {
                         parentElement.appendChild(element); // Append the element to the end of its parent
                     }
                 });
+                console.log("dom reassigned");
             };
-            `
-        },
-        "testkit_cssmod_html":{
-            "uri": "xo:hash",
-            "urns": "xotestkit",
-            "kind": "html",
-            "name": "testkit cssmod widget",
-            "child": "testkit_cssmod_func",
-            "media": `
-            <div id="testkit_retouch">
-            <input type = "text" id = "retouchClass" value = ".draggable">
-            <input type = "text" id = "retouchProperty" value = "background-color">
-            <input type = "text" id = "retouchValue" value = "red">
-            <button id="testkit_retouchButton">retouch</button>
-            </div>
-            `
-        },
-        "testkit_cssmod_func":{
-            "uri": "xo:hash",
-            "urns": "xotestkit",
-            "kind": "js",
-            "name": "testkit cssmod applet",
-            "media": `
-            lain.rom.testkit_cssmod = () => {
-                const targetElement = document.getElementById("testkit_retouch");
-                    if (!targetElement) {
-                        console.error('Target element not found');
-                    }
-                const retouch = () => {
-                    console.log('retouch');
-                    let retouch_class = document.getElementById("retouchClass").value;
-                    let retouch_property = document.getElementById("retouchProperty").value;
-                    let retouch_value = document.getElementById("retouchValue").value;
-                lain.rom.manageCSS().modifyCSSProperty(retouch_class, retouch_property, retouch_value);
-                }
-                document.getElementById('testkit_retouchButton').addEventListener('click', function() {retouch();});
-            }
-            lain.rom.testkit_cssmod();
             `
         },
         "testkit_regen_html":{
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "html",
-            "name": "testkit cssmod widget",
+            "name": "testkit regen widget",
+            "child": "testkit_regen_func",
             "media": `
             <div id="testkit_regenerator">
-            <button id="testkit_exportButton">export navi 2 box</button>
-            <br><hr>
-            <input type = "text" id = "testkit_regenImport" value = "name of input">
+            <input type = "text" id = "testkit_exportName" placeholder = "new skeleton label">
+            <button id="testkit_exportButton">export skeleton</button>
+            <br>
+            <input type = "text" id = "testkit_regenImport" placeholder = "skeleton label">
             <button id="testkit_regenButton">regen navi</button>
             </div>
             `
         },
-        "teskit_regen_func":{
+        "testkit_regen_func":{
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "js",
             "name": "regenerate navi w/ proc",
             "media": `
             lain.rom.testkit_regen = () => {
-                //this requires navi_exporter, testkit_reassign
-                    //run proc, then reassign tree, then add sheets;
+                const removeAllStylesheets = () => {
+                    const linkStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+                    linkStylesheets.forEach(link => link.parentNode.removeChild(link));
+    
+                    const styleElements = document.querySelectorAll('style');
+                    styleElements.forEach(style => style.parentNode.removeChild(style));
+                };
+                skellygen = () => {
+                    try {
+                        console.log("spooky");
+                        let label = testkit_exportName.value;
+                        let skeleton = lain.rom.exporter();
+                        skeleton.name = "skeleton export";
+                        lain.dir[label] = skeleton;
+                        testkit_exportName.value = '';
+                    } catch (error) {
+                        console.log("failed to generate skeleton", error);
+                    }
+                }
+                deadgen = () => {
+                    try {
+                        let label = testkit_regenImport.value;
+                        let skeleton = lain.dir[label];
+                        if (!skeleton) {
+                            console.log("skeleton not found bro");
+                        }
+                        // the real magic
+                        // first clean up
+                        for (let i = lain.cache.length - 1; i >= 0; i--) {
+                            const cacheItem = lain.cache[i];
+                            if (cacheItem && cacheItem.uri === "xo:01gh1085h01rij") {continue;}
+                            lain.rom.removeCacheItem({index: i});
+                        }
+                        const removeCacheItemIndex = lain.cache.findIndex(item => item && item.uri === "xo:01gh1085h01rij");
+                        if (removeCacheItemIndex !== -1) {
+                            console.log("manual removal");
+                            lain.rom.removeCacheItem({index: removeCacheItemIndex});
+                            
+                        }
+                        console.log('cache is..');
+                        console.log(lain.cache);
+                        console.log("echo");
+                        removeAllStylesheets();
+                        lain.domset= 0; // dom is cleared
+                        //run proc, then dom_reassignment, then style
+                        
+                        console.log(skeleton.navi_export.proc);
+                        skeleton.navi_export.proc.forEach(args => {
+                            let rest = args.map(arg => eval(arg));
+                            eiri(lain, ...rest);
+                        });
+                        lain.rom.testkit_reassign(skeleton.navi_export.dom.domReport);                
+                        lain.rom.manageCSS().applyStylesheet(skeleton.navi_export.css);
+                        console.log("aaaaand we're back");
+                        
+                        
+                    } catch (error) {
+                        console.log("failed to regenerate", error);
+                    }
+                }
+                
+                document.getElementById('testkit_exportButton').addEventListener('click', function() {skellygen();});
+                document.getElementById('testkit_regenButton').addEventListener('click', function() {console.log('LETS REGEN'); deadgen();});
             }
+            lain.rom.testkit_regen();
             `
         },
     }
     return{
+        sign: sign,
         domset: domset, //dom counter
         rom: rom,       //active functions
         cache: cache,   //active state pop
         proc: proc,     //navi calls for state log
-        box: box        //temp potential pop
+        dir: dir        //temp potential pop
     }
 }
 
-const navi = function(lain, input, ...rest) {
-    console.log("✩ navi called ✩", arguments);
-    lain.proc.push(arguments);
+const navi = function(lain, ...rest) {
+    console.log("✩ navi called ✩", arguments);   
     const eiri = (lain, input, ...rest) => {
         const initInterpreter = (interpreter) => {
             try {
@@ -661,7 +891,7 @@ const navi = function(lain, input, ...rest) {
             console.log("Interpreting", input.name);
 
             let handler_origin = lain.cache.find(obj => obj.kind === "interpreter" && obj.urns === input.urns).media;
-            handler_match = handler_origin.match(/(\S+?)\s*=\s*{/);
+            let handler_match = handler_origin.match(/(\S+?)\s*=\s*{/);
             if (!handler_match) { console.log(`Can't find handler obj name`); return; }
             const handler = eval(handler_match[1]);
             if (handler && typeof [handler] === "object" && [handler] != null) {
@@ -696,7 +926,7 @@ const navi = function(lain, input, ...rest) {
             if (!canInterpret) {
                 console.log(`Interpreter for ${input.urns} not found. Attempting to mount...`);
                 try {
-                    let interpreter = lain.box.xotestkit_in; // Simulate fetching urns interpreter
+                    let interpreter = lain.dir.xotestkit_in; // Simulate fetching urns interpreter
                     initInterpreter(interpreter);
                     console.log(`Interpreter for urns ${input.urns} mounted`);
                 } catch (error) {
@@ -711,17 +941,46 @@ const navi = function(lain, input, ...rest) {
             }
         }
     }
-    eiri(lain, input, ...rest);
+    try{
+        const evaluatedArgs = rest.map(arg => eval(arg));
+        eiri(lain, ...evaluatedArgs);
+        console.log(arguments);
+        lain.proc.push(rest);
+    }
+    catch(error){
+        console.log('navi has failed', error)
+    }
     return { lain };
 };
 
 let alice = his();
 
-/*
-quests:
 
-    then export to box and import from box as an object
+/* QUEST */
 
-    place an export there, run a func that crosses death
+// regen is sending the wrong target when its loading up html, its sending in htmx-internal-data??
+// problem happens from console.log(JSON.stringify(document.body)) = {"htmx-internal-data":{"initHash":0}} ;
+// for anything to work in proc best to enclose in '' args.
 
+/* demoproc check if a skeleton is there? default? if not then demo_proc?
+   idk figure that shit out how does it know what skeleton to use at startup
+   wallet preferences ? local storage masterkey?
 */
+
+/* window that takes html and saves it to dir
+    would be nice to edit procs / modify directly exports
+    not a priority
+*/
+/* trim redundant proc?
+    what if proc creates something that is destroyed by cache, is that recorded in proc?
+    not a priority
+*/
+/* track dependency funcs?
+    not a priority
+*/
+/* padlock -
+    protect localstorage via a process and closure from eval() manipulation:
+    need to make sure the keystoWatch variable is protected, whether it be static or thru some other magic    
+    move it into dir
+*/
+
