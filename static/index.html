@@ -4,7 +4,6 @@
     <title>urlmud</title>
 	<link rel="stylesheet" type="text/css" href="static/style.css">
     <script src="static/main.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
 </head>
 <body>
 {{ range .rootmap }}{{ range $key, $value := . }}{{  $value }}{{ end }}{{ end }}

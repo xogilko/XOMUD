@@ -82,6 +82,23 @@ import (
             import a script and css / generating unique IDs for element ids? vs classes?
 */
 
+/*
+	CLIENT -> LOADBALANCE -> GOVERNOR -> SUBJEX
+
+	/call/ in order to return testkit dir and call navi
+
+	seperate handler of main website and the xomud specific functionality
+	command vs /
+	maybe each call will have a prefix ? (testkit/) going to a testkit.go and following /com/
+
+	website.go
+	testkit.go
+
+
+	custom header X-O-testkit-atc-set-message
+	for each custom header split off into handling
+*/
+
 func main() {
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

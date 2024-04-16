@@ -21,7 +21,6 @@ const his = () => {
                     } else {console.log('function(s) already cached')}
                 },
                 html: (input, target) => {
-                    console.log(target);
                     var container = document.createElement("div");
                     container.innerHTML = input.media;
                     input.domset = [];
@@ -57,6 +56,7 @@ const his = () => {
             "kind": "js",
             "name": "dynamic htmx observer",
             "media": `
+                document.addEventListener('htmx:loaded', function() {
                 console.log("htmx will observe");
                 const observer = new MutationObserver((mutations) => {
                     mutations.forEach((mutation) => {
@@ -68,6 +68,7 @@ const his = () => {
                     });
                 });
                 observer.observe(document.body, { childList: true, subtree: true });
+            });
             `
         },
         "htmx_import":{
@@ -79,12 +80,13 @@ const his = () => {
                 import('https://unpkg.com/htmx.org@1.9.11')
                 .then(htmx => {
                     // Now htmx library is available, and you can use it
-                    console.log('htmx imported');
+                    console.log('htmx is from https://unpkg.com/htmx.org@1.9.11');
                 })
                 .catch(error => {
                     // Handle error
                     console.error('Failed to load htmx library:', error);
-                });`
+                });
+                console.log('htmx imported');`
         },
         "padlock":{
             "uri": "xo:hash",
@@ -562,13 +564,14 @@ const his = () => {
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "js",
-            "name": "testkit demo setup",
+            "name": "testkit demo setup!",
             "media": `
             lain.rom.demo_proc = () => {
                 //if (localStorage.getItem('default_navi')
                 eiri(lain, lain.dir.drag_functions);
                 eiri(lain, lain.dir.enclose_draggable);
                 lain.rom.drag_init();
+                eiri(lain, lain.dir.htmx_import);
                 eiri(lain, lain.dir.css_manager);
                 eiri(lain, lain.dir.dom_reporter);
                 eiri(lain, lain.dir.dom_reassignment);
@@ -581,6 +584,29 @@ const his = () => {
                 eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
             }
             lain.rom.demo_proc();
+            `
+        },
+        "test_name_reproc":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "js",
+            "name": "testkit transform content!",
+            "media": `
+                // DRY style -> list spitter interpreter future
+                console.log('transform?');
+                document.querySelectorAll('*').forEach((element) => {
+                    if (element.childNodes.length === 1 && element.textContent.trim() === 'URLMUD') {
+                        const text = element.textContent;
+                        const index = text.indexOf('LM');
+                        if (index !== -1) {
+                            const link = document.createElement('a');
+                            link.href = 'https://wikipedia.org';
+                            link.textContent = 'LM'; // Text to be wrapped in the hyperlink
+                            const newText = text.substring(0, index) + '<a>' + link.outerHTML + '</a>' + text.substring(index + 2);
+                            element.innerHTML = newText; // Update the element with the new HTML
+                        }
+                    }
+                });
             `
         },
         "css_manager":{
@@ -726,7 +752,7 @@ const his = () => {
             "uri": "xo:hash",
             "urns": "xotestkit",
             "kind": "js",
-            "name": "exporter of da navi (experiment)",
+            "name": "exporter of navi",
             "media": `
             lain.rom.exporter = () => {
                 //this requires css_manager + dom_reporter
@@ -764,10 +790,19 @@ const his = () => {
                         Object.entries(elementInfo.attributes).forEach(([attrName, attrValue]) => {
                             element.setAttribute(attrName, attrValue);
                         });
+
+                        //clear processed entries from current map
+                        dom_current_map.delete(entry_domset_value);
             
                         // Append the element to the end of its parent to reorder it
                         const parentElement = element.parentElement;
                         parentElement.appendChild(element); // Append the element to the end of its parent
+                    }
+                });
+                dom_current_map.forEach((element, domset) => {
+                    const cacheItemIndex = lain.cache.findIndex(item => item.domset && item.domset.includes(parseInt(domset)));
+                    if (cacheItemIndex !== -1) {
+                        lain.rom.removeCacheItem({index: cacheItemIndex});
                     }
                 });
                 console.log("dom reassigned");
@@ -944,7 +979,6 @@ const navi = function(lain, ...rest) {
     try{
         const evaluatedArgs = rest.map(arg => eval(arg));
         eiri(lain, ...evaluatedArgs);
-        console.log(arguments);
         lain.proc.push(rest);
     }
     catch(error){
@@ -958,9 +992,9 @@ let alice = his();
 
 /* QUEST */
 
-// regen is sending the wrong target when its loading up html, its sending in htmx-internal-data??
-// problem happens from console.log(JSON.stringify(document.body)) = {"htmx-internal-data":{"initHash":0}} ;
-// for anything to work in proc best to enclose in '' args.
+/*
+navi needs an antannae to recieve ajax jit
+*/
 
 /* demoproc check if a skeleton is there? default? if not then demo_proc?
    idk figure that shit out how does it know what skeleton to use at startup
@@ -971,10 +1005,7 @@ let alice = his();
     would be nice to edit procs / modify directly exports
     not a priority
 */
-/* trim redundant proc?
-    what if proc creates something that is destroyed by cache, is that recorded in proc?
-    not a priority
-*/
+
 /* track dependency funcs?
     not a priority
 */
