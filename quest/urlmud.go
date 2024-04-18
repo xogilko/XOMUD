@@ -106,7 +106,6 @@ func main() {
 	//server op
 
 	http.HandleFunc("/", seed)
-	http.HandleFunc("/command/", stem)
 
 	fmt.Println("xomud is active")
 	log.Fatal(http.ListenAndServe(":8080", nil))

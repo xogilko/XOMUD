@@ -1,11 +1,12 @@
-document.addEventListener('DOMContentLoaded', () => { /* phone home */ });
+document.addEventListener('DOMContentLoaded', () => { /* phone home */ 
+});
 
 const his = () => {
     let sign = 'xo';
     let domset = 0;
-    let rom = {}; 
+    let proc = []; 
     let cache = []; 
-    let proc = [];
+    let rom = {};
     let dir = {
         "xotestkit_in":{
             "uri": "xo:hash",
@@ -179,6 +180,25 @@ const his = () => {
                     console.log("Process completed:", processCompleted);
                 };
             })();
+            `
+        },
+        "testkit_register_sw":{
+            "uri": "xo:hash",
+            "urns": "xotestkit",
+            "kind": "js",
+            "name": "testkit transform content!",
+            "media": `
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                    // Registration was successful
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  }, function(err) {
+                    // registration failed :(
+                    console.log('ServiceWorker registration failed: ', err);
+                  });
+                });
+              }
             `
         },
         "htmx_script":{
@@ -900,13 +920,15 @@ const his = () => {
             `
         },
     }
+    let aux = [];
     return{
         sign: sign,
-        domset: domset, //dom counter
-        rom: rom,       //active functions
-        cache: cache,   //active state pop
-        proc: proc,     //navi calls for state log
-        dir: dir        //temp potential pop
+        domset: domset, //dom element counter
+        proc: proc,     //navi session call log
+        cache: cache,   //active state index
+        rom: rom,       //activated functions
+        dir: dir,       //local repository
+        aux: aux        //supplementary doc index
     }
 }
 
@@ -992,20 +1014,17 @@ let alice = his();
 
 /* QUEST */
 
-/*
-navi needs an antannae to recieve ajax jit
-*/
+
+// sse that feeds dir dynamically server-> navi
 
 /* demoproc check if a skeleton is there? default? if not then demo_proc?
    idk figure that shit out how does it know what skeleton to use at startup
    wallet preferences ? local storage masterkey?
 */
-
 /* window that takes html and saves it to dir
     would be nice to edit procs / modify directly exports
     not a priority
 */
-
 /* track dependency funcs?
     not a priority
 */
@@ -1014,4 +1033,7 @@ navi needs an antannae to recieve ajax jit
     need to make sure the keystoWatch variable is protected, whether it be static or thru some other magic    
     move it into dir
 */
-
+/* add a service worker to reroute /command/ to 8081 etc
+a function that recieves responses that accepts objects to dir or docs to aux
+not a priority
+*/
