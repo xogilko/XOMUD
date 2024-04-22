@@ -7,9 +7,14 @@ import (
 	"net/http"
 )
 
-// accept *
+/*
+	this is for the distribution of the navi via sse
+	the navi needs to have a babbage try catch and then modify X- headers for sse req
+*/
+
+// accept * (navi sse will not require xomud.quest dns origin)
+
 // Q - need to verify header X- in middleware
-// Q - need to route navi to 8081 + add verification header
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
