@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 )
 
 /*//////   BLUEPRINT   ///////
@@ -100,13 +102,23 @@ import (
 */
 
 func main() {
-
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	//server op
+	// proxy box
+	proxyUrl, _ := url.Parse("http://localhost:8081")
+	proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
+	//reverse proxy handlers
+	http.HandleFunc("/stem/", func(w http.ResponseWriter, r *http.Request) {
+		modifiedPath := "/" + r.URL.Path[len("/stem/"):]
+		log.Printf("Forwarding request to stem.go: %s", modifiedPath)
+		r.URL.Path = modifiedPath
+		proxy.ServeHTTP(w, r)
+	})
 
+	//serve website
 	http.HandleFunc("/", seed)
 
+	//global service
 	fmt.Println("xomud is active")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
