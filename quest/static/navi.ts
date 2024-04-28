@@ -330,7 +330,11 @@ function chisa(): S {
                 <ul id="qomms">
                 </ul>
                 </div>
+<<<<<<< HEAD
                 <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="/stem/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+=======
+                <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+>>>>>>> 1061553709c889a3f18b01f8e919bad40b3224fc
                 <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "contact server">
                 <input type = "submit" value = "send">
                 </form>
