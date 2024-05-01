@@ -97,18 +97,22 @@ const navi = function(lain: S, ...rest: string[]) {
     return { lain };
 };
 
-function chisa(): void {
+function chisa(msg?: string): void {
     // initialization logic here
     // set check (window, xdm, http) skeleton etc
     // detect context and phone home
     var domain = window.location.hostname;
-    console.log("Domain: " + domain);
+    const bodyData = {
+        domain: domain,
+        msg: msg || ''
+    };
+    console.log(bodyData, "requesting service ✩");
     const requestOptions = {
         method: 'POST',
         headers: {
-          'Content-Type': 'text/plain', 
+          'Content-Type': 'application/json', 
         },
-        body: domain
+        body: JSON.stringify(bodyData)
       };
     fetch('/dir_spawn/', requestOptions)
     .then(response => {

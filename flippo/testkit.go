@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -52,13 +53,22 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
-	// Check if the domain exists in dirDatabase
-	dirName, found := dirDatabase[string(body)]
+	var requestData map[string]string
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, "Error parsing request body", http.StatusInternalServerError)
+		return
+	}
+	key := requestData["msg"]
+	if key == "" {
+		key = requestData["domain"]
+	}
+	dirName, found := dirDatabase[key]
 	if !found {
 		dirName = dirDatabase["default"]
 	}
 	dirPath := "module/" + dirName.(string)
-
+	log.Printf("dirPath: " + dirPath + " key: " + key)
 	http.ServeFile(w, r, dirPath)
 }
 

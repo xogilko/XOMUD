@@ -87,28 +87,31 @@ const navi = function (lain, ...rest) {
     }
     return { lain };
 };
-function chisa() {
+function chisa(msg) {
     // initialization logic here
     // set check (window, xdm, http) skeleton etc
     // detect context and phone home
     var domain = window.location.hostname;
-    console.log("Domain: " + domain);
+    const bodyData = {
+        domain: domain,
+        msg: msg || ''
+    };
+    console.log(bodyData, "requesting service ✩");
     const requestOptions = {
         method: 'POST',
         headers: {
-            'Content-Type': 'text/plain',
+            'Content-Type': 'application/json',
         },
-        body: domain
+        body: JSON.stringify(bodyData)
     };
     fetch('/dir_spawn/', requestOptions)
         .then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('phone isnt working ok');
         }
         return response.text();
     })
         .then(moduleResponse => {
-        // Evaluate the module response text using eval
         eval(moduleResponse);
     })
         .catch(error => {
