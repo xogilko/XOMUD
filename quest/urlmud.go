@@ -85,38 +85,41 @@ import (
 */
 
 /*
-	this is for the xomud.quest website
+	future: make sure cors passing thru urlmud is *
+
+	test the handshake
 */
 
-/*
-	CLIENT -> LOADBALANCE -> GOVERNOR -> SUBJEX
-	/call/ in order to return testkit dir and call navi
-	seperate handler of main website and the xomud specific functionality
-	command vs /
-	maybe each call will have a prefix ? (testkit/) going to a testkit.go and following /com/
-	website.go
-	testkit.go
-	custom header X-O-testkit-atc-set-message
-	for each custom header split off into handling
-*/
+//:>>> SERVER COURT
+
+var serviceURLs = map[string]string{
+	"testkit": "http://localhost:8081",
+}
 
 func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// proxy handler setup via map
+	for prefix, urlString := range serviceURLs {
+		proxyUrl, err := url.Parse(urlString)
+		if err != nil {
+			log.Fatalf("Error parsing URL for %s: %v", prefix, err)
+		}
+		proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
 
-	// proxy box
-	proxyUrl, _ := url.Parse("http://localhost:8081")
-	proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
-	//reverse proxy handlers
-	http.HandleFunc("/stem/", func(w http.ResponseWriter, r *http.Request) {
-		modifiedPath := "/" + r.URL.Path[len("/stem/"):]
-		log.Printf("Forwarding request to stem.go: %s", modifiedPath)
-		r.URL.Path = modifiedPath
-		proxy.ServeHTTP(w, r)
-	})
-
+		handlerPath := "/" + prefix + "/"
+		http.HandleFunc(handlerPath, func(proxy *httputil.ReverseProxy, handlerPath string) http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				modifiedPath := "/" + r.URL.Path[len(handlerPath):]
+				log.Printf("Forwarding request to %s: %s", prefix, modifiedPath)
+				r.URL.Path = modifiedPath
+				proxy.ServeHTTP(w, r)
+			}
+		}(proxy, handlerPath))
+	}
+	//send navi dir files *post rq: body(domain context)*
+	http.HandleFunc("/dir_spawn/", spawn)
 	//serve website
 	http.HandleFunc("/", seed)
-
 	//global service
 	fmt.Println("xomud is active")
 	log.Fatal(http.ListenAndServe(":8080", nil))
