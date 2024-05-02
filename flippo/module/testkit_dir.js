@@ -170,7 +170,7 @@ const testkit_dir = {
             const scrollCli = document.getElementById('testkit_atc');
             const entryMessage = document.getElementById('qomms-entry');
             if (action === 'init_and_callback' || action === 'init') {
-                const stringArray = ["xomud test area", "alice = present state", "navi(alice, 'proc', ...rest)", "or navi(alice, 'eval:alice.proc', ...rest)", "(っ◔◡◔)っ✩"];
+                const stringArray = ["xomud test area", "alice = present state", "navi(alice, 'proc', ...rest)", "(っ◔◡◔)っ✩"];
                 stringArray.forEach(item => {
                     commandFeed.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');
                 });
@@ -520,8 +520,8 @@ const testkit_dir = {
             eiri(lain, lain.dir.testkit_destroy);
             eiri(lain, lain.dir.testkit_regen_html, document.body);
             eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_cssmod_html), document.body);
-            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);
             eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
+            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);
         }
         lain.rom.demo_proc();
         `

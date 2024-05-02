@@ -10,7 +10,7 @@ import (
 	"net/url"
 )
 
-/*//////   BLUEPRINT   ///////
+/* * * * * *  BLUEPRINT  * * * * * *
 
 	<< RESOURCE >>        (( POLICY ))        [[ TARGET ]]
 
@@ -24,7 +24,7 @@ import (
 	the web browser (DOM, XML) may be used as a temporary footstool
 
 	cascading selection constraints:
-		domain (proxy policy/technical conditions)
+		server (proxy policy/technical conditions)
 		resource (digital rights management)
 		client (user defined preferences)
 		native (hardware/user-agent defaults)
@@ -60,39 +60,15 @@ import (
     its impossible to know where on the web anyone is
     we can only infer based on the actions that are made
 
-    ALICE ZERO SUM{
-        overlay network simpage
-            for a grid of a room via scrypt
-                then arrays of objects in simpage
-                    passing around tx vs trust
-                    u pass a tx to the overlay which inits a websocket
-
-    }
-    base content + 2 markup options
-    overlay network + query
-        user preferences
-        custom schema
-        representor
-            ordfs
-        custom css
-    put draggables in context
+	poc:
         wiki
             a series of pages
             text would be marked up with hyperlinks to other pages
         dropdown - based on inputs and events
             requires tom-select.js + plugins OR select2 based on user preference
-            import a script and css / generating unique IDs for element ids? vs classes?
 */
 
-/*
-	future: make sure cors passing thru urlmud is *
-
-	test the handshake
-*/
-
-//:>>> SERVER COURT
-
-var serviceURLs = map[string]string{
+var serviceURLs = map[string]string{ //:>>> SERVER COURT
 	"testkit": "http://localhost:8081",
 }
 

@@ -80,7 +80,7 @@ const navi = function (lain, ...rest) {
     try {
         const evaluatedArgs = rest.map(arg => eval(arg));
         eiri(lain, ...evaluatedArgs);
-        lain.proc.push(...rest);
+        lain.proc.push(rest);
     }
     catch (error) {
         console.log('navi has failed', error);
@@ -129,26 +129,21 @@ const alice = {
 };
 chisa();
 /* QUEST */
-/*  sse that feeds dir dynamically server-> navi
-    chisa should decide to request /testkit/ to send the dir
+/*  demoproc check if a skeleton is there? default? if not then demo_proc?
+    idk figure that shit out how does it know what skeleton to use at startup
+    wallet preferences ? local storage masterkey?
 */
-/* demoproc check if a skeleton is there? default? if not then demo_proc?
-   idk figure that shit out how does it know what skeleton to use at startup
-   wallet preferences ? local storage masterkey?
-*/
-/* window that takes html and saves it to dir
+/*  LOW PRIORITY
+
+    window that takes html and saves it to dir
     would be nice to edit procs / modify directly exports
-    not a priority
-*/
-/* track dependency funcs?
-    not a priority
-*/
-/* padlock -
+    
+    track dependency funcs?
+
+    padlock -
     protect localstorage via a process and closure from eval() manipulation:
     need to make sure the keystoWatch variable is protected, whether it be static or thru some other magic
-    move it into dir
-*/
-/* add a service worker to reroute /command/ to 8081 etc
-a function that recieves responses that accepts objects to dir or docs to aux
-not a priority
+
+    add a service worker to reroute /command/ to 8081 etc
+    a function that recieves responses that accepts objects to dir or docs to aux
 */ 
