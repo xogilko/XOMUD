@@ -48,19 +48,41 @@ const testkit_dir = {
         "kind": "js",
         "name": "dynamic htmx observer",
         "media": `
-            document.addEventListener('htmx:loaded', function() {
-            console.log("htmx will observe");
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1 && node.querySelectorAll('[hx-trigger]') !== null) {
-                            htmx.process(node);
-                        }
+        function initialize() {
+                function waitForHtmx() {
+                    if (typeof window.htmx === 'undefined') {
+                        console.log("observer waiting for htmx...");
+                        setTimeout(waitForHtmx, 100); // Check every 100ms
+                    } else {
+                        console.log("observer found htmx");
+                        setupHtmxObserver();
+                    }
+                }
+    
+                function setupHtmxObserver() {
+                    console.log("Setting up HTMX observer");
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            mutation.addedNodes.forEach((node) => {
+                                if (node.nodeType === 1 && node.querySelectorAll('[hx-trigger]').length) {
+                                    htmx.process(node);
+                                    console.log('HTMX processed a node');
+                                }
+                            });
+                        });
                     });
-                });
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
+                    observer.observe(document.body, { childList: true, subtree: true });
+                    console.log("HTMX observer is active");
+                }
+    
+                waitForHtmx();
+            }
+            if (document.readyState === "loading") {
+                document.addEventListener('DOMContentLoaded', initialize);
+            } else {
+                // DOMContentLoaded has already fired
+                initialize();
+            }
         `
     },
     "htmx_import":{
@@ -130,7 +152,7 @@ const testkit_dir = {
         <ul id="qomms">
         </ul>
         </div>
-        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="/testkit/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
         <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "contact server">
         <input type = "submit" value = "send">
         </form>
