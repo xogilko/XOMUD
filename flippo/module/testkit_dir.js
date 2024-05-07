@@ -12,6 +12,29 @@ const testkit_dir = {
                     catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
                 } else {console.log('function(s) already cached')}
             },
+            jsmod: (input) => {
+                if (lain.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){
+                    try {
+                        const fetchModuleAndImport = async (moduleURL) => {
+                            try {
+                                const module = await import(moduleURL);
+                                if (module.activate_module) {
+                                    module.activate_module(lain);
+                                    console.log('Module imported and activated:', input.name);
+                                } else {
+                                    console.log('Module imported (no activation):', input.name);
+                                }
+                            } catch (error) {
+                                console.error('Error importing module:', error);
+                            }
+                        };
+                        const moduleURL = input.media;
+                        const directURL = 'http://localhost:8080' + moduleURL;
+                        fetchModuleAndImport(directURL);
+                        lain.cache.push(input);}
+                    catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
+                } else {console.log('function(s) already cached')}
+            },
             html: (input, target) => {
                 var container = document.createElement("div");
                 container.innerHTML = input.media;
@@ -40,49 +63,16 @@ const testkit_dir = {
                     else {console.log("child func of", input.name, "not found");}
                 }
             }
-        };`
+        };
+        console.log('interpreter registered with callback:', 'http://localhost:8080');
+        `
     },
     "htmx_observe":{
         "uri": "xo:hash",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "dynamic htmx observer",
-        "media": `
-        function initialize() {
-                function waitForHtmx() {
-                    if (typeof window.htmx === 'undefined') {
-                        console.log("observer waiting for htmx...");
-                        setTimeout(waitForHtmx, 100); // Check every 100ms
-                    } else {
-                        console.log("observer found htmx");
-                        setupHtmxObserver();
-                    }
-                }
-    
-                function setupHtmxObserver() {
-                    console.log("Setting up HTMX observer");
-                    const observer = new MutationObserver((mutations) => {
-                        mutations.forEach((mutation) => {
-                            mutation.addedNodes.forEach((node) => {
-                                if (node.nodeType === 1 && node.querySelectorAll('[hx-trigger]').length) {
-                                    htmx.process(node);
-                                    console.log('HTMX processed a node');
-                                }
-                            });
-                        });
-                    });
-                    observer.observe(document.body, { childList: true, subtree: true });
-                    console.log("HTMX observer is active");
-                }
-    
-                waitForHtmx();
-            }
-            if (document.readyState === "loading") {
-                document.addEventListener('DOMContentLoaded', initialize);
-            } else {
-                // DOMContentLoaded has already fired
-                initialize();
-            }
+        "media": `/testkit/dirmod/testkit_dir/htmx_observe
         `
     },
     "htmx_import":{
@@ -128,6 +118,21 @@ const testkit_dir = {
         "name": "htmx script 1.9.11",
         "media": `
         <script src="https://unpkg.com/htmx.org@1.9.11"></script>`
+    },
+    "packetpay_import":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "packetpay import",
+        "media": `
+            import('https://unpkg.com/@packetpay/js')
+            .then(PacketPay => {
+                console.log('packetpay is from https://unpkg.com/@packetpay/js');
+            }).catch(error => {
+                console.error('Failed to dynamically import @packetpay/js:', error);
+            });
+            console.log('packetpay may be imported');
+            `
     },
     "testkit_dragtest":{
         "uri": "xo:hash",
@@ -187,45 +192,9 @@ const testkit_dir = {
     "testkit_destroy":{
         "uri": "xo:01gh1085h01rij",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "destroy via cache",
-        "media": `
-        lain.rom.removeCacheItem = (item) => {
-            try {
-                const cacheItem = lain.cache[item.index];
-                if (cacheItem) {
-                    if (cacheItem.kind === 'html'){
-                        cacheItem.domset.forEach(domset => {
-                            const element = document.querySelector('[data-set="' + domset + '"]');
-                            if (element) {
-                                element.remove();
-                                console.log('Element removed successfully');
-                            } else {
-                                console.log('Element not found', element);
-                            }
-                        });
-                    }
-                    else if (cacheItem.kind === 'js' || cacheItem.kind === 'interpreter'){
-                        handler_match = cacheItem.media.match(/lain\.rom\.[a-zA-Z0-9_]+/g);
-                        if (handler_match) {
-                            eval(handler_match[0] + ' = null;');
-                            console.log(handler_match[0], eval(handler_match[0]));
-                        } else {
-                            console.log('no function to disable');
-                        }
-                    }
-                    else {
-                        console.log("cache type unrecognized? :O ", cacheItem);
-                    }
-                    lain.cache.splice(item.index, 1);
-                } else {
-                    console.log('Cache item not found');
-                }
-            } catch(error) {
-                console.log('Failed to destroy bc', error);
-            }
-        };
-        `
+        "media": `/testkit/dirmod/testkit_dir/testkit_destroy`
     },
     "drag_functions":{
         "uri": "xo:hash",

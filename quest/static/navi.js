@@ -129,7 +129,10 @@ const alice = {
 };
 chisa();
 /* QUEST */
-/*  demoproc check if a skeleton is there? default? if not then demo_proc?
+/*  
+jsmod interpretation is broken bc of cors and mime idk
+    maybe we really could use relative instead of bare identifiers bc the modules are sent with the dir
+demoproc check if a skeleton is there? default? if not then demo_proc?
     idk figure that shit out how does it know what skeleton to use at startup
     wallet preferences ? local storage masterkey?
 */

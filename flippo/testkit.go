@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 /*
@@ -22,9 +23,30 @@ import (
 
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers for all requests
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		next(w, r)
 	}
+}
+
+func ServeFileWithMIME(w http.ResponseWriter, r *http.Request, filePath string) {
+	// Set the Content-Type header based on the file extension
+	contentType := "text/plain" // Default to text/plain
+	if strings.HasSuffix(filePath, ".js") {
+		contentType = "application/javascript"
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	http.ServeFile(w, r, filePath)
 }
 
 // /command/ atc simulation
@@ -43,6 +65,19 @@ func atc_com(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+// specific dir module responses
+
+func dirmod_send(w http.ResponseWriter, r *http.Request) {
+	// Extract the module path from the request URL
+	modulePath := r.URL.Path[len("/dirmod/"):]
+
+	// Construct the full path to the module file
+	moduleFilePath := "module/" + modulePath + ".js"
+	log.Printf(moduleFilePath)
+	// Serve the module file
+	ServeFileWithMIME(w, r, moduleFilePath)
 }
 
 // respond to POST with dir contents for navi
@@ -77,6 +112,7 @@ func main() {
 
 	router.HandleFunc("/command/", corsMiddleware(atc_com))
 	router.HandleFunc("/dirbox/", corsMiddleware(dirbox_send))
+	router.HandleFunc("/dirmod/", corsMiddleware(dirmod_send))
 
 	fmt.Println("Command server is active")
 	log.Fatal(http.ListenAndServe(":8081", router))
