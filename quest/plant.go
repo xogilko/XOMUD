@@ -6,15 +6,15 @@ import (
 	"net/url"
 )
 
-//navi reports context, based on it, court is asked to provide dir
+//navi appeals to server map for initial dir
 
-func spawn(w http.ResponseWriter, r *http.Request) {
+func plant(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Assuming serviceURLs["testkit"] is properly defined and accessible
+	// hardcoded server assuming serviceURLs["testkit"] is accessible
 	url, err := url.Parse(serviceURLs["testkit"] + "/dirbox")
 	if err != nil {
 		http.Error(w, "Error parsing URL", http.StatusInternalServerError)

@@ -10,15 +10,6 @@ import (
 	"strings"
 )
 
-/*
-	this server may use conditions to negotiate responses
-	this can be coded into the middleware logic
-	currently:
-	accept * cors origin
-
-	future: sse
-*/
-
 //	http middleware
 
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
@@ -38,13 +29,15 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+//cant remember if this is deprecated
+
 func ServeFileWithMIME(w http.ResponseWriter, r *http.Request, filePath string) {
 	// Set the Content-Type header based on the file extension
 	contentType := "text/plain" // Default to text/plain
 	if strings.HasSuffix(filePath, ".js") {
 		contentType = "application/javascript"
 	}
-
+	fmt.Println("servewithmime was useful?")
 	w.Header().Set("Content-Type", contentType)
 	http.ServeFile(w, r, filePath)
 }
@@ -80,7 +73,7 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 	ServeFileWithMIME(w, r, moduleFilePath)
 }
 
-// respond to POST with dir contents for navi
+// respond to POST context with dir contents for navi
 
 func dirbox_send(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)

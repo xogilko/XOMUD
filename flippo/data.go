@@ -5,4 +5,4 @@ var dirDatabase = map[string]interface{}{
 	"default": "testkit_dir.js",
 }
 
-// modules when evaluated append to alice.dir global var
+// modules when evaluated append to alice.dir

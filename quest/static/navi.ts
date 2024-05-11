@@ -114,10 +114,10 @@ function chisa(msg?: string): void {
         },
         body: JSON.stringify(bodyData)
       };
-    fetch('/dir_spawn/', requestOptions)
+    fetch('/collect_dir/', requestOptions)
     .then(response => {
     if (!response.ok) {
-        throw new Error('phone isnt working ok');
+        throw new Error('no response');
     }
         return response.text();
     })
@@ -125,7 +125,7 @@ function chisa(msg?: string): void {
         eval(moduleResponse);
     })
     .catch(error => {
-        console.error('failed to spawn dir:', error);
+        console.error('failed to collect dir:', error);
     });
 }
 
@@ -151,6 +151,8 @@ chisa();
 
 
 /*  LOW PRIORITY
+
+    navigating pages, like ssr full html and then reproc onto it maintaining state
 
     window that takes html and saves it to dir
     would be nice to edit procs / modify directly exports

@@ -20,9 +20,9 @@ const testkit_dir = {
                                 const module = await import(moduleURL);
                                 if (module.activate_module) {
                                     module.activate_module(lain);
-                                    console.log('Module imported and activated:', input.name);
+                                    console.log('Module imported with activation:', input.name);
                                 } else {
-                                    console.log('Module imported (no activation):', input.name);
+                                    console.log('Module imported without activation:', input.name);
                                 }
                             } catch (error) {
                                 console.error('Error importing module:', error);
@@ -30,6 +30,7 @@ const testkit_dir = {
                         };
                         const moduleURL = input.media;
                         const directURL = 'http://localhost:8080' + moduleURL;
+                        console.log('importing async:', input.name);
                         fetchModuleAndImport(directURL);
                         lain.cache.push(input);}
                     catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
@@ -72,8 +73,61 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "dynamic htmx observer",
-        "media": `/testkit/dirmod/testkit_dir/htmx_observe
+        "media": "/testkit/dirmod/testkit_dir/htmx_observe"
+    },
+    "bsv_script":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "append bsv library 1.5.6",
+        "media": `
+        new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = "https://unpkg.com/bsv@1.5.6/bsv.min.js";
+            script.onload = () => resolve(window.bsv);
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });`
+    },
+    "testkit_kiosk_html":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit kiosk widget",
+        "child": "testkit_kiosk_func",
+        "media": `
+        <span>
+        <div id="testkit_kiosk">
+        <input type = "text" id = "testkit_kiosk_keygen_derive" placeholder = "optional hd key">
+        <input type = "checkbox" id = "testkit_kiosk_keygen_hdcheck" name="confirm"/>hd
+        <button id="testkit_kiosk_keygen_button">generate keys</button>
+        <p><span id="testkit_kiosk_keygen_privKey"></span></p>
+        <p><span id="testkit_kiosk_keygen_pubKey"></span></p>
+        <p><span id="testkit_kiosk_keygen_pubAddr"></span></p>
+        <hr>
+        <input type = "text" id = "testkit_kiosk_inputKeyForUTXO" placeholder = "insert an address">
+        <input type = "checkbox" id = "testkit_kiosk_confirmForUTXO" name="confirm"/>confirmed
+        <button id="testkit_kiosk_getUTXO_button">get utxo</button>
+        <p><i>total: </i><span id="UTXO_total"></span></p>
+        <hr>
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_utxo" placeholder = "UTXO address">
+        <input type = "text" id = "testkit_kiosk_inputForTX_pubkey" placeholder = "UTXO public key">
+        <input type = "checkbox" id = "testkit_kiosk_inputForTX_confirm" name="confirm"/>confirmed
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address">
+        <input type = "text" id = "testkit_kiosk_inputForTX_amount" placeholder = "spend amount">
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_change" placeholder = "change address">
+        <input type = "text" id = "testkit_kiosk_inputForTX_sign" placeholder = "signing private key">
+        <button id="testkit_kiosk_TX_button">make tx</button>
+        </div>
+        </span>
         `
+    },
+    "testkit_kiosk_func":{
+        "uri": "xo:hash",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit kiosk applet",
+        "media": "/testkit/dirmod/testkit_dir/testkit_kiosk"
     },
     "htmx_import":{
         "uri": "xo:hash",
@@ -194,7 +248,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "destroy via cache",
-        "media": `/testkit/dirmod/testkit_dir/testkit_destroy`
+        "media": "/testkit/dirmod/testkit_dir/testkit_destroy"
     },
     "drag_functions":{
         "uri": "xo:hash",
@@ -358,25 +412,9 @@ const testkit_dir = {
     "testkit_cssmod_func":{
         "uri": "xo:hash",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "testkit cssmod applet",
-        "media": `
-        lain.rom.testkit_cssmod = () => {
-            const targetElement = document.getElementById("testkit_retouch");
-                if (!targetElement) {
-                    console.error('Target element not found');
-                }
-            const retouch = () => {
-                console.log('retouch');
-                let retouch_class = document.getElementById("retouchClass").value;
-                let retouch_property = document.getElementById("retouchProperty").value;
-                let retouch_value = document.getElementById("retouchValue").value;
-            lain.rom.manageCSS().modifyCSSProperty(retouch_class, retouch_property, retouch_value);
-            }
-            document.getElementById('testkit_retouchButton').addEventListener('click', function() {retouch();});
-        }
-        lain.rom.testkit_cssmod();
-        `
+        "media": "/testkit/dirmod/testkit_dir/testkit_cssmod_func"
     },
     "enclose_draggable":{
         "uri": "xo:hash",
@@ -418,56 +456,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "js",
         "name": "testkit move! applet",
-        "media": `
-        lain.rom.store_gate = () => {
-            const gate = () => {
-                console.log('move!');
-                entryElement = document.getElementById("testkit_store_gate_Entry");
-                let entry = entryElement.value;
-                entryElement.value = '';
-                let direction = document.getElementById("testkit_store_gate_select").value;
-                if (direction === "b2ls" && lain.dir.hasOwnProperty(entry)) {
-                    try {
-                        localStorage.setItem(entry, JSON.stringify(lain.dir[entry]));
-                        if (testkit_store_gate_mode.value === 'cut'){
-                            delete lain.dir[entry];
-                            lain.dir[entry] = undefined;
-                        }
-                    } catch (error) {
-                        console.log("failed to send to local storage");
-                    }
-                } else if (direction === "ls2b") {
-                    let storedItem = localStorage.getItem(entry);
-                    if (storedItem) {
-                        try {
-                            lain.dir[entry] = JSON.parse(storedItem);
-                            if (testkit_store_gate_mode.value === 'cut'){
-                                localStorage.removeItem(entry);
-                            }
-                        } catch (error) {
-                            console.log("failed to parse from local storage, maybe its not json");
-                            console.log("putting a string in dir ig :/");
-                            try {
-                                lain.dir[entry] = storedItem;
-                                if (testkit_store_gate_mode.value === 'cut'){
-                                    localStorage.removeItem(entry);
-                                }
-                            } catch (error) {
-                                console.log("that didn't work either so giving up");
-                            }
-                        }
-                    } else {
-                        console.log("item not found in local storage");
-                    }
-                } else {
-                    console.log("something went wrong idk maybe its not in dir");
-                }
-            }
-            console.log("movement armed");   
-            document.getElementById('testkit_store_gate_Button').addEventListener('click', function() {gate();});
-        }
-        lain.rom.store_gate();
-        `  
+        "media": "/testkit/dirmod/testkit_dir/testkit_store_gate_func" 
     },
     "demo_proc":{
         "uri": "xo:hash",
@@ -480,6 +469,7 @@ const testkit_dir = {
             eiri(lain, lain.dir.drag_functions);
             eiri(lain, lain.dir.enclose_draggable);
             lain.rom.drag_init();
+            eiri(lain, lain.dir.bsv_script);
             eiri(lain, lain.dir.htmx_import);
             eiri(lain, lain.dir.css_manager);
             eiri(lain, lain.dir.dom_reporter);
@@ -487,10 +477,11 @@ const testkit_dir = {
             eiri(lain, lain.dir.navi_exporter);
             eiri(lain, lain.dir.htmx_observe);
             eiri(lain, lain.dir.testkit_destroy);
-            eiri(lain, lain.dir.testkit_regen_html, document.body);
+            eiri(lain, lain.dir.testkit_regen_html, document.body);  
             eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_cssmod_html), document.body);
             eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
             eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);
+            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_kiosk_html), document.body);
         }
         lain.rom.demo_proc();
         `
@@ -813,7 +804,7 @@ try{
 Object.keys(testkit_dir).forEach(key => {
     alice.dir[key] = testkit_dir[key];
 });
-console.log("testkit directory deployed")
+console.log("xotestkit directory deployed")
 } catch (error) {
     console.log("failed to append testkit_dir to alice:", error);
 }

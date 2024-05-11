@@ -104,10 +104,10 @@ function chisa(msg) {
         },
         body: JSON.stringify(bodyData)
     };
-    fetch('/dir_spawn/', requestOptions)
+    fetch('/collect_dir/', requestOptions)
         .then(response => {
         if (!response.ok) {
-            throw new Error('phone isnt working ok');
+            throw new Error('no response');
         }
         return response.text();
     })
@@ -115,7 +115,7 @@ function chisa(msg) {
         eval(moduleResponse);
     })
         .catch(error => {
-        console.error('failed to spawn dir:', error);
+        console.error('failed to collect dir:', error);
     });
 }
 const alice = {
@@ -129,10 +129,7 @@ const alice = {
 };
 chisa();
 /* QUEST */
-/*  
-jsmod interpretation is broken bc of cors and mime idk
-    maybe we really could use relative instead of bare identifiers bc the modules are sent with the dir
-demoproc check if a skeleton is there? default? if not then demo_proc?
+/*  demoproc check if a skeleton is there? default? if not then demo_proc?
     idk figure that shit out how does it know what skeleton to use at startup
     wallet preferences ? local storage masterkey?
 */

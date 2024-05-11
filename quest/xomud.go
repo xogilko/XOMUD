@@ -68,13 +68,13 @@ import (
             requires tom-select.js + plugins OR select2 based on user preference
 */
 
-var serviceURLs = map[string]string{ //:>>> SERVER COURT
+var serviceURLs = map[string]string{ //:>>> server map
 	"testkit": "http://localhost:8081",
 }
 
 func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	// proxy handler setup via map
+	// proxy handler setup via server map
 	for prefix, urlString := range serviceURLs {
 		proxyUrl, err := url.Parse(urlString)
 		if err != nil {
@@ -93,7 +93,7 @@ func main() {
 		}(proxy, handlerPath))
 	}
 	//send navi dir files *post rq: body(domain context)*
-	http.HandleFunc("/dir_spawn/", spawn)
+	http.HandleFunc("/collect_dir/", plant)
 	//serve website
 	http.HandleFunc("/", seed)
 	//global service
