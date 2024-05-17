@@ -164,7 +164,7 @@ export function activate_module(lain) {
                     if (utxos.length > 0) {
                     console.log(utxos);
                     let totalValue = utxos.reduce((acc, utxo) => acc + utxo.value, 0);
-                    UTXO_total.innerHTML = totalValue.toString() + '⌀';
+                    UTXO_total.innerHTML = 'total: ' + totalValue.toString() + '⌀';
                     } else {
                         document.getElementById('UTXO_total').innerHTML = 'no record';
                     }

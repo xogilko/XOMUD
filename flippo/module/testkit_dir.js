@@ -1,6 +1,6 @@
 const testkit_dir = {
     "xotestkit_in":{
-        "uri": "xo:hash",
+        "uri": "xo.05919057190759",
         "urns": "xotestkit",
         "kind": "interpreter",
         "name": "'xotestkit' urns interpreter",
@@ -29,7 +29,7 @@ const testkit_dir = {
                             }
                         };
                         const moduleURL = input.media;
-                        const directURL = 'http://localhost:8080' + moduleURL;
+                        const directURL = lain.portal + moduleURL;
                         console.log('importing async:', input.name);
                         fetchModuleAndImport(directURL);
                         lain.cache.push(input);}
@@ -37,6 +37,15 @@ const testkit_dir = {
                 } else {console.log('function(s) already cached')}
             },
             html: (input, target) => {
+                if (input.hasOwnProperty('count')) {
+                    const matches = lain.cache.filter(obj => {
+                        return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);
+                    });
+                    if (matches.length >= input.count) {
+                        console.log('item has met cache limit:', matches.length);
+                        return;
+                    }
+                }
                 var container = document.createElement("div");
                 container.innerHTML = input.media;
                 input.domset = [];
@@ -55,7 +64,7 @@ const testkit_dir = {
                     }
                 });
                 while (container.firstChild) {
-                    target.appendChild(container.firstChild);
+                    target.insertBefore(container.firstChild, target.firstChild);
                 } 
                 lain.cache.push(input);
                 let kidfunc = lain.dir[input.child];
@@ -65,18 +74,41 @@ const testkit_dir = {
                 }
             }
         };
-        console.log('interpreter registered with callback:', 'http://localhost:8080');
+        console.log('interpreter registered with callback:', lain.portal);
+        `
+    },
+    "testkit_style_html":{
+        "uri": "xo.764906239052624667",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit styles :)",
+        "media": `
+        <style>
+            .draggable {
+            padding: 2px;
+            background-color: #00aeb4;
+            line-height: 3px;
+            position: absolute;
+            cursor: move;
+            }
+            .dragged_content {
+            padding: 10px;
+            background-color: #fafafa;
+            cursor: auto;
+            user-select: text;
+            }
+        </style>
         `
     },
     "htmx_observe":{
-        "uri": "xo:hash",
+        "uri": "xo.12985719056914601",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "dynamic htmx observer",
         "media": "/testkit/dirmod/testkit_dir/htmx_observe"
     },
     "bsv_script":{
-        "uri": "xo:hash",
+        "uri": "xo.12591903790136",
         "urns": "xotestkit",
         "kind": "js",
         "name": "append bsv library 1.5.6",
@@ -90,11 +122,12 @@ const testkit_dir = {
         });`
     },
     "testkit_kiosk_html":{
-        "uri": "xo:hash",
+        "uri": "xo.1294189056906",
         "urns": "xotestkit",
         "kind": "html",
         "name": "testkit kiosk widget",
         "child": "testkit_kiosk_func",
+        "count": 1,
         "media": `
         <span>
         <div id="testkit_kiosk">
@@ -108,7 +141,7 @@ const testkit_dir = {
         <input type = "text" id = "testkit_kiosk_inputKeyForUTXO" placeholder = "insert an address">
         <input type = "checkbox" id = "testkit_kiosk_confirmForUTXO" name="confirm"/>confirmed
         <button id="testkit_kiosk_getUTXO_button">get utxo</button>
-        <p><i>total: </i><span id="UTXO_total"></span></p>
+        <p><span id="UTXO_total"></span></p>
         <hr>
         <br><input type = "text" id = "testkit_kiosk_inputForTX_utxo" placeholder = "UTXO address">
         <input type = "text" id = "testkit_kiosk_inputForTX_pubkey" placeholder = "UTXO public key">
@@ -123,14 +156,14 @@ const testkit_dir = {
         `
     },
     "testkit_kiosk_func":{
-        "uri": "xo:hash",
+        "uri": "xo.1051901904694690906",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit kiosk applet",
         "media": "/testkit/dirmod/testkit_dir/testkit_kiosk"
     },
     "htmx_import":{
-        "uri": "xo:hash",
+        "uri": "xo.103901390590134576",
         "urns": "xotestkit",
         "kind": "js",
         "name": "htmx import 1.9.11",
@@ -146,50 +179,16 @@ const testkit_dir = {
             });
             console.log('htmx imported');`
     },
-    "testkit_register_sw":{
-        "uri": "xo:hash",
-        "urns": "xotestkit",
-        "kind": "js",
-        "name": "testkit transform content!",
-        "media": `
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-                // Registration was successful
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-              }, function(err) {
-                // registration failed :(
-                console.log('ServiceWorker registration failed: ', err);
-              });
-            });
-          }
-        `
-    },
     "htmx_script":{
-        "uri": "xo:hash",
+        "uri": "xo.5906239056059015",
         "urns": "xotestkit",
         "kind": "html",
         "name": "htmx script 1.9.11",
         "media": `
         <script src="https://unpkg.com/htmx.org@1.9.11"></script>`
     },
-    "packetpay_import":{
-        "uri": "xo:hash",
-        "urns": "xotestkit",
-        "kind": "js",
-        "name": "packetpay import",
-        "media": `
-            import('https://unpkg.com/@packetpay/js')
-            .then(PacketPay => {
-                console.log('packetpay is from https://unpkg.com/@packetpay/js');
-            }).catch(error => {
-                console.error('Failed to dynamically import @packetpay/js:', error);
-            });
-            console.log('packetpay may be imported');
-            `
-    },
     "testkit_dragtest":{
-        "uri": "xo:hash",
+        "uri": "xo.307902690246343334",
         "urns": "xotestkit",
         "kind": "html",
         "name": "testkit_dragtest",
@@ -200,18 +199,19 @@ const testkit_dir = {
         <div class="draggable"><div class="dragged_content"><i>boom</i></div></div>`
     },
     "testkit_atc_html":{
-        "uri": "xo:hash",
+        "uri": "xo.9672303456646593015",
         "urns": "xotestkit",
         "kind": "html",
-        "name": "testkit atc widget",
+        "name": "testkit atc widget via quest",
         "child": "testkit_atc_func",
+        "count": 1,
         "media": `
         <span>
         <div id="testkit_atc" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
         <ul id="qomms">
         </ul>
         </div>
-        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="/testkit/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="http://localhost:8080/testkit/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
         <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "contact server">
         <input type = "submit" value = "send">
         </form>
@@ -219,7 +219,7 @@ const testkit_dir = {
         `
     },
     "testkit_atc_func":{
-        "uri": "xo:hash",
+        "uri": "xo.13905760624562462",
         "urns": "xotestkit",
         "kind": "js",
         "name": "testkit atc applet",
@@ -243,23 +243,72 @@ const testkit_dir = {
         lain.rom.testkit_atc('init_and_callback');
         `
     },
+    "testkit_menu_html":{
+        "uri": "xo.10357109570198666",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit menu widget",
+        "child": "testkit_menu_func",
+        "count": 1,
+        "media": `
+        <span>
+        <div id="testkit_menu">
+        <i>testkit tools</i><hr>
+        <select id="testkit_menuSelect" multiple size="6">
+        <option value = "testkit_atc_html">atc</option>
+        <option value = "testkit_clerk_html">clerk</option>
+        <option value = "testkit_kiosk_html">kiosk</option>
+        <option value = "testkit_csspaint_html">csspaint</option>
+        <option value = "testkit_regen_html">regen</option>
+        <option value = "testkit_store_gate_html">storegate</option>
+        </select><br>
+        <button id="testkit_menuStart">start</button>
+        </span>
+        `
+    },
+    "testkit_menu_func":{
+        "uri": "xo.1591340569834601786",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit menu applet",
+        "media": `
+        lain.rom.testkit_menu = (() => {
+            alice['launch'] = [];
+            let launch = alice.launch;
+            function launchMethod(select) {
+                console.log('select:', select)
+                eiri(lain, lain.rom.enclose_draggable(select), document.body);
+                const lastCacheItem = lain.cache[lain.cache.length - 2].domset;
+                console.log(lastCacheItem)
+                launch.push({ key: select, domset: lastCacheItem });
+                console.log('Launched:', launch[launch.length - 1]);
+            }
+            document.getElementById('testkit_menuStart').addEventListener('click', function() {
+                navi(alice, 'specialCondition', 'alice.rom.testkit_menu.launchMethod(alice.dir.' + testkit_menuSelect.value + ')');
+            });
+            return {
+                launchMethod
+            };
+        })();
+        `
+    },
     "testkit_destroy":{
-        "uri": "xo:01gh1085h01rij",
+        "uri": "xo.15901360516061",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "destroy via cache",
         "media": "/testkit/dirmod/testkit_dir/testkit_destroy"
     },
     "drag_functions":{
-        "uri": "xo:hash",
+        "uri": "xo.1346901349050946",
         "urns": "xotestkit",
         "kind": "js",
         "name": "draggable divs controller",
         "media": `
         lain.rom.drag_init = () => {
+            const initializedElements = new Set();
             const draggin = (e) => {
                 const element = e.target;
-            
                 if (element.closest('.dragged_content')) return;
                 e.preventDefault();
                 const rect = element.getBoundingClientRect();
@@ -267,30 +316,45 @@ const testkit_dir = {
                 const offsetY = e.clientY - rect.top;
                 const leftInPx = rect.left + window.scrollX;
                 const topInPx = rect.top + window.scrollY;
-            
                 element.style.position = 'absolute';
                 element.style.left = leftInPx + 'px';
                 element.style.top = topInPx + 'px';
-            
                 document.body.append(element);
-            
                 const dragMove = (moveEvent) => {
                     const newLeft = moveEvent.pageX - offsetX;
                     const newTop = moveEvent.pageY - offsetY;
                     element.style.left = newLeft + 'px';
                     element.style.top = newTop + 'px';
                 };
-            
                 const dragEnd = () => {
                     document.removeEventListener('mousemove', dragMove);
                     document.removeEventListener('mouseup', dragEnd);
                 };
-            
                 document.addEventListener('mousemove', dragMove);
                 document.addEventListener('mouseup', dragEnd);
             };
             const addDragEventListener = (element) => {
                 element.addEventListener('mousedown', draggin);
+                if (!initializedElements.has(element)) {
+                    // Manually trigger the draggin function
+                    const simMouseDown = new MouseEvent('mousedown', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: element.getBoundingClientRect().left,
+                        clientY: element.getBoundingClientRect().top
+                    });
+                    element.dispatchEvent(simMouseDown);
+                    const simMouseUp = new MouseEvent('mouseup', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: element.getBoundingClientRect().left,
+                        clientY: element.getBoundingClientRect().top
+                    });
+                    element.dispatchEvent(simMouseUp);
+                    initializedElements.add(element);
+                }
             };
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
@@ -303,15 +367,19 @@ const testkit_dir = {
             });
             observer.observe(document.body, { childList: true, subtree: true });
             const draggableElements = document.querySelectorAll('.draggable');
-            draggableElements.forEach(addDragEventListener);
-        }`
+            draggableElements.forEach(element => {
+                addDragEventListener(element);
+            });
+        }
+        `
     },
     "testkit_clerk_html":{
-        "uri": "xo:hash",
+        "uri": "xo.13904517903346136136",
         "urns": "xotestkit",
         "kind": "html",
         "name": "testkit clerk widget",
         "child": "testkit_clerk_func",
+        "count": 1,
         "media": `
         <select id="testkit_clerkSelect">
         <option value = "cache">cache</option>
@@ -326,7 +394,7 @@ const testkit_dir = {
         `
     },
     "testkit_clerk_func": {
-        "uri": "xo:hash",
+        "uri": "xo.575692746724068956",
         "urns": "xotestkit",
         "kind": "js",
         "name": "testkit clerk applet",
@@ -371,6 +439,7 @@ const testkit_dir = {
                 if (clerk_select.value === "cache") {
                     lain.cache.forEach(function(item, index) {
                         document.getElementById('removeCache_' + index).onclick = function() {
+                            console.log(item)
                             lain.rom.removeCacheItem({index: index});
                             reset();
                             return false;
@@ -394,12 +463,12 @@ const testkit_dir = {
         lain.rom.testkit_clerk();
         `
     },
-    "testkit_cssmod_html":{
-        "uri": "xo:hash",
+    "testkit_csspaint_html":{
+        "uri": "xo.96290760257023536",
         "urns": "xotestkit",
         "kind": "html",
-        "name": "testkit cssmod widget",
-        "child": "testkit_cssmod_func",
+        "name": "testkit csspaint widget",
+        "child": "testkit_csspaint_func",
         "media": `
         <div id="testkit_retouch">
         <input type = "text" id = "retouchClass" value = ".draggable">
@@ -409,29 +478,22 @@ const testkit_dir = {
         </div>
         `
     },
-    "testkit_cssmod_func":{
-        "uri": "xo:hash",
+    "testkit_csspaint_func":{
+        "uri": "xo.8957893475923050246",
         "urns": "xotestkit",
         "kind": "jsmod",
-        "name": "testkit cssmod applet",
-        "media": "/testkit/dirmod/testkit_dir/testkit_cssmod_func"
+        "name": "testkit csspaint applet",
+        "media": "/testkit/dirmod/testkit_dir/testkit_csspaint_func"
     },
     "enclose_draggable":{
-        "uri": "xo:hash",
+        "uri": "xo.9076309520571515566",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "enclose x in draggable div",
-        "media": `
-        lain.rom.enclose_draggable = (originalObject) => {
-            newMedia = '<div class="draggable"><div class="dragged_content">' + originalObject.media + '</div></div>';
-            newName = 'draggable enclosure of ' + originalObject.name;
-            const modifiedObject = { ...originalObject, media: newMedia, name: newName };
-            return modifiedObject;
-        }
-        `  
+        "media": "/testkit/dirmod/testkit_dir/enclose_draggable"  
     },
     "testkit_store_gate_html":{
-        "uri": "xo:hash",
+        "uri": "xo.346975705910570175",
         "urns": "xotestkit",
         "kind": "html",
         "name": "testkit move! widget",
@@ -452,20 +514,21 @@ const testkit_dir = {
         `
     },
     "testkit_store_gate_func":{
-        "uri": "xo:hash",
+        "uri": "xo.6767690457739309523",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "testkit move! applet",
         "media": "/testkit/dirmod/testkit_dir/testkit_store_gate_func" 
     },
     "demo_proc":{
-        "uri": "xo:hash",
+        "uri": "xo.190571057013560106038",
         "urns": "xotestkit",
         "kind": "js",
         "name": "testkit demo setup!",
         "media": `
         lain.rom.demo_proc = () => {
             //if (localStorage.getItem('default_navi')
+            eiri(lain, lain.dir.testkit_style_html, document.head);  
             eiri(lain, lain.dir.drag_functions);
             eiri(lain, lain.dir.enclose_draggable);
             lain.rom.drag_init();
@@ -477,17 +540,26 @@ const testkit_dir = {
             eiri(lain, lain.dir.navi_exporter);
             eiri(lain, lain.dir.htmx_observe);
             eiri(lain, lain.dir.testkit_destroy);
-            eiri(lain, lain.dir.testkit_regen_html, document.body);  
-            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_cssmod_html), document.body);
-            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
-            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);
-            eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_kiosk_html), document.body);
+            const checkAndExecute = () => {
+                if (typeof lain.rom.enclose_draggable === 'function') {
+                    eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_menu_html), document.body);
+                } else {
+                    setTimeout(checkAndExecute, 100);
+                }
+            };
+            checkAndExecute();
+            
+           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_regen_html), document.body);  
+           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_csspaint_html), document.body);
+           //eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
+           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);
+           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_kiosk_html), document.body);
         }
         lain.rom.demo_proc();
         `
     },
     "test_name_reproc":{
-        "uri": "xo:hash",
+        "uri": "xo.2346903701358935",
         "urns": "xotestkit",
         "kind": "js",
         "name": "testkit transform content!",
@@ -510,116 +582,14 @@ const testkit_dir = {
         `
     },
     "css_manager":{
-        "uri": "xo:hash",
+        "uri": "xo.87468435648701234",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "edit/create css manager",
-        "media": `
-        lain.rom.manageCSS = () => {
-            let customStyleSheet = null;
-        
-            const getOrCreateCustomStyleSheet = () => {
-                if (!customStyleSheet) {
-                    const styleElement = document.createElement('style');
-                    document.head.appendChild(styleElement);
-                    customStyleSheet = styleElement.sheet;
-                }
-                return customStyleSheet;
-            };
-
-            const getCSSProperties = () => {
-                var styleProperties = {};
-                var styleSheets = document.styleSheets;
-        
-                for (var i = 0; i < styleSheets.length; i++) {
-                    var styleSheet = styleSheets[i];
-                    try {
-                        // Accessing cssRules might throw a SecurityError on cross-origin stylesheets
-                        var cssRules = styleSheet.cssRules || styleSheet.rules;
-                        for (var j = 0; j < cssRules.length; j++) {
-                            var rule = cssRules[j];
-                            if (rule instanceof CSSStyleRule) {
-                                var selectors = rule.selectorText.split(/\s*,\s*/);
-                                selectors.forEach(function(selector) {
-                                    // Initialize the selector's property object if it doesn't exist
-                                    if (!styleProperties[selector]) {
-                                        styleProperties[selector] = {};
-                                    }
-                                    var styleDeclaration = rule.style;
-                                    for (var k = 0; k < styleDeclaration.length; k++) {
-                                        var property = styleDeclaration[k];
-                                        // Store property values, overriding any previously stored value
-                                        // This mimics the cascade where the last rule wins
-                                        styleProperties[selector][property] = styleDeclaration.getPropertyValue(property);
-                                    }
-                                });
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Access to stylesheet ' + styleSheet.href + ' is denied.', error);
-                    }
-                }
-        
-                // Attempt to capture inline styles and styles applied directly via JS
-                // This is especially useful for elements like 'body' or those manipulated with JS
-                document.querySelectorAll('*').forEach(element => {
-                    const selector = element.tagName.toLowerCase() + (element.id ? '#' + element.id : '') + (element.className ? '.' + element.className.split(/\s+/).join('.') : '');
-                    if (!styleProperties[selector]) {
-                        styleProperties[selector] = {};
-                    }
-                    var style = element.style;
-                    for (var i = 0; i < style.length; i++) {
-                        var property = style[i];
-                        styleProperties[selector][property] = style.getPropertyValue(property);
-                    }
-                });
-        
-                return styleProperties;
-            };
-        
-            const modifyCSSProperty = (selector, property, value) => {
-                let ruleFound = false;
-                for (let i = 0; i < document.styleSheets.length; i++) {
-                    const styleSheet = document.styleSheets[i];
-                    try {
-                        const cssRules = styleSheet.cssRules || styleSheet.rules;
-                        for (let j = 0; j < cssRules.length; j++) {
-                            const rule = cssRules[j];
-                            if (rule.selectorText === selector) {
-                                rule.style[property] = value;
-                                ruleFound = true;
-                                break;
-                            }
-                        }
-                    } catch (error) {
-                        console.warn('Could not access rules of stylesheet: ' + styleSheet.href, error);
-                    }
-                    if (ruleFound) break;
-                }
-                if (!ruleFound) {
-                    const customSheet = getOrCreateCustomStyleSheet();
-                    customSheet.insertRule(selector + ' { ' + property + ': ' + value + '; }', customSheet.cssRules.length);
-                }
-            };
-
-            const applyStylesheet = (stylesheetObject) => {
-                Object.entries(stylesheetObject).forEach(([selector, styles]) => {
-                    Object.entries(styles).forEach(([property, value]) => {
-                        modifyCSSProperty(selector, property, value);
-                    });
-                });
-            };
-
-            return {
-                applyStylesheet,
-                modifyCSSProperty,
-                getCSSProperties
-            };
-        };
-        `
+        "media": "/testkit/dirmod/testkit_dir/css_manager"
     },
     "dom_reporter":{
-        "uri": "xo:hash",
+        "uri": "xo.5475837342346844768768",
         "urns": "xotestkit",
         "kind": "js",
         "name": "data-set tree reporter",
@@ -649,7 +619,7 @@ const testkit_dir = {
         `
     },
     "navi_exporter":{
-        "uri": "xo:hash",
+        "uri": "xo.73687385434867682",
         "urns": "xotestkit",
         "kind": "js",
         "name": "exporter of navi",
@@ -671,7 +641,7 @@ const testkit_dir = {
         `
     },
     "dom_reassignment":{
-        "uri": "xo:hash",
+        "uri": "xo.58753544223475875324",
         "urns": "xotestkit",
         "kind": "js",
         "name": "reassign elements to export",
@@ -694,9 +664,18 @@ const testkit_dir = {
                     //clear processed entries from current map
                     dom_current_map.delete(entry_domset_value);
         
-                    // Append the element to the end of its parent to reorder it
                     const parentElement = element.parentElement;
-                    parentElement.appendChild(element); // Append the element to the end of its parent
+
+                    if (parentElement.tagName.toLowerCase() === 'body') {
+                        // Check if the body has any child elements
+                        if (parentElement.firstChild) {
+                            parentElement.insertBefore(element, parentElement.firstChild);
+                        } else {
+                            parentElement.appendChild(element);
+                        }
+                    } else {
+                        parentElement.appendChild(element);
+                    }
                 }
             });
             dom_current_map.forEach((element, domset) => {
@@ -710,7 +689,7 @@ const testkit_dir = {
         `
     },
     "testkit_regen_html":{
-        "uri": "xo:hash",
+        "uri": "xo.7685575453425453742122",
         "urns": "xotestkit",
         "kind": "html",
         "name": "testkit regen widget",
@@ -726,15 +705,15 @@ const testkit_dir = {
         `
     },
     "testkit_regen_func":{
-        "uri": "xo:hash",
+        "uri": "xo.1321346875468776",
         "urns": "xotestkit",
         "kind": "js",
         "name": "regenerate navi w/ proc",
         "media": `
         lain.rom.testkit_regen = () => {
             const removeAllStylesheets = () => {
-                const linkStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
-                linkStylesheets.forEach(link => link.parentNode.removeChild(link));
+                //const linkStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+                //linkStylesheets.forEach(link => link.parentNode.removeChild(link));
 
                 const styleElements = document.querySelectorAll('style');
                 styleElements.forEach(style => style.parentNode.removeChild(style));
@@ -762,32 +741,30 @@ const testkit_dir = {
                     // first clean up
                     for (let i = lain.cache.length - 1; i >= 0; i--) {
                         const cacheItem = lain.cache[i];
-                        if (cacheItem && cacheItem.uri === "xo:01gh1085h01rij") {continue;}
+                        if (cacheItem && cacheItem.uri === "xo.01gh1085h01rij") {continue;}
                         lain.rom.removeCacheItem({index: i});
                     }
-                    const removeCacheItemIndex = lain.cache.findIndex(item => item && item.uri === "xo:01gh1085h01rij");
+                    const removeCacheItemIndex = lain.cache.findIndex(item => item && item.uri === "xo.01gh1085h01rij");
                     if (removeCacheItemIndex !== -1) {
                         console.log("manual removal");
-                        lain.rom.removeCacheItem({index: removeCacheItemIndex});
-                        
+                        lain.rom.removeCacheItem({index: removeCacheItemIndex});  
                     }
                     console.log('cache is..');
                     console.log(lain.cache);
-                    console.log("echo");
                     removeAllStylesheets();
                     lain.domset= 0; // dom is cleared
                     //run proc, then dom_reassignment, then style
-                    
-                    console.log(skeleton.navi_export.proc);
+                    lain.proc = [];
+                    console.log(skeleton.navi_export.proc, 'old proc:', lain.proc);
                     skeleton.navi_export.proc.forEach(args => {
+                        let specialCondition = "specialCondition";
                         let rest = args.map(arg => eval(arg));
-                        eiri(lain, ...rest);
+                        navi(lain, ...rest);
                     });
                     lain.rom.testkit_reassign(skeleton.navi_export.dom.domReport);                
                     lain.rom.manageCSS().applyStylesheet(skeleton.navi_export.css);
-                    console.log("aaaaand we're back");
-                    
-                    
+                    console.log("and we're back");
+
                 } catch (error) {
                     console.log("failed to regenerate", error);
                 }
@@ -805,6 +782,7 @@ Object.keys(testkit_dir).forEach(key => {
     alice.dir[key] = testkit_dir[key];
 });
 console.log("xotestkit directory deployed")
+navi(alice, 'alice.dir.demo_proc');
 } catch (error) {
     console.log("failed to append testkit_dir to alice:", error);
 }

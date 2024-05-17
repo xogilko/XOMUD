@@ -78,8 +78,16 @@ const navi = function (lain, ...rest) {
         }
     };
     try {
+        const specialCondition = "specialCondition";
         const evaluatedArgs = rest.map(arg => eval(arg));
-        eiri(lain, ...evaluatedArgs);
+        if (evaluatedArgs.length > 0 && typeof evaluatedArgs[0] === 'string' && evaluatedArgs[0] === specialCondition) {
+            // a special request eiri doesn't need
+            console.log('special', rest);
+        }
+        else {
+            // Otherwise, proceed as normal
+            eiri(lain, ...evaluatedArgs);
+        }
         lain.proc.push(rest);
     }
     catch (error) {
@@ -87,24 +95,47 @@ const navi = function (lain, ...rest) {
     }
     return { lain };
 };
-function chisa(msg) {
-    // initialization logic here
-    // set check (window, xdm, http) skeleton etc
-    // detect context and phone home
-    var domain = window.location.hostname;
+function chisa(request) {
+    const meta = {};
+    Array.from(document.getElementsByTagName('meta')).forEach(tag => {
+        Array.from(tag.attributes).forEach(attr => {
+            meta[attr.name] = attr.value;
+        });
+    });
+    if (!meta['portal']) {
+        console.error('navi has no portal key');
+        return;
+    }
+    else {
+        alice.portal = meta['portal'];
+    }
+    const req_headers = {
+        'Content-Type': 'application/json',
+    };
+    if (request) {
+        console.log("Request exists:", request);
+        if (request.headers) {
+            Object.assign(req_headers, request.headers);
+        }
+    }
+    var client = {
+        href: window.location.href,
+        userAgent: navigator.userAgent,
+        touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+        connection: navigator.connection ? navigator.connection.effectiveType : 'unknown',
+        meta: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
+    };
     const bodyData = {
-        domain: domain,
-        msg: msg || ''
+        msg: request?.msg || '',
+        client: client
     };
     console.log(bodyData, "requesting service ✩");
     const requestOptions = {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: req_headers,
         body: JSON.stringify(bodyData)
     };
-    fetch('/collect_dir/', requestOptions)
+    fetch(alice.portal + '/collect_dir/', requestOptions)
         .then(response => {
         if (!response.ok) {
             throw new Error('no response');
@@ -120,30 +151,11 @@ function chisa(msg) {
 }
 const alice = {
     sign: 'xo',
+    portal: '',
     domset: 0,
     proc: [],
     cache: [],
     rom: {},
-    dir: {},
-    aux: []
+    dir: {}
 };
-chisa();
-/* QUEST */
-/*  demoproc check if a skeleton is there? default? if not then demo_proc?
-    idk figure that shit out how does it know what skeleton to use at startup
-    wallet preferences ? local storage masterkey?
-*/
-/*  LOW PRIORITY
-
-    window that takes html and saves it to dir
-    would be nice to edit procs / modify directly exports
-    
-    track dependency funcs?
-
-    padlock -
-    protect localstorage via a process and closure from eval() manipulation:
-    need to make sure the keystoWatch variable is protected, whether it be static or thru some other magic
-
-    add a service worker to reroute /command/ to 8081 etc
-    a function that recieves responses that accepts objects to dir or docs to aux
-*/ 
+document.addEventListener('DOMContentLoaded', function () { chisa(); });

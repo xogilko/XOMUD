@@ -68,6 +68,22 @@ import (
             requires tom-select.js + plugins OR select2 based on user preference
 */
 
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set headers
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow any domain
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, hx-current-url, hx-request, hx-target")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 var serviceURLs = map[string]string{ //:>>> server map
 	"testkit": "http://localhost:8081",
 }
@@ -85,15 +101,19 @@ func main() {
 		handlerPath := "/" + prefix + "/"
 		http.HandleFunc(handlerPath, func(proxy *httputil.ReverseProxy, handlerPath string) http.HandlerFunc {
 			return func(w http.ResponseWriter, r *http.Request) {
-				modifiedPath := "/" + r.URL.Path[len(handlerPath):]
-				log.Printf("Forwarding request to %s: %s", prefix, modifiedPath)
-				r.URL.Path = modifiedPath
-				proxy.ServeHTTP(w, r)
+				enableCORS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					modifiedPath := "/" + r.URL.Path[len(handlerPath):]
+					log.Printf("Forwarding request to %s: %s", prefix, modifiedPath)
+					r.URL.Path = modifiedPath
+					proxy.ServeHTTP(w, r)
+				})).ServeHTTP(w, r)
 			}
 		}(proxy, handlerPath))
 	}
 	//send navi dir files *post rq: body(domain context)*
-	http.HandleFunc("/collect_dir/", plant)
+	http.HandleFunc("/collect_dir/", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(http.HandlerFunc(plant)).ServeHTTP(w, r)
+	})
 	//serve website
 	http.HandleFunc("/", seed)
 	//global service
