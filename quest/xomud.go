@@ -85,7 +85,7 @@ func enableCORS(next http.Handler) http.Handler {
 }
 
 var serviceURLs = map[string]string{ //:>>> server map
-	"testkit": "http://localhost:8081",
+	"flippo": "http://localhost:8081",
 }
 
 func main() {

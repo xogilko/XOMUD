@@ -105,7 +105,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "dynamic htmx observer",
-        "media": "/testkit/dirmod/testkit_dir/htmx_observe"
+        "media": "/flippo/dirmod/testkit_dir/htmx_observe"
     },
     "bsv_script":{
         "uri": "xo.12591903790136",
@@ -160,7 +160,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit kiosk applet",
-        "media": "/testkit/dirmod/testkit_dir/testkit_kiosk"
+        "media": "/flippo/dirmod/testkit_dir/testkit_kiosk"
     },
     "htmx_import":{
         "uri": "xo.103901390590134576",
@@ -211,7 +211,7 @@ const testkit_dir = {
         <ul id="qomms">
         </ul>
         </div>
-        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="http://localhost:8080/testkit/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="http://localhost:8080/flippo/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
         <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "contact server">
         <input type = "submit" value = "send">
         </form>
@@ -297,7 +297,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "destroy via cache",
-        "media": "/testkit/dirmod/testkit_dir/testkit_destroy"
+        "media": "/flippo/dirmod/testkit_dir/testkit_destroy"
     },
     "drag_functions":{
         "uri": "xo.1346901349050946",
@@ -483,14 +483,14 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit csspaint applet",
-        "media": "/testkit/dirmod/testkit_dir/testkit_csspaint_func"
+        "media": "/flippo/dirmod/testkit_dir/testkit_csspaint_func"
     },
     "enclose_draggable":{
         "uri": "xo.9076309520571515566",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "enclose x in draggable div",
-        "media": "/testkit/dirmod/testkit_dir/enclose_draggable"  
+        "media": "/flippo/dirmod/testkit_dir/enclose_draggable"  
     },
     "testkit_store_gate_html":{
         "uri": "xo.346975705910570175",
@@ -518,7 +518,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit move! applet",
-        "media": "/testkit/dirmod/testkit_dir/testkit_store_gate_func" 
+        "media": "/flippo/dirmod/testkit_dir/testkit_store_gate_func" 
     },
     "demo_proc":{
         "uri": "xo.190571057013560106038",
@@ -586,7 +586,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "edit/create css manager",
-        "media": "/testkit/dirmod/testkit_dir/css_manager"
+        "media": "/flippo/dirmod/testkit_dir/css_manager"
     },
     "dom_reporter":{
         "uri": "xo.5475837342346844768768",

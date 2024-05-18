@@ -143,13 +143,28 @@ function chisa(request?: { [key: string]: any }): void {
       };
     fetch(alice.portal + '/collect_dir/', requestOptions)
     .then(response => {
-    if (!response.ok) {
-        throw new Error('no response');
-    }
-        return response.text();
+        if (!response.ok) {
+            throw new Error('no response');
+        }
+        return response.json();
     })
-    .then(moduleResponse => {
-        eval(moduleResponse);
+    .then((urls: string[]) => {
+        urls.forEach((url: string) => {
+            console.log(url)
+            fetch(alice.portal + url, { method: 'GET' })
+            .then(modResponse => {
+                if (!modResponse.ok) {
+                    throw new Error('Failed to load module');
+                }
+                return modResponse.text();
+            })
+            .then(moduleScript => {
+                eval(moduleScript);
+            })
+            .catch(error => {
+                console.error('Error loading module:', error);
+            });
+        });
     })
     .catch(error => {
         console.error('failed to collect dir:', error);

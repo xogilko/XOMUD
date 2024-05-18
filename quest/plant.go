@@ -15,7 +15,7 @@ func plant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hardcoded server assuming serviceURLs["testkit"] is accessible
-	url, err := url.Parse(serviceURLs["testkit"] + "/dirbox")
+	url, err := url.Parse(serviceURLs["flippo"] + "/dirbox")
 	if err != nil {
 		http.Error(w, "Error parsing URL", http.StatusInternalServerError)
 		return
