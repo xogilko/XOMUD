@@ -36,10 +36,8 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(modulePath, ".js") {
 		modulePath += ".js"
 	}
-	// Construct the full path to the module file
 	moduleFilePath := "module/" + modulePath
-	log.Print(moduleFilePath)
-	// Serve the module file
+	log.Printf("dirmod serving: %s", moduleFilePath)
 	http.ServeFile(w, r, moduleFilePath)
 }
 
@@ -61,27 +59,22 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing request body", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("request data: %s", requestData)
 	//	REQUEST LOGIC
 	client, ok := requestData["client"].(map[string]interface{})
 	if !ok {
 		http.Error(w, "Invalid client data", http.StatusBadRequest)
 		return
 	}
-	log.Printf("request client: %s", client)
-
 	uriInterface, ok := client["uri"].([]interface{})
 	if !ok {
 		http.Error(w, "URI data is missing or not a string", http.StatusBadRequest)
 		return
 	}
-	log.Printf("request uri: %s", uriInterface)
 	hostName, ok := client["href"].(string)
 	if !ok {
 		http.Error(w, "Host data is missing or not a string", http.StatusBadRequest)
 		return
 	}
-	log.Printf("request host: %s", hostName)
 	// Split the uriString into individual URIs
 	var uris []string
 	for _, uri := range uriInterface {
@@ -92,9 +85,7 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 		}
 		uris = append(uris, uriStr)
 	}
-	log.Printf("request uris: %s", uris)
 	var urls []string
-
 	// Check each URI in the 'uri' section of dirDatabase
 	for _, uri := range uris {
 		if dirNames, ok := dirDatabase["uri"].(map[string]interface{})[uri].([]string); ok {
@@ -103,7 +94,6 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
 	// Check the hostname and uri in the 'hosts' section of dirDatabase
 	if hostEntries, ok := dirDatabase["hosts"].(map[string]interface{})[hostName].(map[string]interface{}); ok {
 		for _, uri := range uris {
@@ -114,7 +104,7 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	log.Printf("request urls: %s", urls)
+	log.Printf("dirbox urls: %s", urls)
 	// Convert the list of URLs to JSON and send it back to the client
 	jsonResponse, err := json.Marshal(urls)
 	if err != nil {

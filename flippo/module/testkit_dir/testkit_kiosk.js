@@ -120,7 +120,11 @@ export function activate_module(lain) {
                         if (utxos.length > 0) {
                             let tx = new bsv.Transaction()
                                 .from(utxos)
-                                .to(inputTargetAddr, spend)
+                                .to(inputTargetAddr, parseInt(spend, 10))
+                                .addOutput(new bsv.Transaction.Output({
+                                    script: bsv.Script.buildDataOut('testkit kiosk'),
+                                    satoshis: 0
+                                }))
                                 .change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
                                 .sign(new bsv.PrivateKey.fromString(inputPrivateKey, 'testnet'))
                                 .serialize();
