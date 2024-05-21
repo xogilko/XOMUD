@@ -87,7 +87,7 @@ const testkit_dir = {
             .draggable {
             padding: 2px;
             background-color: #00aeb4;
-            line-height: 3px;
+            line-height: normal;
             position: absolute;
             cursor: move;
             }
@@ -121,6 +121,32 @@ const testkit_dir = {
             document.head.appendChild(script);
         });`
     },
+    "testkit_shop_html":{
+        "uri": "xo.1294189056906",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit shop widget",
+        "child": "testkit_shop_func",
+        "count": 1,
+        "media": `
+        <span>
+        <div id="testkit_shop">
+        <i>department:</i>
+        <input type = "text" id="testkit_shop_depart" placeholder="department" value="Bob's Shop">
+        <button id="testkit_shop_refresh">refresh</button>
+        <hr>
+        <div id="testkit_shop_list"></div>
+        </div>
+        </span>
+        `
+    },
+    "testkit_shop_func":{
+        "uri": "xo.1051901904694690906",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit shop applet",
+        "media": "/flippo/dirmod/testkit_dir/testkit_shop"
+    },
     "testkit_kiosk_html":{
         "uri": "xo.1294189056906",
         "urns": "xotestkit",
@@ -134,23 +160,25 @@ const testkit_dir = {
         <input type = "text" id = "testkit_kiosk_keygen_derive" placeholder = "optional hd key">
         <input type = "checkbox" id = "testkit_kiosk_keygen_hdcheck" name="confirm"/>hd
         <button id="testkit_kiosk_keygen_button">generate keys</button>
-        <p><span id="testkit_kiosk_keygen_privKey"></span></p>
-        <p><span id="testkit_kiosk_keygen_pubKey"></span></p>
-        <p><span id="testkit_kiosk_keygen_pubAddr"></span></p>
+        <span id="testkit_kiosk_keygen_privKey"></span>
+        <span id="testkit_kiosk_keygen_pubKey"></span>
+        <span id="testkit_kiosk_keygen_pubAddr"></span>
         <hr>
         <input type = "text" id = "testkit_kiosk_inputKeyForUTXO" placeholder = "insert an address">
         <input type = "checkbox" id = "testkit_kiosk_confirmForUTXO" name="confirm"/>confirmed
         <button id="testkit_kiosk_getUTXO_button">get utxo</button>
-        <p><span id="UTXO_total"></span></p>
+        <span id="testkit_kiosk_UTXO_total"></span>
         <hr>
         <br><input type = "text" id = "testkit_kiosk_inputForTX_utxo" placeholder = "UTXO address">
         <input type = "text" id = "testkit_kiosk_inputForTX_pubkey" placeholder = "UTXO public key">
         <input type = "checkbox" id = "testkit_kiosk_inputForTX_confirm" name="confirm"/>confirmed
-        <br><input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address">
-        <input type = "text" id = "testkit_kiosk_inputForTX_amount" placeholder = "spend amount">
         <br><input type = "text" id = "testkit_kiosk_inputForTX_change" placeholder = "change address">
+        <input type = "text" id = "testkit_kiosk_inputForTX_amount" placeholder = "spend amount">
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address">
         <input type = "text" id = "testkit_kiosk_inputForTX_sign" placeholder = "signing private key">
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_memo" placeholder = "memo">
         <button id="testkit_kiosk_TX_button">make tx</button>
+        <p><span id="testkit_kiosk_TX_ID"></span></p>
         </div>
         </span>
         `
@@ -254,12 +282,13 @@ const testkit_dir = {
         <span>
         <div id="testkit_menu">
         <i>testkit tools</i><hr>
-        <select id="testkit_menuSelect" multiple size="6">
+        <select id="testkit_menuSelect" multiple size="7">
         <option value = "testkit_atc_html">atc</option>
         <option value = "testkit_clerk_html">clerk</option>
         <option value = "testkit_kiosk_html">kiosk</option>
         <option value = "testkit_csspaint_html">csspaint</option>
         <option value = "testkit_regen_html">regen</option>
+        <option value = "testkit_shop_html">shop</option>
         <option value = "testkit_store_gate_html">storegate</option>
         </select><br>
         <button id="testkit_menuStart">start</button>
@@ -388,7 +417,7 @@ const testkit_dir = {
         <option value = "local">local</option>
         </select>
         <button id="testkit_clerkButton">refresh</button>
-        <br><p id="testkit_clerkSelectDesc"></p><hr>
+        <br><span id="testkit_clerkSelectDesc"></span><hr>
         <div id="testkit_clerk"></div>
         
         `
@@ -412,25 +441,25 @@ const testkit_dir = {
                 if (clerk_select.value === "cache") {
                     document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are cached as staged! (X to destroy)</i>';
                     lain.cache.forEach(function(item, index) {
-                        htmlString += '<p><a href="#" id="removeCache_' + index + '">X</a> ' + item.name + '</p>';
+                        htmlString += '<a href="#" id="removeCache_' + index + '">X</a> ' + item.name + '<br>';
                     });
                 } else if (clerk_select.value === "rom") {
                     document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are activated functions!</i>';
                     Object.entries(lain.rom).filter(function([key, value]) { return value !== null; })
                         .forEach(function([key, value]) {
-                            htmlString += '<p>' + key + '()</p>';
+                            htmlString += key + '()<br>';
                         });
                 } else if (clerk_select.value === "dir") {
                     document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>heres what directory has indexed! (X to attempt build)</i>';
                     Object.entries(lain.dir).forEach(function([key, value]) {
                         if (value !== undefined) {
-                            htmlString += '<p><a href="#" id="dir_' + key + '">X</a> ' + key + ' <i> - ' + value.name + '</i></p>';
+                            htmlString += '<a href="#" id="dir_' + key + '">X</a> ' + key + ' <i> - ' + value.name + '</i><br>';
                         }
                     });
                 } else if (clerk_select.value === "local") {
                     document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>keys placed in local storage:</i>';
                     Object.keys(localStorage).forEach(function(key) {
-                        htmlString += '<p>' + key + '</p>';
+                        htmlString += + key + '<br>';
                     });
                 }
                 targetElement.innerHTML = htmlString;

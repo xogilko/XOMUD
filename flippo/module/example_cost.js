@@ -1,4 +1,4 @@
-const example_b = {
+const example_cost = {
     "testkit_register_sw":{
         "uri": "xo.389138909067605626",
         "urns": "xotestkit",
@@ -20,10 +20,10 @@ const example_b = {
     },
 }
 try{
-    Object.keys(example_b).forEach(key => {
-        alice.dir[key] = example_b[key];
+    Object.keys(example_cost).forEach(key => {
+        alice.dir[key] = example_cost[key];
     });
-    console.log("example_b deployed")
+    console.log("example_cost deployed")
     } catch (error) {
-        console.log("failed to deploy example_b to alice:", error);
+        console.log("failed to deploy example_cost to alice:", error);
     }

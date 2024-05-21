@@ -96,71 +96,94 @@ const navi = function (lain, ...rest) {
     return { lain };
 };
 function chisa(request) {
-    const meta = {};
-    Array.from(document.getElementsByTagName('meta')).forEach(tag => {
-        Array.from(tag.attributes).forEach(attr => {
-            meta[attr.name] = attr.value;
-        });
-    });
-    if (!meta['portal']) {
-        console.error('navi has no portal key');
-        return;
-    }
-    else {
-        alice.portal = meta['portal'];
-    }
-    const req_headers = {
-        'Content-Type': 'application/json',
-    };
-    if (request) {
+    if (request && request.msg) { //request.msg is the http path for module
+        const req_headers = {
+            'Content-Type': 'application/json',
+        };
         if (request.headers) {
             Object.assign(req_headers, request.headers);
         }
+        const bodyData = {
+            ...request, // Spread other properties of request into the body
+        };
+        const requestOptions = {
+            method: 'POST',
+            headers: req_headers,
+            body: JSON.stringify(bodyData)
+        };
+        fetch(alice.portal + request.msg, requestOptions)
+            .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to load module ${request.msg}`);
+            }
+            return response.text();
+        })
+            .then(moduleScript => {
+            eval(moduleScript);
+        })
+            .catch(error => {
+            console.error('Error loading module:', error);
+        });
     }
-    var client = {
-        href: window.location.href,
-        userAgent: navigator.userAgent,
-        touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-        connection: navigator.connection ? navigator.connection.effectiveType : 'unknown',
-        uri: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
-    };
-    const bodyData = {
-        msg: request?.msg || '',
-        client: client
-    };
-    console.log(bodyData, "requesting service ✩");
-    const requestOptions = {
-        method: 'POST',
-        headers: req_headers,
-        body: JSON.stringify(bodyData)
-    };
-    fetch(alice.portal + '/collect_dir/', requestOptions)
-        .then(response => {
-        if (!response.ok) {
-            throw new Error('no response');
-        }
-        return response.json();
-    })
-        .then((urls) => {
-        urls.forEach((url) => {
-            fetch(alice.portal + url, { method: 'GET' })
-                .then(modResponse => {
-                if (!modResponse.ok) {
-                    throw new Error('Failed to load module');
-                }
-                return modResponse.text();
-            })
-                .then(moduleScript => {
-                eval(moduleScript);
-            })
-                .catch(error => {
-                console.error('Error loading module:', error);
+    else { //when request.msg does not exist
+        const meta = {};
+        Array.from(document.getElementsByTagName('meta')).forEach(tag => {
+            Array.from(tag.attributes).forEach(attr => {
+                meta[attr.name] = attr.value;
             });
         });
-    })
-        .catch(error => {
-        console.error('failed to collect dir:', error);
-    });
+        if (!meta['portal']) {
+            console.error('navi has no portal key');
+            return;
+        }
+        else {
+            alice.portal = meta['portal'];
+        }
+        const req_headers = {
+            'Content-Type': 'application/json',
+        };
+        const bodyData = {
+            client: {
+                href: window.location.href,
+                touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+                connection: navigator.connection ? navigator.connection.effectiveType : 'unknown',
+                uri: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
+            }
+        };
+        console.log(bodyData, "requesting service ✩");
+        const requestOptions = {
+            method: 'POST',
+            headers: req_headers,
+            body: JSON.stringify(bodyData)
+        };
+        fetch(alice.portal + '/collect_dir/', requestOptions)
+            .then(response => {
+            if (!response.ok) {
+                throw new Error('no response');
+            }
+            return response.json();
+        })
+            .then((urls) => {
+            urls.forEach((url) => {
+                fetch(alice.portal + url, requestOptions)
+                    .then(modResponse => {
+                    if (!modResponse.ok) {
+                        throw new Error(`Failed to load module ${url}`);
+                    }
+                    return modResponse.text();
+                })
+                    .then(moduleScript => {
+                    eval(moduleScript);
+                })
+                    .catch(error => {
+                    console.error('Error loading module:', error);
+                });
+            });
+        })
+            .catch(error => {
+            console.error('failed to collect dir:', error);
+        });
+    }
 }
 const alice = {
     sign: 'xo',

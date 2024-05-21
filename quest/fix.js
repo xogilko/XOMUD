@@ -4,11 +4,19 @@
 /* QUEST */
 
 /*  
+    ex:
+    Private Key: cUWf3a2zgD3vfTcJiLKkv3MvCG7hRekCmXDMzE951gZkf7hkwqVF
+    Public Key: 02843e3df01460e099dcf5cfb4f1cd190fae50fac53f28f5b24197aec325fff55d
+    Public Address: mpyuybyu8suYfjDumBtp5KoXQo8QxqfrMK
+    vendor address: mtRAtJ172v3BNkYMdtnwYoA3zmMMjAoFN9
+    offer hash: 2db89636be8fc3d7762cba324338840c
+    txid: c4aa517b977d94b0d93471b5e872996c5b3b768ed93f7dc41e5d0536532c8a8c
 
-    navi.js code needs a disclaimer in comment and an explicit config for endpoint
-    so i am distributing navi.js configured for xomud.quest
+    retire permits
+    
+    navi.js code needs a disclaimer
 
-    the way menu calls navi ignores the context and therefore the launch array is empty on regen
+    modules need a way to re-establish targetElement incase its destroyed
 
     cant delete multiple html clones (only one actually but the rest no)
 
@@ -30,7 +38,4 @@
     padlock -
     protect localstorage via a process and closure from eval() manipulation:
     need to make sure the keystoWatch variable is protected, whether it be static or thru some other magic    
-
-    add a service worker to reroute /command/ to 8081 etc
-    a function that recieves responses that accepts objects to dir or docs to aux
 */

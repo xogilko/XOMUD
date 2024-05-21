@@ -99,16 +99,20 @@ func main() {
 		proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
 
 		handlerPath := "/" + prefix + "/"
-		http.HandleFunc(handlerPath, func(proxy *httputil.ReverseProxy, handlerPath string) http.HandlerFunc {
+		http.HandleFunc(handlerPath, func(proxy *httputil.ReverseProxy, handlerPath, prefix string) http.HandlerFunc {
 			return func(w http.ResponseWriter, r *http.Request) {
 				enableCORS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					modifiedPath := "/" + r.URL.Path[len(handlerPath):]
 					log.Printf("Forwarding request to %s: %s", prefix, modifiedPath)
+					log.Printf("Original request method: %s", r.Method) // Log the original method
+
 					r.URL.Path = modifiedPath
 					proxy.ServeHTTP(w, r)
+
+					log.Printf("Request method after proxy: %s", r.Method) // Log the method after proxy handling
 				})).ServeHTTP(w, r)
 			}
-		}(proxy, handlerPath))
+		}(proxy, handlerPath, prefix))
 	}
 	//send navi dir files *post rq: body(domain context)*
 	http.HandleFunc("/collect_dir/", func(w http.ResponseWriter, r *http.Request) {

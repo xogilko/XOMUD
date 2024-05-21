@@ -16,7 +16,8 @@ export function activate_module(lain) {
         lain.rom.testkit_kiosk= () => {
             console.log('kiosk is open');
             
-            const genKey = (hd, derive = '') => { //derive not functional yet
+            const genKey = (hd, derive = '') => { 
+                let randomIndex = Math.floor(Math.random() * 1000000);
                 if (derive == ''){
                     if (hd == false){ //fresh normal keys
                         let gen_privateKey = new bsv.PrivateKey.fromRandom('testnet');
@@ -43,8 +44,9 @@ export function activate_module(lain) {
                 else { 
                     if (hd == false){ //derive normal keys
                         let derivekey = new bsv.HDPrivateKey.fromString(derive);
-                        let gen_privateKey = new bsv.PrivateKey.fromString(derivekey.privateKey.toString());
-                        let gen_publicKey = new bsv.PublicKey.fromString(derivekey.publicKey.toString());
+                        let childKey = derivekey.deriveChild(`m/0'/0/${randomIndex}`);
+                        let gen_privateKey = childKey.privateKey;
+                        let gen_publicKey = childKey.publicKey;
                         console.log(gen_privateKey.toString(), gen_publicKey.toString())
                         let gen_pubAddress = new bsv.Address.fromPublicKey(gen_publicKey, 'testnet');
                         return {
@@ -55,9 +57,8 @@ export function activate_module(lain) {
 
                     } else { //derive hd keys
                         let derivekey = new bsv.HDPrivateKey.fromString(derive);
-                        let gen_privateKey = derivekey.deriveChild("m/5/2/8").toString()
+                        let gen_privateKey = derivekey.deriveChild(`m/0'/0/${randomIndex}`);
                         let gen_publicKey = new bsv.HDPublicKey.fromHDPrivateKey(gen_privateKey, 'testnet');
-                        console.log(gen_privateKey.toString(), gen_publicKey.toString())
                         let gen_pubAddress = new bsv.Address.fromPublicKey(gen_publicKey.publicKey, 'testnet');
                         return {
                             gen_privateKey,
@@ -66,7 +67,6 @@ export function activate_module(lain) {
                         }
                     }
                 }
-
             }
 
             const getScriptPubKey = (pubkey) => {
@@ -113,7 +113,7 @@ export function activate_module(lain) {
                     });
             };
 
-            const makeTX = async (inputUTXOaddress, inputUTXOpubkey, inputTargetAddr, spend, inputChangeAddr, inputPrivateKey, confirm) => {
+            const makeTX = async (inputUTXOaddress, inputUTXOpubkey, inputTargetAddr, spend, inputChangeAddr, inputPrivateKey, memo, confirm) => {
                 return new Promise(async (resolve, reject) => {
                     try {
                         const utxos = await getUTXO(inputUTXOaddress, confirm, inputUTXOpubkey);
@@ -122,7 +122,7 @@ export function activate_module(lain) {
                                 .from(utxos)
                                 .to(inputTargetAddr, parseInt(spend, 10))
                                 .addOutput(new bsv.Transaction.Output({
-                                    script: bsv.Script.buildDataOut('testkit kiosk'),
+                                    script: bsv.Script.buildDataOut(memo),
                                     satoshis: 0
                                 }))
                                 .change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
@@ -147,6 +147,7 @@ export function activate_module(lain) {
                 })
                 const bres = await b.json();
                 console.log('broadcasted tx', bres);
+                return bres;
             }
 
             testkit_kiosk_keygen_button.addEventListener('click', function() {
@@ -156,9 +157,9 @@ export function activate_module(lain) {
                 } else {
                     generation = genKey(testkit_kiosk_keygen_hdcheck.checked, testkit_kiosk_keygen_derive.value);
                 }
-                testkit_kiosk_keygen_privKey.innerHTML = 'Private Key: ' + generation.gen_privateKey.toString();
-                testkit_kiosk_keygen_pubKey.innerHTML = 'Public Key: ' + generation.gen_publicKey.toString();
-                testkit_kiosk_keygen_pubAddr.innerHTML = 'Public Address: ' + generation.gen_pubAddress.toString();
+                testkit_kiosk_keygen_privKey.innerHTML = '<br>Private Key: ' + generation.gen_privateKey.toString();
+                testkit_kiosk_keygen_pubKey.innerHTML = '<br>Public Key: ' + generation.gen_publicKey.toString();
+                testkit_kiosk_keygen_pubAddr.innerHTML = '<br>Public Address: ' + generation.gen_pubAddress.toString();
             });
 
             testkit_kiosk_getUTXO_button.addEventListener('click', function() {
@@ -168,9 +169,9 @@ export function activate_module(lain) {
                     if (utxos.length > 0) {
                     console.log(utxos);
                     let totalValue = utxos.reduce((acc, utxo) => acc + utxo.value, 0);
-                    UTXO_total.innerHTML = 'total: ' + totalValue.toString() + '⌀';
+                    testkit_kiosk_UTXO_total.innerHTML = '<br>total: ' + totalValue.toString() + '⌀';
                     } else {
-                        document.getElementById('UTXO_total').innerHTML = 'no record';
+                        document.getElementById('testkit_kiosk_UTXO_total').innerHTML = 'no record';
                     }
                 }).catch(error => {
                     console.error('Error fetching UTXOs:', error);
@@ -181,10 +182,16 @@ export function activate_module(lain) {
                 makeTX(testkit_kiosk_inputForTX_utxo.value, testkit_kiosk_inputForTX_pubkey.value,
                     testkit_kiosk_inputForTX_target.value, testkit_kiosk_inputForTX_amount.value,
                     testkit_kiosk_inputForTX_change.value, testkit_kiosk_inputForTX_sign.value,
-                    testkit_kiosk_inputForTX_confirm.checked).then(xo => {
+                    testkit_kiosk_inputForTX_memo.value, testkit_kiosk_inputForTX_confirm.checked).then(xo => {
                         let tx = xo;
                         console.log('will broadcast:', tx)
-                        broadcast(tx);
+                        broadcast(tx).then(bres => {
+                            testkit_kiosk_TX_ID.innerHTML = "txid: " + bres.toString();
+                            // You can use bres here as needed
+                        }).catch(error => {
+                            console.error('error broadcasting tx:', error);
+                            testkit_kiosk_TX_ID.innerHTML = "error broadcasting tx";
+                        });;
                     });
             });
         }
