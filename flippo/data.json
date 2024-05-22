@@ -21,7 +21,7 @@
         "department": {
             "Bob's Shop": {
                 "example_cost.js": {
-                    "desc": "optional",
+                    "desc": "this is an example",
                     "vendor":"Bob",
                     "price": 5000,
                     "expiration": null

@@ -131,9 +131,10 @@ const testkit_dir = {
         "media": `
         <span>
         <div id="testkit_shop">
-        <i>department:</i>
+        <b>department:</b>
         <input type = "text" id="testkit_shop_depart" placeholder="department" value="Bob's Shop">
         <button id="testkit_shop_refresh">refresh</button>
+        <br><i>receipts must have offer hash in memo</i>
         <hr>
         <div id="testkit_shop_list"></div>
         </div>
@@ -146,6 +147,21 @@ const testkit_dir = {
         "kind": "jsmod",
         "name": "testkit shop applet",
         "media": "/flippo/dirmod/testkit_dir/testkit_shop"
+    },
+    "fishtext":{
+        "uri": "xo.1051901904694690906",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "fishtext",
+        "child": "testkit_maritime",
+        "media": '<div id="fishtext"></div>'
+    },
+    "testkit_maritime":{
+        "uri": "xo.1051901904694690906",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit maritime",
+        "media": "/flippo/dirmod/fish"
     },
     "testkit_kiosk_html":{
         "uri": "xo.1294189056906",
@@ -331,76 +347,9 @@ const testkit_dir = {
     "drag_functions":{
         "uri": "xo.1346901349050946",
         "urns": "xotestkit",
-        "kind": "js",
+        "kind": "jsmod",
         "name": "draggable divs controller",
-        "media": `
-        lain.rom.drag_init = () => {
-            const initializedElements = new Set();
-            const draggin = (e) => {
-                const element = e.target;
-                if (element.closest('.dragged_content')) return;
-                e.preventDefault();
-                const rect = element.getBoundingClientRect();
-                const offsetX = e.clientX - rect.left;
-                const offsetY = e.clientY - rect.top;
-                const leftInPx = rect.left + window.scrollX;
-                const topInPx = rect.top + window.scrollY;
-                element.style.position = 'absolute';
-                element.style.left = leftInPx + 'px';
-                element.style.top = topInPx + 'px';
-                document.body.append(element);
-                const dragMove = (moveEvent) => {
-                    const newLeft = moveEvent.pageX - offsetX;
-                    const newTop = moveEvent.pageY - offsetY;
-                    element.style.left = newLeft + 'px';
-                    element.style.top = newTop + 'px';
-                };
-                const dragEnd = () => {
-                    document.removeEventListener('mousemove', dragMove);
-                    document.removeEventListener('mouseup', dragEnd);
-                };
-                document.addEventListener('mousemove', dragMove);
-                document.addEventListener('mouseup', dragEnd);
-            };
-            const addDragEventListener = (element) => {
-                element.addEventListener('mousedown', draggin);
-                if (!initializedElements.has(element)) {
-                    // Manually trigger the draggin function
-                    const simMouseDown = new MouseEvent('mousedown', {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true,
-                        clientX: element.getBoundingClientRect().left,
-                        clientY: element.getBoundingClientRect().top
-                    });
-                    element.dispatchEvent(simMouseDown);
-                    const simMouseUp = new MouseEvent('mouseup', {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true,
-                        clientX: element.getBoundingClientRect().left,
-                        clientY: element.getBoundingClientRect().top
-                    });
-                    element.dispatchEvent(simMouseUp);
-                    initializedElements.add(element);
-                }
-            };
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1 && node.classList.contains('draggable')) {
-                            addDragEventListener(node);
-                        }
-                    });
-                });
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-            const draggableElements = document.querySelectorAll('.draggable');
-            draggableElements.forEach(element => {
-                addDragEventListener(element);
-            });
-        }
-        `
+        "media": "/flippo/dirmod/testkit_dir/drag_functions"
     },
     "testkit_clerk_html":{
         "uri": "xo.13904517903346136136",
@@ -418,7 +367,7 @@ const testkit_dir = {
         </select>
         <button id="testkit_clerkButton">refresh</button>
         <br><span id="testkit_clerkSelectDesc"></span><hr>
-        <div id="testkit_clerk"></div>
+        <div id="testkit_clerk" style="max-height: 400px; overflow-y: auto;"></div>
         
         `
     },
@@ -560,7 +509,6 @@ const testkit_dir = {
             eiri(lain, lain.dir.testkit_style_html, document.head);  
             eiri(lain, lain.dir.drag_functions);
             eiri(lain, lain.dir.enclose_draggable);
-            lain.rom.drag_init();
             eiri(lain, lain.dir.bsv_script);
             eiri(lain, lain.dir.htmx_import);
             eiri(lain, lain.dir.css_manager);
@@ -570,7 +518,7 @@ const testkit_dir = {
             eiri(lain, lain.dir.htmx_observe);
             eiri(lain, lain.dir.testkit_destroy);
             const checkAndExecute = () => {
-                if (typeof lain.rom.enclose_draggable === 'function') {
+                if (typeof lain.rom.enclose_draggable === 'function' && typeof lain.rom.drag_init === 'function') {
                     eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_menu_html), document.body);
                 } else {
                     setTimeout(checkAndExecute, 100);

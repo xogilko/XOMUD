@@ -12,11 +12,8 @@
     offer hash: 2db89636be8fc3d7762cba324338840c
     txid: c4aa517b977d94b0d93471b5e872996c5b3b768ed93f7dc41e5d0536532c8a8c
 
-    retire permits
-    
     navi.js code needs a disclaimer
-
-    modules need a way to re-establish targetElement incase its destroyed
+    obfuscate eiri
 
     cant delete multiple html clones (only one actually but the rest no)
 
