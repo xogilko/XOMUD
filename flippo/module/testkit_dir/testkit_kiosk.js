@@ -70,11 +70,10 @@ export function activate_module(lain) {
             }
 
             const getScriptPubKey = (pubkey) => {
-                console.log('getscriptpubkey', pubkey);
                 const pubKeyHash = bsv.crypto.Hash.sha256ripemd160(pubkey.toBuffer()).toString('hex')
-                console.log(pubKeyHash);
+                console.log('pkh:', pubKeyHash);
                 return bsv.Script.fromASM(`OP_DUP OP_HASH160 ${pubKeyHash} OP_EQUALVERIFY OP_CHECKSIG`)
-              }
+            }
 
             const getUTXO = async(address, confirm, inputPubkey = null) => {
                 let lookup = `https://api.whatsonchain.com/v1/bsv/test/address/${address}`;
@@ -104,16 +103,16 @@ export function activate_module(lain) {
                             value: out.value,
                             height: out.height,
                             amount: parseFloat((out.value / 1e8).toFixed(8)),
-                            script: pubkey? pubkey && getScriptPubKey(pubkey).toString() : out.script
+                            script: pubkey ? getScriptPubKey(pubkey).toString() : out.script
                         }));
                     })
                     .catch(error => {
                         console.error('Failed to fetch UTXOs:', error);
                         return []; // Return an empty array in case of error
                     });
-            };
+            }
 
-            const makeTX = async (inputUTXOaddress, inputUTXOpubkey, inputTargetAddr, spend, inputChangeAddr, inputPrivateKey, memo, confirm) => {
+            const makeTX = async (inputUTXOaddress, inputUTXOpubkey, inputTargetAddr, spend, inputChangeAddr, inputPrivateKey, scriptType, script, confirm) => {
                 return new Promise(async (resolve, reject) => {
                     try {
                         const utxos = await getUTXO(inputUTXOaddress, confirm, inputUTXOpubkey);
@@ -121,11 +120,18 @@ export function activate_module(lain) {
                             let tx = new bsv.Transaction()
                                 .from(utxos)
                                 .to(inputTargetAddr, parseInt(spend, 10))
-                                .addOutput(new bsv.Transaction.Output({
-                                    script: bsv.Script.buildDataOut(memo),
-                                    satoshis: 0
-                                }))
-                                .change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
+                                if (scriptType === 'data') {
+                                    tx.addOutput(new bsv.Transaction.Output({
+                                        script: bsv.Script.buildDataOut(script),
+                                        satoshis: 0
+                                    }));
+                                } else if (scriptType === 'asm') {
+                                    tx.addOutput(new bsv.Transaction.Output({
+                                        script: bsv.Script.fromASM(script),
+                                        satoshis: 0
+                                    }));
+                                }
+                                tx.change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
                                 .sign(new bsv.PrivateKey.fromString(inputPrivateKey, 'testnet'))
                                 .serialize();
                             resolve(tx); // Resolve the promise with the transaction
@@ -137,7 +143,8 @@ export function activate_module(lain) {
                         reject(error); // Reject the promise if there's an error
                     }
                 });
-            };
+            }
+
             const broadcast = async (tx) => {
                 const b = await fetch('https://api.whatsonchain.com/v1/bsv/test/tx/raw' , {
                     method: 'post',
@@ -161,7 +168,6 @@ export function activate_module(lain) {
                 testkit_kiosk_keygen_pubKey.innerHTML = '<br>Public Key: ' + generation.gen_publicKey.toString();
                 testkit_kiosk_keygen_pubAddr.innerHTML = '<br>Public Address: ' + generation.gen_pubAddress.toString();
             });
-
             testkit_kiosk_getUTXO_button.addEventListener('click', function() {
                 getUTXO(testkit_kiosk_inputKeyForUTXO.value, testkit_kiosk_confirmForUTXO.checked).then(xo => {
                     let utxos = xo;
@@ -177,12 +183,21 @@ export function activate_module(lain) {
                     console.error('Error fetching UTXOs:', error);
                 });
             });
-
-            testkit_kiosk_TX_button.addEventListener('click', function() {
+            testkit_inputForTX_script_select.addEventListener('change', function() {
+                var inputField = document.getElementById('testkit_kiosk_inputForTX_script');
+                if (this.value === 'asm') {
+                    inputField.placeholder = 'custom asm script';
+                } else {
+                    inputField.placeholder = 'memo (op_return)';
+                }
+            });
+            testkit_kiosk_makeTX_button.addEventListener('click', function() {
+                //could add logic for script_select constructions
                 makeTX(testkit_kiosk_inputForTX_utxo.value, testkit_kiosk_inputForTX_pubkey.value,
                     testkit_kiosk_inputForTX_target.value, testkit_kiosk_inputForTX_amount.value,
                     testkit_kiosk_inputForTX_change.value, testkit_kiosk_inputForTX_sign.value,
-                    testkit_kiosk_inputForTX_memo.value, testkit_kiosk_inputForTX_confirm.checked).then(xo => {
+                    testkit_inputForTX_script_select.value, testkit_kiosk_inputForTX_script.value,
+                    testkit_kiosk_inputForTX_confirm.checked).then(xo => {
                         let tx = xo;
                         console.log('will broadcast:', tx)
                         broadcast(tx).then(bres => {
@@ -194,6 +209,13 @@ export function activate_module(lain) {
                         });;
                     });
             });
+
+            return {
+                genKey,
+                getScriptPubKey,
+                getUTXO,
+                makeTX
+            };
         }
         waitforBSV();
     }

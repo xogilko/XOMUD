@@ -156,7 +156,7 @@ function chisa(request) {
             headers: req_headers,
             body: JSON.stringify(bodyData)
         };
-        fetch(alice.portal + '/collect_dir/', requestOptions)
+        fetch(alice.portal + '/quest/dirbox/', requestOptions)
             .then(response => {
             if (!response.ok) {
                 throw new Error('no response');

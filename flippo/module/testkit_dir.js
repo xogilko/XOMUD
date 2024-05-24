@@ -192,8 +192,12 @@ const testkit_dir = {
         <input type = "text" id = "testkit_kiosk_inputForTX_amount" placeholder = "spend amount">
         <br><input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address">
         <input type = "text" id = "testkit_kiosk_inputForTX_sign" placeholder = "signing private key">
-        <br><input type = "text" id = "testkit_kiosk_inputForTX_memo" placeholder = "memo">
-        <button id="testkit_kiosk_TX_button">make tx</button>
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_script" placeholder = "memo (op_return)">
+        <select id="testkit_inputForTX_script_select">
+        <option value = "data">memo</option>
+        <option value = "asm">asm</option>
+        </select>
+        <button id="testkit_kiosk_makeTX_button">make tx</button>
         <p><span id="testkit_kiosk_TX_ID"></span></p>
         </div>
         </span>
@@ -366,6 +370,8 @@ const testkit_dir = {
         <option value = "local">local</option>
         </select>
         <button id="testkit_clerkButton">refresh</button>
+        <input type = "text" id = "testkit_clerk_rqinput" placeholder = "/quest/dirmod/(...) <--">
+        <button id="testkit_clerk_rqButton">request</button>
         <br><span id="testkit_clerkSelectDesc"></span><hr>
         <div id="testkit_clerk" style="max-height: 400px; overflow-y: auto;"></div>
         
@@ -437,6 +443,10 @@ const testkit_dir = {
             };
             reset();
             document.getElementById('testkit_clerkButton').addEventListener('click', reset);
+            document.getElementById('testkit_clerk_rqButton').addEventListener('click', function() {
+                let calling = "/quest/dirmod/" + testkit_clerk_rqinput.value;
+                chisa({msg: calling});
+            });
         }
         lain.rom.testkit_clerk();
         `

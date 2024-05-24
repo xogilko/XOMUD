@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+var serviceURLs = map[string]string{ //:>>> server map
+	"flippo": "http://localhost:8081",
+}
+
 func seed(w http.ResponseWriter, r *http.Request) {
 
 	rootmap := []map[string]interface{}{

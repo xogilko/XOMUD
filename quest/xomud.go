@@ -83,41 +83,45 @@ func enableCORS(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-var serviceURLs = map[string]string{ //:>>> server map
-	"flippo": "http://localhost:8081",
+func proxyHandler(proxyUrl *url.URL, basePath string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
+		modifiedPath := "/" + r.URL.Path[len(basePath):]
+		r.URL.Path = modifiedPath
+		log.Printf("Forwarding request to %s: %s", proxyUrl, modifiedPath)
+		enableCORS(proxy).ServeHTTP(w, r)
+	}
 }
 
 func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	// proxy handler setup via server map
+
+	// court direct proxy
 	for prefix, urlString := range serviceURLs {
 		proxyUrl, err := url.Parse(urlString)
 		if err != nil {
 			log.Fatalf("Error parsing URL for %s: %v", prefix, err)
 		}
-		proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
-
 		handlerPath := "/" + prefix + "/"
-		http.HandleFunc(handlerPath, func(proxy *httputil.ReverseProxy, handlerPath, prefix string) http.HandlerFunc {
-			return func(w http.ResponseWriter, r *http.Request) {
-				enableCORS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					modifiedPath := "/" + r.URL.Path[len(handlerPath):]
-					log.Printf("Forwarding request to %s: %s", prefix, modifiedPath)
-					log.Printf("Original request method: %s", r.Method) // Log the original method
-
-					r.URL.Path = modifiedPath
-					proxy.ServeHTTP(w, r)
-
-					log.Printf("Request method after proxy: %s", r.Method) // Log the method after proxy handling
-				})).ServeHTTP(w, r)
-			}
-		}(proxy, handlerPath, prefix))
+		http.HandleFunc(handlerPath, proxyHandler(proxyUrl, handlerPath))
 	}
-	//send navi dir files *post rq: body(domain context)*
-	http.HandleFunc("/collect_dir/", func(w http.ResponseWriter, r *http.Request) {
-		enableCORS(http.HandlerFunc(plant)).ServeHTTP(w, r)
+
+	// /quest/ courtier proxy
+	http.HandleFunc("/quest/", func(w http.ResponseWriter, r *http.Request) {
+		// Dynamically select the first service URL for demonstration
+		for _, urlString := range serviceURLs {
+			proxyUrl, err := url.Parse(urlString)
+			if err != nil {
+				log.Printf("Error parsing URL: %v", err)
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
+			proxyHandler(proxyUrl, "/quest/")(w, r)
+			return
+		}
+		http.Error(w, "Service not available", http.StatusServiceUnavailable)
 	})
+
 	//serve website
 	http.HandleFunc("/", seed)
 	//global service
