@@ -84,9 +84,12 @@ const testkit_dir = {
         "name": "testkit styles :)",
         "media": `
         <style>
+            body {
+            background-color: cyan;
+            }
             .draggable {
             padding: 2px;
-            background-color: #00aeb4;
+            background-color: silver;
             line-height: normal;
             position: absolute;
             cursor: move;
@@ -105,13 +108,13 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "dynamic htmx observer",
-        "media": "/flippo/dirmod/testkit_dir/htmx_observe"
+        "media": "/flippo/dirmod/testkit_dir/htmx_observe.js"
     },
     "bsv_script":{
         "uri": "xo.12591903790136",
         "urns": "xotestkit",
         "kind": "js",
-        "name": "append bsv library 1.5.6",
+        "name": "bsv library 1.5.6",
         "media": `
         new Promise((resolve, reject) => {
             const script = document.createElement('script');
@@ -146,10 +149,10 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit shop applet",
-        "media": "/flippo/dirmod/testkit_dir/testkit_shop"
+        "media": "/flippo/dirmod/testkit_dir/testkit_shop.js"
     },
     "fishtext":{
-        "uri": "xo.1051901904694690906",
+        "uri": "xo.1358356737564645646",
         "urns": "xotestkit",
         "kind": "html",
         "name": "fishtext",
@@ -157,11 +160,11 @@ const testkit_dir = {
         "media": '<div id="fishtext"></div>'
     },
     "testkit_maritime":{
-        "uri": "xo.1051901904694690906",
+        "uri": "xo.10597953363777764",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit maritime",
-        "media": "/flippo/dirmod/fish"
+        "media": "/flippo/dirmod/fish.js"
     },
     "testkit_kiosk_html":{
         "uri": "xo.1294189056906",
@@ -192,7 +195,7 @@ const testkit_dir = {
         <input type = "text" id = "testkit_kiosk_inputForTX_amount" placeholder = "spend amount">
         <br><input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address">
         <input type = "text" id = "testkit_kiosk_inputForTX_sign" placeholder = "signing private key">
-        <br><input type = "text" id = "testkit_kiosk_inputForTX_script" placeholder = "memo (op_return)">
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_script" placeholder = "memo">
         <select id="testkit_inputForTX_script_select">
         <option value = "data">memo</option>
         <option value = "asm">asm</option>
@@ -208,13 +211,13 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit kiosk applet",
-        "media": "/flippo/dirmod/testkit_dir/testkit_kiosk"
+        "media": "/flippo/dirmod/testkit_dir/testkit_kiosk.js"
     },
     "htmx_import":{
         "uri": "xo.103901390590134576",
         "urns": "xotestkit",
         "kind": "js",
-        "name": "htmx import 1.9.11",
+        "name": "htmx library 1.9.11",
         "media": `
             import('https://unpkg.com/htmx.org@1.9.11')
             .then(htmx => {
@@ -346,14 +349,14 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "destroy via cache",
-        "media": "/flippo/dirmod/testkit_dir/testkit_destroy"
+        "media": "/flippo/dirmod/testkit_dir/testkit_destroy.js"
     },
     "drag_functions":{
         "uri": "xo.1346901349050946",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "draggable divs controller",
-        "media": "/flippo/dirmod/testkit_dir/drag_functions"
+        "media": "/flippo/dirmod/testkit_dir/drag_functions.js"
     },
     "testkit_clerk_html":{
         "uri": "xo.13904517903346136136",
@@ -367,10 +370,11 @@ const testkit_dir = {
         <option value = "cache">cache</option>
         <option value = "rom">rom</option>
         <option value = "dir">dir</option>
-        <option value = "local">local</option>
+        <option value = "ls">ls</option>
+        <option value = "db">db</option>
         </select>
         <button id="testkit_clerkButton">refresh</button>
-        <input type = "text" id = "testkit_clerk_rqinput" placeholder = "/quest/dirmod/(...) <--">
+        <input type = "text" id = "testkit_clerk_rqinput" placeholder = 'request module via path'>
         <button id="testkit_clerk_rqButton">request</button>
         <br><span id="testkit_clerkSelectDesc"></span><hr>
         <div id="testkit_clerk" style="max-height: 400px; overflow-y: auto;"></div>
@@ -411,10 +415,29 @@ const testkit_dir = {
                             htmlString += '<a href="#" id="dir_' + key + '">X</a> ' + key + ' <i> - ' + value.name + '</i><br>';
                         }
                     });
-                } else if (clerk_select.value === "local") {
+                } else if (clerk_select.value === "ls") {
                     document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>keys placed in local storage:</i>';
                     Object.keys(localStorage).forEach(function(key) {
                         htmlString += + key + '<br>';
+                    });
+                } else if (clerk_select.value === "db") {
+                    document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>here are objects in IndexedDB: (X to attempt dir)</i>';
+                    lain.rom.dbModule.openDB().then(function() {
+                        lain.db.forEach(function(id) {
+                            lain.rom.dbModule.getData(id).then(function(data) {
+                                if (typeof data === 'object' && data !== null) {
+                                    htmlString += '<a href="#" id="moveToDir_' + id + '">X</a>' + ' id(' + id + '): ' + ( (data.file + ' ' + data.name) || 'data.name' || 'unnamed') + '<br>';
+                                    targetElement.innerHTML = htmlString;
+                                    document.getElementById('moveToDir_' + id).onclick = function() {
+                                        alice.dir[data.file] = data;
+                                        console.log('Moved ' + data.name + ' to directory under key ' + data.file);
+                                        lain.rom.dbModule.deleteData(id);
+                                        reset();
+                                        return false;
+                                    };
+                                }
+                            });
+                        });
                     });
                 }
                 targetElement.innerHTML = htmlString;
@@ -440,6 +463,7 @@ const testkit_dir = {
                         }
                     });
                 }
+                
             };
             reset();
             document.getElementById('testkit_clerkButton').addEventListener('click', reset);
@@ -459,9 +483,9 @@ const testkit_dir = {
         "child": "testkit_csspaint_func",
         "media": `
         <div id="testkit_retouch">
-        <input type = "text" id = "retouchClass" value = ".draggable">
+        <input type = "text" id = "retouchClass" value = "body">
         <input type = "text" id = "retouchProperty" value = "background-color">
-        <input type = "text" id = "retouchValue" value = "red">
+        <input type = "text" id = "retouchValue" value = "cyan">
         <button id="testkit_retouchButton">retouch</button>
         </div>
         `
@@ -471,14 +495,21 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit csspaint applet",
-        "media": "/flippo/dirmod/testkit_dir/testkit_csspaint_func"
+        "media": "/flippo/dirmod/testkit_dir/testkit_csspaint_func.js"
     },
     "enclose_draggable":{
         "uri": "xo.9076309520571515566",
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "enclose x in draggable div",
-        "media": "/flippo/dirmod/testkit_dir/enclose_draggable"  
+        "media": "/flippo/dirmod/testkit_dir/enclose_draggable.js"  
+    },
+    "testkit_indexedDB":{
+        "uri": "xo.098067293572359340",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "indexedDB functions",
+        "media": "/flippo/dirmod/testkit_dir/indexeddb.js"  
     },
     "testkit_store_gate_html":{
         "uri": "xo.346975705910570175",
@@ -488,14 +519,16 @@ const testkit_dir = {
         "child": "testkit_store_gate_func",
         "media": `
         <div id="testkit_store_gate">
-        <input type = "text" id = "testkit_store_gate_Entry" placeholder = "dir index / storage key">
+        <input type = "text" id = "testkit_store_gate_Entry" placeholder = "index / key">
         <select id="testkit_store_gate_mode">
         <option value = "cut"> cut </option>
         <option value = "copy"> copy </option>
         </select>
         <select id="testkit_store_gate_select">
-        <option value = "b2ls"> dir -> local storage </option>
-        <option value = "ls2b"> local storage -> dir </option>
+        <option value = "b2ls">dir -> ls</option>
+        <option value = "ls2b">ls -> dir</option>
+        <option value = "b2db">dir -> db</option>
+        <option value = "db2b">db -> dir</option>
         </select>
         <button id="testkit_store_gate_Button">move!</button>
         </div>
@@ -506,7 +539,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "testkit move! applet",
-        "media": "/flippo/dirmod/testkit_dir/testkit_store_gate_func" 
+        "media": "/flippo/dirmod/testkit_dir/testkit_store_gate_func.js" 
     },
     "demo_proc":{
         "uri": "xo.190571057013560106038",
@@ -519,6 +552,7 @@ const testkit_dir = {
             eiri(lain, lain.dir.testkit_style_html, document.head);  
             eiri(lain, lain.dir.drag_functions);
             eiri(lain, lain.dir.enclose_draggable);
+            eiri(lain, lain.dir.testkit_indexedDB);
             eiri(lain, lain.dir.bsv_script);
             eiri(lain, lain.dir.htmx_import);
             eiri(lain, lain.dir.css_manager);
@@ -534,7 +568,7 @@ const testkit_dir = {
                     setTimeout(checkAndExecute, 100);
                 }
             };
-            checkAndExecute();
+           checkAndExecute();
             
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_regen_html), document.body);  
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_csspaint_html), document.body);
@@ -573,7 +607,7 @@ const testkit_dir = {
         "urns": "xotestkit",
         "kind": "jsmod",
         "name": "edit/create css manager",
-        "media": "/flippo/dirmod/testkit_dir/css_manager"
+        "media": "/flippo/dirmod/testkit_dir/css_manager.js"
     },
     "dom_reporter":{
         "uri": "xo.5475837342346844768768",
@@ -695,7 +729,7 @@ const testkit_dir = {
         "uri": "xo.1321346875468776",
         "urns": "xotestkit",
         "kind": "js",
-        "name": "regenerate navi w/ proc",
+        "name": "testkit regen applet",
         "media": `
         lain.rom.testkit_regen = () => {
             const removeAllStylesheets = () => {
@@ -712,6 +746,7 @@ const testkit_dir = {
                     let skeleton = lain.rom.exporter();
                     skeleton.name = "skeleton export";
                     lain.dir[label] = skeleton;
+                    lain.dir[label].file = label;
                     testkit_exportName.value = '';
                 } catch (error) {
                     console.log("failed to generate skeleton", error);
@@ -728,16 +763,18 @@ const testkit_dir = {
                     // first clean up
                     for (let i = lain.cache.length - 1; i >= 0; i--) {
                         const cacheItem = lain.cache[i];
-                        if (cacheItem && cacheItem.uri === "xo.01gh1085h01rij") {continue;}
+                        if (cacheItem && cacheItem.uri === "xo.15901360516061") {continue;}
                         lain.rom.removeCacheItem({index: i});
                     }
-                    const removeCacheItemIndex = lain.cache.findIndex(item => item && item.uri === "xo.01gh1085h01rij");
+                    const removeCacheItemIndex = lain.cache.findIndex(item => item && item.uri === "xo.15901360516061");
                     if (removeCacheItemIndex !== -1) {
                         console.log("manual removal");
                         lain.rom.removeCacheItem({index: removeCacheItemIndex});  
                     }
                     console.log('cache is..');
                     console.log(lain.cache);
+                    lain.cache = [];
+                    console.log('tossed', lain.cache)
                     removeAllStylesheets();
                     lain.domset= 0; // dom is cleared
                     //run proc, then dom_reassignment, then style

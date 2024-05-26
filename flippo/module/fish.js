@@ -2,7 +2,7 @@ function fishFunction() {
     
     const fish = document.createElement('div');
     fish.className = 'hyperfish';
-    fish.innerText = 'fish';
+    fish.innerHTML = '<span>fish</span>';
     fish.style.position = 'absolute';
     fish.style.left = `${Math.random() * window.innerWidth}px`;
     fish.style.top = `${Math.random() * window.innerHeight}px`;
@@ -36,13 +36,13 @@ function fishFunction() {
 
     function startDarting(x, y) {
         darting = true;
-        fish.innerHTML = '<i>fish</i>'; // Change innerHTML to italicized when darting
+        fish.innerHTML = '<span><i>fish</i></span>'; // Change innerHTML to italicized when darting
         speed = 20; // Temporarily increase speed for darting
         directionX = x > parseInt(fish.style.left, 10) + fish.offsetWidth / 2 ? -1 : 1;
         directionY = y > parseInt(fish.style.top, 10) + fish.offsetHeight / 2 ? -1 : 1;
         setTimeout(() => {
             darting = false;
-            fish.innerText = 'fish'; // Reset innerText when not darting
+            fish.innerHTML = '<span>fish</span>'; // Reset innerText when not darting
             speed = 2; // Reset to lazy speed after darting
         }, 1000); // Dart for one second
     }

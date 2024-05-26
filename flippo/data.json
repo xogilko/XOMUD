@@ -2,14 +2,47 @@
     "dirDatabase": {
         "priv": "cMr9x7JtgEdXTS6vFxa9UHNzVsYWcPM9vwtziepTCJGX7dVnyrXe",
         "skellykey": "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6",
+
+
+
+
+
         "uri": {
             "testkit": ["testkit_dir.js"]
         },
+
+
         "hosts": {
             "http://localhost:8083/": {
-                "testkit": ["example_dir.js", "example_cost.js"]
+                "uri": {
+                    "testkit": ["example_dir.js"]
+                }
             }
         },
+
+        "domains": {
+            "test_game": {
+                "ordinance": ["txid"],
+                "condition": {
+                    "join condition": "",
+                    "leave condition": ""
+                },
+                "hosts": {
+                    "*://*/*": {
+                        "condition": {}
+                    },
+                    "http://localhost:8083/": {
+                        "condition": {}
+                    }
+                }
+            }
+        },
+
+
+
+
+
+
         "permit": {
             "example_cost.js": {
                 "department": ["Bob's Shop"],

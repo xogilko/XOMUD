@@ -3,7 +3,7 @@ export function activate_module(lain) {
     lain.rom.store_gate = () => {
         const gate = () => {
             console.log('move!');
-            entryElement = document.getElementById("testkit_store_gate_Entry");
+            const entryElement = document.getElementById("testkit_store_gate_Entry");
             let entry = entryElement.value;
             entryElement.value = '';
             let direction = document.getElementById("testkit_store_gate_select").value;
@@ -40,8 +40,36 @@ export function activate_module(lain) {
                 } else {
                     console.log("item not found in local storage");
                 }
+            } else if (direction === "b2db") {
+                if (lain.dir.hasOwnProperty(entry)) {
+                    lain.rom.dbModule.addData(lain.dir[entry]).then(function(id) {
+                        console.log('Data added to DB with ID:', id);
+                        if (testkit_store_gate_mode.value === 'cut') {
+                            delete lain.dir[entry];
+                            lain.dir[entry] = undefined;
+                        }
+                    }).catch(function(error) {
+                        console.log('Error adding data to DB:', error);
+                    });
+                } else {
+                    console.log("entry not found in dir");
+                }
+            } else if (direction === "db2b") {
+                lain.rom.dbModule.getData(parseInt(entry, 10)).then(function(data) {
+                    if (data) {
+                        lain.dir[entry] = data;
+                        console.log('Data retrieved from DB and added to dir:', entry);
+                        if (testkit_store_gate_mode.value === 'cut') {
+                            lain.rom.dbModule.deleteData(parseInt(entry, 10));
+                        }
+                    } else {
+                        console.log("No data found in DB for ID:", entry);
+                    }
+                }).catch(function(error) {
+                    console.log('Error retrieving data from DB:', error);
+                });
             } else {
-                console.log("something went wrong idk maybe its not in dir");
+                console.log("Invalid direction or entry not found");
             }
         }
         console.log("movement armed");   

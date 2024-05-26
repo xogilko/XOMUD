@@ -76,42 +76,31 @@ func generateAddress(pubkey string) (string, error) {
 	return address, nil
 }
 func extractTXdata(txDetails map[string]interface{}) (string, string, error) {
+	// Load the JavaScript BSV library
+	bsvJS, err := loadJavaScriptFile("lib/bsv.min.js")
+	if err != nil {
+		return "", "", fmt.Errorf("error loading bsv library: %w", err)
+	}
+
+	// Initialize the JavaScript VM
+	vm := goja.New()
+	_, err = vm.RunString(bsvJS) // Execute the BSV library code
+	if err != nil {
+		return "", "", fmt.Errorf("error executing bsv library: %w", err)
+	}
+
+	// Extract vout array from the transaction details
 	vouts, ok := txDetails["vout"].([]interface{})
 	if !ok {
 		return "", "", fmt.Errorf("vout data is missing or not in expected format")
 	}
 
-	vins, ok := txDetails["vin"].([]interface{})
-	if !ok {
-		return "", "", fmt.Errorf("vin data is missing or not in expected format")
-	}
+	// Define the markers to look for in the asm string
+	markerStart := "0 OP_IF 6582895 1 "
+	markerEnd := " OP_ENDIF"
+	addressStartMarker := "OP_DUP OP_HASH160 "
+	addressEndMarker := " OP_EQUALVERIFY"
 
-	// Collect all addresses from vin to exclude them
-	vinAddresses := make(map[string]bool)
-	for _, vin := range vins {
-		vinMap, ok := vin.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		scriptSig, ok := vinMap["scriptSig"].(map[string]interface{})
-		if !ok {
-			continue
-		}
-		addresses, ok := scriptSig["addresses"].([]interface{})
-		if ok {
-			for _, addr := range addresses {
-				addrStr, ok := addr.(string)
-				if ok {
-					vinAddresses[addrStr] = true
-				}
-			}
-		}
-	}
-
-	var opReturnData string
-	var address string
-
-	// First, extract OP_RETURN data if available
 	for _, vout := range vouts {
 		voutMap, ok := vout.(map[string]interface{})
 		if !ok {
@@ -122,47 +111,67 @@ func extractTXdata(txDetails map[string]interface{}) (string, string, error) {
 			continue
 		}
 		asm, ok := scriptPubKey["asm"].(string)
-		if ok && strings.HasPrefix(asm, "OP_RETURN ") {
-			hexData := strings.TrimPrefix(asm, "OP_RETURN ")
-			decodedBytes, err := hex.DecodeString(hexData)
-			if err != nil {
-				return "", "", fmt.Errorf("error decoding hex to ASCII: %w", err)
-			}
-			opReturnData = string(decodedBytes)
-			break // OP_RETURN data found, no need to check further
-		}
-	}
-
-	// Then, find the first valid address not in vin
-	for _, vout := range vouts {
-		voutMap, ok := vout.(map[string]interface{})
 		if !ok {
 			continue
 		}
-		scriptPubKey, ok := voutMap["scriptPubKey"].(map[string]interface{})
-		if !ok {
+
+		// Extract address
+		addressStartIndex := strings.Index(asm, addressStartMarker)
+		if addressStartIndex == -1 {
 			continue
 		}
-		if scriptPubKey["type"].(string) == "pubkeyhash" {
-			addresses, ok := scriptPubKey["addresses"].([]interface{})
-			if ok && len(addresses) > 0 {
-				firstAddress, ok := addresses[0].(string)
-				if ok && !vinAddresses[firstAddress] {
-					address = firstAddress
-					break // Found a valid address not in vin
-				}
-			}
+		addressStartIndex += len(addressStartMarker)
+
+		addressEndIndex := strings.Index(asm[addressStartIndex:], addressEndMarker)
+		if addressEndIndex == -1 {
+			continue
 		}
+
+		pubKeyHash := asm[addressStartIndex : addressStartIndex+addressEndIndex]
+
+		// Find the start and end of the data segment
+		startIndex := strings.Index(asm, markerStart)
+		if startIndex == -1 {
+			continue
+		}
+		startIndex += len(markerStart)
+
+		endIndex := strings.Index(asm[startIndex:], markerEnd)
+		if endIndex == -1 {
+			continue
+		}
+		endIndex += startIndex
+
+		// Extract the pubKeyHash and data segments
+		segments := strings.Split(asm[startIndex:endIndex], " ")
+		if len(segments) < 2 {
+			return "", "", fmt.Errorf("data segments not found")
+		}
+
+		hexData := segments[2]
+		log.Printf("hexdata: %s", hexData)
+		log.Printf("pubkey: %s", pubKeyHash)
+		// Convert hexData to ASCII
+		decodedBytes, err := hex.DecodeString(hexData)
+		if err != nil {
+			return "", "", fmt.Errorf("error decoding hex to ASCII: %w", err)
+		}
+		asciiData := string(decodedBytes)
+
+		// Convert pubKeyHash to address using the bsv library
+		val, err := vm.RunString(fmt.Sprintf(`bsv.Address.fromPublicKeyHash(bsv.deps.Buffer.from('%s', 'hex'), 'testnet').toString()`, pubKeyHash))
+		if err != nil {
+			return "", "", fmt.Errorf("error converting pubkeyhash to address: %w", err)
+		}
+		address, ok := val.Export().(string)
+		if !ok {
+			return "", "", fmt.Errorf("failed to convert result to string")
+		}
+
+		return asciiData, address, nil
 	}
 
-	if opReturnData == "" {
-		return "", "", fmt.Errorf("no OP_RETURN data found")
-	}
-	if address == "" {
-		return "", "", fmt.Errorf("no valid address found")
-	}
-
-	return opReturnData, address, nil
+	return "", "", fmt.Errorf("no data found with specified markers")
 }
 func compileScrypt(w http.ResponseWriter, r *http.Request) {
 	// Read TypeScript code from the request body

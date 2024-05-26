@@ -119,16 +119,19 @@ export function activate_module(lain) {
                         if (utxos.length > 0) {
                             let tx = new bsv.Transaction()
                                 .from(utxos)
-                                .to(inputTargetAddr, parseInt(spend, 10))
                                 if (scriptType === 'data') {
+                                    const lockingScript = bsv.Script.buildPublicKeyHashOut(new bsv.Address.fromString(inputTargetAddr, 'testnet')).toASM();
+                                    const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
                                     tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.buildDataOut(script),
-                                        satoshis: 0
+                                        script: bsv.Script.fromASM(customScript),
+                                        satoshis: parseInt(spend, 10)
                                     }));
                                 } else if (scriptType === 'asm') {
+                                    const addressScript = bsv.Script.buildPublicKeyHashOut(new bsv.Address.fromString(inputTargetAddr, 'testnet')).toASM();
+                                    const fullScript = `${addressScript} ${script}`;
                                     tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.fromASM(script),
-                                        satoshis: 0
+                                        script: bsv.Script.fromASM(fullScript),
+                                        satoshis: parseInt(spend, 10)
                                     }));
                                 }
                                 tx.change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
@@ -186,9 +189,9 @@ export function activate_module(lain) {
             testkit_inputForTX_script_select.addEventListener('change', function() {
                 var inputField = document.getElementById('testkit_kiosk_inputForTX_script');
                 if (this.value === 'asm') {
-                    inputField.placeholder = 'custom asm script';
+                    inputField.placeholder = 'asm';
                 } else {
-                    inputField.placeholder = 'memo (op_return)';
+                    inputField.placeholder = 'memo';
                 }
             });
             testkit_kiosk_makeTX_button.addEventListener('click', function() {

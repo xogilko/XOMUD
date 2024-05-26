@@ -4,29 +4,37 @@
 /* QUEST */
 
 /*  
+    https://unpkg.com/simpercell@1.0.1/navi.js
+    static/navi.js
+
     ex:
     Private Key: cUWf3a2zgD3vfTcJiLKkv3MvCG7hRekCmXDMzE951gZkf7hkwqVF
     Public Key: 02843e3df01460e099dcf5cfb4f1cd190fae50fac53f28f5b24197aec325fff55d
     Public Address: mpyuybyu8suYfjDumBtp5KoXQo8QxqfrMK
-    vendor address: mtRAtJ172v3BNkYMdtnwYoA3zmMMjAoFN9
-    offer hash: 2db89636be8fc3d7762cba324338840c
-    txid: c4aa517b977d94b0d93471b5e872996c5b3b768ed93f7dc41e5d0536532c8a8c
 
-    switch memo out of op return so that the receipt can be spent
-    maybe to op_false
-    
-    navi.js code needs a disclaimer
-    obfuscate eiri
+    uri may be domain based
+        i suppose uri can look at domains but to be in a domain is to stake
 
-    bitscript maker widget
+    positional append of html
 
-    scrypt compiling /flippo/req
+    plug regen directly into db
+
+    why cant i add fish offline
+
+    servers being nice and offering simpage/0conf
+    balancing server data with onchain power
+        some sort of multisig ? uri
+
+    fish get limited by window at top when page has box scroll
+
+    point and click css id like inspect!
 
     cant delete multiple html clones (only one actually but the rest no)
-
-    demoproc check if a skeleton is there? default? if not then demo_proc?
-    idk figure that shit out how does it know what skeleton to use at startup
-    wallet preferences ? local storage masterkey?
+    
+    i can get regen to break idk how or why it does . fidget with it
+  
+    demoproc check if a skeleton is there? 
+        uri testkit_blue = a proc that pulls out db skelly
 */
 
 
@@ -39,7 +47,24 @@
     
     track dependency funcs?
 
-    padlock -
-    protect localstorage via a process and closure from eval() manipulation:
-    need to make sure the keystoWatch variable is protected, whether it be static or thru some other magic    
+    padlock - protected content
 */
+
+// Create the script element
+const script = document.createElement('script');
+script.src = "https://unpkg.com/simpercell@1.0.1/navi.js";
+
+// Create the meta element
+const meta = document.createElement('meta');
+meta.setAttribute('portal', 'http://localhost:8080');
+meta.setAttribute('uri', 'testkit');
+
+// Append the meta element first
+document.head.appendChild(meta);
+
+// Append the script element and ensure it executes
+document.head.appendChild(script);
+
+
+chisa()
+navi(alice, 'alice.rom.enclose_draggable(alice.dir.testkit_menu_html)', 'document.body')

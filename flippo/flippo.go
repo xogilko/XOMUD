@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
 func atc_com(w http.ResponseWriter, r *http.Request) {
@@ -120,15 +119,10 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error: dirDatabase format incorrect", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Request method: %s", r.Method) // Log the method of the request
 	// Extract the module path from the request URL
 	modulePath := r.URL.Path[len("/dirmod/"):]
-	modulePath = strings.TrimSuffix(modulePath, "/")
-	if !strings.HasSuffix(modulePath, ".js") {
-		modulePath += ".js"
-	}
 	moduleFilePath := "module/" + modulePath
-	log.Printf("dirmod serving: %s", moduleFilePath)
+	log.Printf("%s request serving: %s", r.Method, moduleFilePath)
 
 	// Check for permit conditions
 	permits, ok := dirDatabase["permit"].(map[string]interface{})
@@ -167,6 +161,7 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// research tx
+			log.Printf("transaction details: %v", txid)
 			txDetails, err := fetchTX(txid)
 			if err != nil {
 				log.Printf("Error fetching transaction details: %v", err)
@@ -208,7 +203,6 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 	}
 	// Serve the file based on the module path
 	http.ServeFile(w, r, moduleFilePath)
-	log.Printf("dirmod served: %s", moduleFilePath)
 }
 func dirbox_send(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -263,10 +257,6 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Fatal("Expected 'hosts' to be a map[string]interface{}")
 	}
-	hostEntries, ok := hostsMap[hostName].(map[string]interface{})
-	if !ok {
-		log.Printf("No host entries found for hostname: %s", hostName)
-	}
 	//collect urls
 	var urls []string
 	for _, uri := range uris {
@@ -281,19 +271,20 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	for _, uri := range uris {
-		dirNames, ok := hostEntries[uri].([]interface{})
-		if !ok {
-			log.Printf("No directory names found for URI: %s", uri)
-			continue
-		}
-		for _, dirName := range dirNames {
-			dirNameStr, ok := dirName.(string)
-			if !ok {
-				log.Printf("Expected directory name to be a string, got: %v", dirName)
-				continue
+	hostEntries, ok := hostsMap[hostName].(map[string]interface{})
+	if ok {
+		// Process host entries
+		for _, uri := range uris {
+			if dirNames, ok := hostEntries["uri"].(map[string]interface{})[uri].([]interface{}); ok {
+				for _, dirName := range dirNames {
+					dirNameStr, ok := dirName.(string)
+					if !ok {
+						log.Printf("Expected directory name to be a string, got: %v", dirName)
+						continue
+					}
+					urls = append(urls, "/flippo/dirmod/"+dirNameStr)
+				}
 			}
-			urls = append(urls, "/flippo/dirmod/"+dirNameStr)
 		}
 	}
 
