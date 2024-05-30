@@ -336,7 +336,7 @@ const testkit_dir = {
                 console.log('Launched:', launch[launch.length - 1]);
             }
             document.getElementById('testkit_menuStart').addEventListener('click', function() {
-                navi(alice, 'specialCondition', 'alice.rom.testkit_menu.launchMethod(alice.dir.' + testkit_menuSelect.value + ')');
+                navi(alice, 'lain.rom.enclose_draggable(alice.dir.' + testkit_menuSelect.value + ')', 'document.body');
             });
             return {
                 launchMethod
