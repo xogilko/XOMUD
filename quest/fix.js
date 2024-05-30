@@ -12,6 +12,21 @@
     Public Key: 02843e3df01460e099dcf5cfb4f1cd190fae50fac53f28f5b24197aec325fff55d
     Public Address: mpyuybyu8suYfjDumBtp5KoXQo8QxqfrMK
 
+
+    turn testkit_dir entries into json
+    make module request json based on request parameters
+    this way we can write to dirs
+
+        dont want to do this every call so preload modules add versioning
+
+    created urls by dirbox needs a path for generating a dir
+    uses an sql db containing objects and construct a js module
+    the sql db can be written to this way
+
+
+    logger makes offer hash obscelete. think about signing a proof
+    of an nft holder instead? idk man
+
     uri may be domain based
         i suppose uri can look at domains but to be in a domain is to stake
 
@@ -28,6 +43,8 @@
     fish get limited by window at top when page has box scroll
 
     point and click css id like inspect!
+
+    server function execution store, command + receipt in request
 
     cant delete multiple html clones (only one actually but the rest no)
     

@@ -88,8 +88,12 @@ func proxyHandler(proxyUrl *url.URL, basePath string) http.HandlerFunc {
 		proxy := httputil.NewSingleHostReverseProxy(proxyUrl)
 		modifiedPath := "/" + r.URL.Path[len(basePath):]
 		r.URL.Path = modifiedPath
-		log.Printf("Forwarding request to %s: %s", proxyUrl, modifiedPath)
+		clientIP := r.RemoteAddr
+		if forwardedIP := r.Header.Get("X-Forwarded-For"); forwardedIP != "" {
+			clientIP = forwardedIP
+		}
 		enableCORS(proxy).ServeHTTP(w, r)
+		log.Printf("Forwarding request from %s to %s: %s", clientIP, proxyUrl, modifiedPath)
 	}
 }
 

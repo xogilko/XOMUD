@@ -315,6 +315,7 @@ const testkit_dir = {
         <option value = "testkit_store_gate_html">storegate</option>
         </select><br>
         <button id="testkit_menuStart">start</button>
+        <span id= 'testkit_blinker'></span>
         </span>
         `
     },
@@ -325,22 +326,51 @@ const testkit_dir = {
         "name": "testkit menu applet",
         "media": `
         lain.rom.testkit_menu = (() => {
-            alice['launch'] = [];
-            let launch = alice.launch;
-            function launchMethod(select) {
-                console.log('select:', select)
-                eiri(lain, lain.rom.enclose_draggable(select), document.body);
-                const lastCacheItem = lain.cache[lain.cache.length - 2].domset;
-                console.log(lastCacheItem)
-                launch.push({ key: select, domset: lastCacheItem });
-                console.log('Launched:', launch[launch.length - 1]);
-            }
+            // Blinkenlights
+            let console_count = 0;
+            let isBlinkerRunning = false;
+            const blinker = document.getElementById('testkit_blinker');
+            const flickerBlinker = (blinkcolor) => {
+                if (console_count > 0) {
+                    isBlinkerRunning = true;
+                    blinker.style.color = blinkcolor;
+                    blinker.innerHTML = '●';
+                    setTimeout(() => {
+                        console_count--;
+                        blinker.innerHTML = '';
+                        if (console_count > 0) {
+                            setTimeout(() => flickerBlinker(blinkcolor), 40);
+                        } else {
+                            isBlinkerRunning = false;
+                        }
+                    }, 40);
+                }
+            };
+            document.addEventListener('consolelogged', (event) => {
+                if (console_count > 0 && !isBlinkerRunning) {
+                    const isError = event.detail.error;
+                    const blinkcolor = isError ? 'red' : 'green';
+                    flickerBlinker(blinkcolor);
+                }
+            });
+            const consoleEvent = new CustomEvent('consolelogged', { detail: { error: false } });
+            const originalLog = console.log;
+            console.log = function(...args) {
+                console_count++;
+                originalLog.apply(console, args);
+                document.dispatchEvent(new CustomEvent('consolelogged', { detail: { error: false } }));
+            };
+            const originalError = console.error;
+            console.error = function(...args) {
+                console_count++;
+                originalError.apply(console, args);
+                document.dispatchEvent(new CustomEvent('consolelogged', { detail: { error: true } }));
+            };
+            console.log('Hello, world!');
+            // Testkit Apps
             document.getElementById('testkit_menuStart').addEventListener('click', function() {
                 navi(alice, 'lain.rom.enclose_draggable(alice.dir.' + testkit_menuSelect.value + ')', 'document.body');
             });
-            return {
-                launchMethod
-            };
         })();
         `
     },
@@ -482,12 +512,15 @@ const testkit_dir = {
         "name": "testkit csspaint widget",
         "child": "testkit_csspaint_func",
         "media": `
-        <div id="testkit_retouch">
-        <input type = "text" id = "retouchClass" value = "body">
-        <input type = "text" id = "retouchProperty" value = "background-color">
-        <input type = "text" id = "retouchValue" value = "cyan">
-        <button id="testkit_retouchButton">retouch</button>
-        </div>
+        <div id="testkit_csspaint">
+        <table>
+            <tr><td>class:</td><td><select id="retouchClass"></select>
+            <button id="testkit_csspaint_refresh">refresh</button></td></tr>
+            <tr><td>property:</td><td><input type="text" id="retouchProperty" value="background-color"></td></tr>
+            <tr><td>value:</td><td><input type="text" id="retouchValue" value="cyan"></td></tr>
+        </table>
+        <button id="testkit_csspaint_retouch">retouch</button>
+    </div>
         `
     },
     "testkit_csspaint_func":{

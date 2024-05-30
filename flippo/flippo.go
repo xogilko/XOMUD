@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 func atc_com(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +194,7 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Extracted address: %s", address)
 			log.Printf("Extracted OP_RETURN data: %s", extractHash)
 			log.Printf("reconstructed hash: %s", hashed)
-
+			logEntry(fmt.Sprintf("valid receipt for vendor %s = %s ", vendor, txid))
 			//compare to verify transaction
 			if extractHash != hashed {
 				http.Error(w, "Forbidden: Hash mismatch", http.StatusForbidden)
@@ -301,6 +302,8 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	initLogger()
+	logEntry(fmt.Sprintf("Flippo was activated! %s", time.Now()))
 	router := http.NewServeMux()
 	router.HandleFunc("/command/", atc_com)
 	//atc tower simulation for mud style clients
@@ -317,4 +320,5 @@ func main() {
 
 	fmt.Println("Command server is active")
 	log.Fatal(http.ListenAndServe(":8081", router))
+	defer close(logEntries)
 }
