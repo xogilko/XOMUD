@@ -112,26 +112,40 @@ export function activate_module(lain) {
                     });
             }
 
-            const makeTX = async (inputUTXOaddress, inputUTXOpubkey, inputTargetAddr, spend, inputChangeAddr, inputPrivateKey, scriptType, script, confirm) => {
+            const fireTX = async (inputUTXOaddress, inputUTXOpubkey, confirm, inputTargetAddr = null, spend, inputChangeAddr, inputPrivateKey, scriptType, script, script2 = null) => {
                 return new Promise(async (resolve, reject) => {
                     try {
                         const utxos = await getUTXO(inputUTXOaddress, confirm, inputUTXOpubkey);
                         if (utxos.length > 0) {
                             let tx = new bsv.Transaction()
                                 .from(utxos)
-                                if (scriptType === 'data') {
+                                if (scriptType === 'satalite') {//satalite currently p2pkh ordinal
+                                    const newAddress = new bsv.Address.fromPrivateKey(new bsv.PrivateKey.fromRandom('testnet'), 'testnet');
+                                    const lockingScript = bsv.Script.buildPublicKeyHashOut(newAddress).toASM();
+                                    const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
+                                    tx.addOutput(new bsv.Transaction.Output({
+                                        script: bsv.Script.fromASM(customScript),
+                                        satoshis: 1 
+                                    }));
+                                } else if (scriptType === 'ordtxtpkh') {//p2pkh ordinal
                                     const lockingScript = bsv.Script.buildPublicKeyHashOut(new bsv.Address.fromString(inputTargetAddr, 'testnet')).toASM();
                                     const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
                                     tx.addOutput(new bsv.Transaction.Output({
                                         script: bsv.Script.fromASM(customScript),
                                         satoshis: parseInt(spend, 10)
                                     }));
-                                } else if (scriptType === 'asm') {
-                                    const addressScript = bsv.Script.buildPublicKeyHashOut(new bsv.Address.fromString(inputTargetAddr, 'testnet')).toASM();
-                                    const fullScript = `${addressScript} ${script}`;
+                                } else if (scriptType === 'ordtxtcustom') { // old: const fullScript = `${addressScript} ${script}`;
+                                    const customScript = `${script2} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
                                     tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.fromASM(fullScript),
-                                        satoshis: parseInt(spend, 10)
+                                        script: bsv.Script.fromASM(customScript),
+                                        satoshis: parseInt(spend, 10),
+                                        address: new bsv.Address.fromString(inputTargetAddr, 'testnet')
+                                    }));
+                                } else if (scriptType === 'asm') { // old: const fullScript = `${addressScript} ${script}`;
+                                    tx.addOutput(new bsv.Transaction.Output({
+                                        script: bsv.Script.fromASM(script),
+                                        satoshis: parseInt(spend, 10),
+                                        address: new bsv.Address.fromString(inputTargetAddr, 'testnet')
                                     }));
                                 }
                                 tx.change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
@@ -142,7 +156,7 @@ export function activate_module(lain) {
                             throw new Error("No UTXOs found.");
                         }
                     } catch (error) {
-                        console.error('Error in sendTX:', error);
+                        console.error('Error in fireTX:', error);
                         reject(error); // Reject the promise if there's an error
                     }
                 });
@@ -159,6 +173,26 @@ export function activate_module(lain) {
                 console.log('broadcasted tx', bres);
                 return bres;
             }
+
+            /*testkit_inputForTX_script_select.addEventListener('change', function() {
+                var inputField = document.getElementById('testkit_kiosk_inputForTX_script');
+                if (this.value === 'asm') {
+                    inputField.placeholder = 'asm';
+                } else {
+                    inputField.placeholder = 'memo';
+                }
+            });*/
+            testkit_inputForTX_lock_select.addEventListener('change', function() {
+                if (this.value === 'satalite') {
+                    testkit_lock_inputfield.innerHTML = '<br><textarea id="testkit_kiosk_inputForTX_lock" name="lockvalue" rows="1" cols="44" placeholder="memo"></textarea>';
+                } else if (this.value === 'asm') {
+                    testkit_lock_inputfield.innerHTML = '<input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address"><br><textarea id="testkit_kiosk_inputForTX_lock" name="lockvalue" rows="1" cols="44" placeholder="locking script"></textarea>';
+                } else if (this.value === 'ordtxtpkh') { 
+                    testkit_lock_inputfield.innerHTML = '<input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address"><br><textarea id="testkit_kiosk_inputForTX_lock" name="lockvalue" rows="1" cols="44" placeholder="memo"></textarea>';
+                } else if (this.value === 'ordtxtcustom') { 
+                    testkit_lock_inputfield.innerHTML = '<input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address"><br><textarea id="testkit_kiosk_inputForTX_lock" name="lockvalue" rows="1" cols="22" placeholder="memo"></textarea><textarea id="testkit_kiosk_inputForTX_lock2" name="lockvalue2" rows="1" cols="22" placeholder="locking script"></textarea>';
+                }
+            });
 
             testkit_kiosk_keygen_button.addEventListener('click', function() {
                 let generation;
@@ -186,21 +220,16 @@ export function activate_module(lain) {
                     console.error('Error fetching UTXOs:', error);
                 });
             });
-            testkit_inputForTX_script_select.addEventListener('change', function() {
-                var inputField = document.getElementById('testkit_kiosk_inputForTX_script');
-                if (this.value === 'asm') {
-                    inputField.placeholder = 'asm';
-                } else {
-                    inputField.placeholder = 'memo';
-                }
-            });
-            testkit_kiosk_makeTX_button.addEventListener('click', function() {
+            testkit_kiosk_fireTX_button.addEventListener('click', function() {
                 //could add logic for script_select constructions
-                makeTX(testkit_kiosk_inputForTX_utxo.value, testkit_kiosk_inputForTX_pubkey.value,
-                    testkit_kiosk_inputForTX_target.value, testkit_kiosk_inputForTX_amount.value,
-                    testkit_kiosk_inputForTX_change.value, testkit_kiosk_inputForTX_sign.value,
-                    testkit_inputForTX_script_select.value, testkit_kiosk_inputForTX_script.value,
-                    testkit_kiosk_inputForTX_confirm.checked).then(xo => {
+                fireTX(testkit_kiosk_inputForTX_utxo.value, testkit_kiosk_inputForTX_pubkey.value,
+                    testkit_kiosk_inputForTX_confirm.checked,
+                    typeof testkit_kiosk_inputForTX_target !== 'undefined' ? testkit_kiosk_inputForTX_target.value : undefined,
+                    testkit_kiosk_inputForTX_amount.value, testkit_kiosk_inputForTX_change.value,
+                    testkit_kiosk_inputForTX_sign.value, testkit_inputForTX_lock_select.value,
+                    testkit_kiosk_inputForTX_lock.value,
+                    typeof testkit_kiosk_inputForTX_lock2 !== 'undefined' ? testkit_kiosk_inputForTX_lock2.value : undefined
+                    ).then(xo => {
                         let tx = xo;
                         console.log('will broadcast:', tx)
                         broadcast(tx).then(bres => {
@@ -217,7 +246,7 @@ export function activate_module(lain) {
                 genKey,
                 getScriptPubKey,
                 getUTXO,
-                makeTX
+                fireTX
             };
         }
         waitforBSV();

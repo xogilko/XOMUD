@@ -2,24 +2,21 @@
     "dirDatabase": {
         "priv": "cMr9x7JtgEdXTS6vFxa9UHNzVsYWcPM9vwtziepTCJGX7dVnyrXe",
         "skellykey": "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6",
-
-
-
-
-
         "uri": {
             "testkit": ["testkit_dir.js"]
         },
-
-
         "hosts": {
             "http://localhost:8083/": {
                 "uri": {
                     "testkit": ["example_dir.js"]
                 }
+            },
+            "https://xomud.quest/": {
+                "uri": {
+                    "testkit": ["xomudsite.js"]
+                }
             }
         },
-
         "domains": {
             "test_game": {
                 "ordinance": ["txid"],
@@ -37,12 +34,6 @@
                 }
             }
         },
-
-
-
-
-
-
         "permit": {
             "example_cost.js": {
                 "department": ["Bob's Shop"],
@@ -68,5 +59,14 @@
         "hdpub": "xpub661MyMwAqRbcGhefzcWB7GHCBhJjF5kHshESSQ1TMBXKfX7NwaqxkRR6xNhUMETkc5DkpZga1K8uiTsf3hNBiyNfUuX6uAWDqtcbJXyf5gL",
         "items": ["example_cost.js"]
         }
+    },
+    "command": {
+        "help": "/quest/ command list:<br>help - this! <br>status - report uri and portal",
+        "status": "current uri: <b><span id='atc_temp_uri'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
+    },
+    "script": {
+        "id": "",
+        "compiled": "",
+        "lockscript": ""
     }
 }

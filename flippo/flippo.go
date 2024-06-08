@@ -5,28 +5,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"time"
 )
-
-func atc_com(w http.ResponseWriter, r *http.Request) {
-	Message := template.HTMLEscapeString(r.PostFormValue("set-message"))
-	log.Printf("Received message: %s", Message) // Log the received message
-
-	formattedLog := fmt.Sprintf("<li><i>&></i> %s</li>", Message)
-	tmpl, err := template.New("t").Parse(formattedLog)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	err = tmpl.Execute(w, nil)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
 
 func vending_send(w http.ResponseWriter, r *http.Request) {
 	//access flippo database
@@ -85,6 +68,8 @@ func solicit_offer(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Error generating address", http.StatusInternalServerError)
 				return
 			}
+
+			logEntry(fmt.Sprintf("vendor: %s new_addr: %s", vendor, address))
 
 			skellykey := data["dirDatabase"].(map[string]interface{})["skellykey"].(string)
 			constructedString := fmt.Sprintf("%s %s %s", address, vendor, skellykey)
@@ -192,7 +177,7 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 
 			log.Printf("Extracted vendor: %s", vendor)
 			log.Printf("Extracted address: %s", address)
-			log.Printf("Extracted OP_RETURN data: %s", extractHash)
+			log.Printf("Extracted data: %s", extractHash)
 			log.Printf("reconstructed hash: %s", hashed)
 			logEntry(fmt.Sprintf("valid receipt for vendor %s = %s ", vendor, txid))
 			//compare to verify transaction
@@ -200,6 +185,7 @@ func dirmod_send(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Forbidden: Hash mismatch", http.StatusForbidden)
 				return
 			}
+			//add logic for receipt use count via log
 		}
 	}
 	// Serve the file based on the module path
@@ -315,8 +301,6 @@ func main() {
 	//a request for a list of contents from department
 	router.HandleFunc("/solicit/", solicit_offer)
 	//a request for an offer to be generated for a module
-	router.HandleFunc("/scrypt/", compileScrypt)
-	//a request to turn scrypt into asm
 
 	fmt.Println("Command server is active")
 	log.Fatal(http.ListenAndServe(":8081", router))

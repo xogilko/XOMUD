@@ -1,6 +1,6 @@
 function fishFunction() {
     
-    const fish = document.createElement('div');
+    const fish = document.createElement('span');
     fish.className = 'hyperfish';
     fish.innerHTML = '<span>fish</span>';
     fish.style.position = 'absolute';

@@ -6,9 +6,10 @@ const testkit_dir = {
         "name": "'xotestkit' urns interpreter",
         "media": `
         lain.rom.xotestkit_handler= {
+
             js: (input) => {
                 if (lain.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){
-                    try {eval(input.media); lain.cache.push(input);}
+                    try {eval(input.media); input.step = lain.proc.length; lain.cache.push(input);}
                     catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
                 } else {console.log('function(s) already cached')}
             },
@@ -32,6 +33,7 @@ const testkit_dir = {
                         const directURL = lain.portal + moduleURL;
                         console.log('importing async:', input.name);
                         fetchModuleAndImport(directURL);
+                        input.step = lain.proc.length;
                         lain.cache.push(input);}
                     catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
                 } else {console.log('function(s) already cached')}
@@ -48,12 +50,12 @@ const testkit_dir = {
                 }
                 var container = document.createElement("div");
                 container.innerHTML = input.media;
-                input.domset = [];
+                input.step = lain.proc.length;
                 Array.from(container.childNodes).forEach(node => {
                     if (node.nodeType === 1) {
-                        const currentDomSet = lain.domset++;
-                        node.setAttribute("data-set", currentDomSet);
-                        input.domset.push(currentDomSet);
+                        input.domset = lain.domset++;
+                        node.setAttribute("data-set", input.domset);
+                        node.setAttribute("data-step", input.step);
                         const assignDataSetsToChildren = (childNode) => {
                             if (childNode.nodeType === 1) {
                                 childNode.setAttribute("data-set", lain.domset++);
@@ -84,19 +86,21 @@ const testkit_dir = {
         "name": "testkit styles :)",
         "media": `
         <style>
-            body {
-            background-color: cyan;
+            .resizable {
+                overflow: auto;
+                resize: both; /* Allow both horizontal and vertical resizing */
+                box-sizing: border-box; /* Include padding and border in element's total width and height */
             }
             .draggable {
             padding: 2px;
-            background-color: silver;
+            background-color: gold;
             line-height: normal;
             position: absolute;
             cursor: move;
             }
             .dragged_content {
             padding: 10px;
-            background-color: #fafafa;
+            background-color: silver;
             cursor: auto;
             user-select: text;
             }
@@ -117,11 +121,18 @@ const testkit_dir = {
         "name": "bsv library 1.5.6",
         "media": `
         new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = "https://unpkg.com/bsv@1.5.6/bsv.min.js";
-            script.onload = () => resolve(window.bsv);
-            script.onerror = reject;
-            document.head.appendChild(script);
+            var src = "https://star.xomud.quest/quest/dirmod/lib/bsv.min.js";
+            // Check if the script already exists
+            if (!document.querySelector('script[src="' + src + '"]')) {
+                var script = document.createElement('script');
+                script.src = src;
+                script.onload = function() { resolve(window.bsv); };
+                script.onerror = reject;
+                document.head.appendChild(script);
+            } else {
+                // Resolve with the existing script
+                resolve(window.bsv);
+            }
         });`
     },
     "testkit_shop_html":{
@@ -132,7 +143,7 @@ const testkit_dir = {
         "child": "testkit_shop_func",
         "count": 1,
         "media": `
-        <span>
+        <div>
         <div id="testkit_shop">
         <b>department:</b>
         <input type = "text" id="testkit_shop_depart" placeholder="department" value="Bob's Shop">
@@ -141,7 +152,7 @@ const testkit_dir = {
         <hr>
         <div id="testkit_shop_list"></div>
         </div>
-        </span>
+        </div>
         `
     },
     "testkit_shop_func":{
@@ -166,6 +177,13 @@ const testkit_dir = {
         "name": "testkit maritime",
         "media": "/flippo/dirmod/fish.js"
     },
+    "navi_splash":{
+        "uri": "xo.5906239056059015",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "navi splash",
+        "media": "/quest/dirmod/splash.js"
+    },
     "testkit_kiosk_html":{
         "uri": "xo.1294189056906",
         "urns": "xotestkit",
@@ -174,7 +192,7 @@ const testkit_dir = {
         "child": "testkit_kiosk_func",
         "count": 1,
         "media": `
-        <span>
+        <div>
         <div id="testkit_kiosk">
         <input type = "text" id = "testkit_kiosk_keygen_derive" placeholder = "optional hd key">
         <input type = "checkbox" id = "testkit_kiosk_keygen_hdcheck" name="confirm"/>hd
@@ -188,22 +206,32 @@ const testkit_dir = {
         <button id="testkit_kiosk_getUTXO_button">get utxo</button>
         <span id="testkit_kiosk_UTXO_total"></span>
         <hr>
-        <br><input type = "text" id = "testkit_kiosk_inputForTX_utxo" placeholder = "UTXO address">
+        <input type = "text" id = "testkit_kiosk_inputForTX_utxo" placeholder = "UTXO address">
         <input type = "text" id = "testkit_kiosk_inputForTX_pubkey" placeholder = "UTXO public key">
         <input type = "checkbox" id = "testkit_kiosk_inputForTX_confirm" name="confirm"/>confirmed
         <br><input type = "text" id = "testkit_kiosk_inputForTX_change" placeholder = "change address">
         <input type = "text" id = "testkit_kiosk_inputForTX_amount" placeholder = "spend amount">
-        <br><input type = "text" id = "testkit_kiosk_inputForTX_target" placeholder = "target address">
-        <input type = "text" id = "testkit_kiosk_inputForTX_sign" placeholder = "signing private key">
+        <!--
         <br><input type = "text" id = "testkit_kiosk_inputForTX_script" placeholder = "memo">
         <select id="testkit_inputForTX_script_select">
         <option value = "data">memo</option>
         <option value = "asm">asm</option>
         </select>
-        <button id="testkit_kiosk_makeTX_button">make tx</button>
+        -->
+        <br><select id="testkit_inputForTX_lock_select">
+        <option value = "satalite">Satalite Ordinal</option>
+        <option value = "ordtxtpkh">Text Ordinal(P2PKH)</option>
+        <option value = "ordtxtcustom">Text Ordinal(custom)</option>
+        <option value = "asm">Custom ASM</option>
+        </select>
+        
+        <span id="testkit_lock_inputfield">
+        <br><textarea id="testkit_kiosk_inputForTX_lock" name="lockvalue" rows="1" cols="44" placeholder="memo"></textarea>
+        </span>
+        <br><input type = "text" id = "testkit_kiosk_inputForTX_sign" placeholder = "signing private key"><button id="testkit_kiosk_fireTX_button">fire tx</button>
         <p><span id="testkit_kiosk_TX_ID"></span></p>
         </div>
-        </span>
+        </div>
         `
     },
     "testkit_kiosk_func":{
@@ -257,16 +285,16 @@ const testkit_dir = {
         "child": "testkit_atc_func",
         "count": 1,
         "media": `
-        <span>
+        <div>
         <div id="testkit_atc" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
         <ul id="qomms">
         </ul>
         </div>
-        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="http://localhost:8080/flippo/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
-        <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "contact server">
+        <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="https://star.xomud.quest/quest/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
+        <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "/quest/...">
         <input type = "submit" value = "send">
         </form>
-        </span>
+        </div>
         `
     },
     "testkit_atc_func":{
@@ -276,22 +304,53 @@ const testkit_dir = {
         "name": "testkit atc applet",
         "media": `
         lain.rom.testkit_atc = (action = 'init_and_callback') => {
-            const commandFeed = document.getElementById("qomms");
-            const scrollCli = document.getElementById('testkit_atc');
-            const entryMessage = document.getElementById('qomms-entry');
             if (action === 'init_and_callback' || action === 'init') {
-                const stringArray = ["xomud test area", "alice = present state", "navi(alice, 'proc', ...rest)", "(っ◔◡◔)っ✩"];
+                const stringArray = ["/quest/ testkit cli (type & send 'help')", "(っ◔◡◔)っ✩"];
                 stringArray.forEach(item => {
                     commandFeed.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');
                 });
             }
             if (action === 'callback') {
-                commandFeed.insertAdjacentHTML('beforeend', '<li><i>' + lain.sign + '></i> ' + entryMessage.value + '</li>');
+                commandFeed.insertAdjacentHTML('beforeend', '<li><b><i>' + lain.sign + '></i></b> ' + entryMessage.value + '</li>');
                 scrollCli.scrollTop = scrollCli.scrollHeight;
                 setTimeout(() => { entryMessage.value = ''; }, 0);
             }
         };
+
+            const commandFeed = document.getElementById("qomms");
+            const scrollCli = document.getElementById('testkit_atc');
+            const entryMessage = document.getElementById('qomms-entry');
         lain.rom.testkit_atc('init_and_callback');
+
+        // client side template handling
+
+        const atc_templates = {
+            'atc_temp_portal': (element) => {
+                element.innerHTML = lain.portal;
+            },
+            'atc_temp_uri': (element) => {
+                element.innerHTML = document.querySelector('meta[portal][uri]').getAttribute('uri');
+            },
+        };
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    // Check the last list item in the <ul>
+                    scrollCli.scrollTop = scrollCli.scrollHeight;
+                    const lastListItem = commandFeed.lastElementChild;
+                    if (lastListItem) {
+                        Object.keys(atc_templates).forEach((templateId) => {
+                            const templateElement = lastListItem.querySelector('#' + templateId);
+                            if (templateElement) {
+                                atc_templates[templateId](templateElement);
+                    }
+               	});
+            	};
+        	};
+    		});
+		});
+        observer.observe(commandFeed, { childList: true, });
         `
     },
     "testkit_menu_html":{
@@ -305,7 +364,7 @@ const testkit_dir = {
         <span>
         <div id="testkit_menu">
         <i>testkit tools</i><hr>
-        <select id="testkit_menuSelect" multiple size="7">
+        <select id="testkit_menuSelect" size="8">
         <option value = "testkit_atc_html">atc</option>
         <option value = "testkit_clerk_html">clerk</option>
         <option value = "testkit_kiosk_html">kiosk</option>
@@ -313,6 +372,7 @@ const testkit_dir = {
         <option value = "testkit_regen_html">regen</option>
         <option value = "testkit_shop_html">shop</option>
         <option value = "testkit_store_gate_html">storegate</option>
+        <option value = "testkit_mount_html">satamount</option>
         </select><br>
         <button id="testkit_menuStart">start</button>
         <span id= 'testkit_blinker'></span>
@@ -327,45 +387,48 @@ const testkit_dir = {
         "media": `
         lain.rom.testkit_menu = (() => {
             // Blinkenlights
-            let console_count = 0;
+            let console_count = [];
             let isBlinkerRunning = false;
             const blinker = document.getElementById('testkit_blinker');
-            const flickerBlinker = (blinkcolor) => {
-                if (console_count > 0) {
+
+            const flickerBlinker = () => {
+                if (console_count.length > 0) {
                     isBlinkerRunning = true;
-                    blinker.style.color = blinkcolor;
-                    blinker.innerHTML = '●';
+                    const { color } = console_count.shift();
+                    blinker.style.color = color;
+                    blinker.innerHTML = '';
                     setTimeout(() => {
-                        console_count--;
-                        blinker.innerHTML = '';
-                        if (console_count > 0) {
-                            setTimeout(() => flickerBlinker(blinkcolor), 40);
+                        blinker.innerHTML = '●';
+                        if (console_count.length > 0) {
+                            setTimeout(flickerBlinker, 30);
                         } else {
                             isBlinkerRunning = false;
+                            blinker.style.color = 'grey';
                         }
-                    }, 40);
+                    }, 60);
                 }
             };
+
             document.addEventListener('consolelogged', (event) => {
-                if (console_count > 0 && !isBlinkerRunning) {
-                    const isError = event.detail.error;
-                    const blinkcolor = isError ? 'red' : 'green';
-                    flickerBlinker(blinkcolor);
+                if (console_count.length > 0 && !isBlinkerRunning) {
+                    flickerBlinker();
                 }
             });
-            const consoleEvent = new CustomEvent('consolelogged', { detail: { error: false } });
+
             const originalLog = console.log;
             console.log = function(...args) {
-                console_count++;
+                console_count.push({ color: 'lime' });
                 originalLog.apply(console, args);
                 document.dispatchEvent(new CustomEvent('consolelogged', { detail: { error: false } }));
             };
+
             const originalError = console.error;
             console.error = function(...args) {
-                console_count++;
+                console_count.push({ color: 'red' });
                 originalError.apply(console, args);
                 document.dispatchEvent(new CustomEvent('consolelogged', { detail: { error: true } }));
             };
+
             console.log('Hello, world!');
             // Testkit Apps
             document.getElementById('testkit_menuStart').addEventListener('click', function() {
@@ -396,6 +459,7 @@ const testkit_dir = {
         "child": "testkit_clerk_func",
         "count": 1,
         "media": `
+        <div>
         <select id="testkit_clerkSelect">
         <option value = "cache">cache</option>
         <option value = "rom">rom</option>
@@ -408,7 +472,7 @@ const testkit_dir = {
         <button id="testkit_clerk_rqButton">request</button>
         <br><span id="testkit_clerkSelectDesc"></span><hr>
         <div id="testkit_clerk" style="max-height: 400px; overflow-y: auto;"></div>
-        
+        </div>
         `
     },
     "testkit_clerk_func": {
@@ -499,6 +563,7 @@ const testkit_dir = {
             document.getElementById('testkit_clerkButton').addEventListener('click', reset);
             document.getElementById('testkit_clerk_rqButton').addEventListener('click', function() {
                 let calling = "/quest/dirmod/" + testkit_clerk_rqinput.value;
+                testkit_clerk_rqinput.value = '';
                 chisa({msg: calling});
             });
         }
@@ -520,7 +585,7 @@ const testkit_dir = {
             <tr><td>value:</td><td><input type="text" id="retouchValue" value="cyan"></td></tr>
         </table>
         <button id="testkit_csspaint_retouch">retouch</button>
-    </div>
+        </div>
         `
     },
     "testkit_csspaint_func":{
@@ -582,6 +647,7 @@ const testkit_dir = {
         "media": `
         lain.rom.demo_proc = () => {
             //if (localStorage.getItem('default_navi')
+            eiri(lain, lain.dir.navi_splash);
             eiri(lain, lain.dir.testkit_style_html, document.head);  
             eiri(lain, lain.dir.drag_functions);
             eiri(lain, lain.dir.enclose_draggable);
@@ -592,17 +658,9 @@ const testkit_dir = {
             eiri(lain, lain.dir.dom_reporter);
             eiri(lain, lain.dir.dom_reassignment);
             eiri(lain, lain.dir.navi_exporter);
+            eiri(lain, lain.dir.testkit_grave);
             eiri(lain, lain.dir.htmx_observe);
             eiri(lain, lain.dir.testkit_destroy);
-            const checkAndExecute = () => {
-                if (typeof lain.rom.enclose_draggable === 'function' && typeof lain.rom.drag_init === 'function') {
-                    eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_menu_html), document.body);
-                } else {
-                    setTimeout(checkAndExecute, 100);
-                }
-            };
-           checkAndExecute();
-            
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_regen_html), document.body);  
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_csspaint_html), document.body);
            //eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
@@ -657,18 +715,19 @@ const testkit_dir = {
                     const attributes = element.attributes;
                     const elementInfo = {
                         tagName: tagName,
-                        attributes: {}
+                        attributes: {},
+                        misc: {}
                     };
                     for (let i = 0; i < attributes.length; i++) {
                         const attr = attributes[i];
                         elementInfo.attributes[attr.nodeName] = attr.nodeValue;
                     }
+                    elementInfo.misc['width'] = element.offsetWidth;
+                    elementInfo.misc['height'] = element.offsetHeight;
                     domReport.push(elementInfo);
                 }
             });
-            return {
-                domReport
-            };
+            return domReport;
         }
         `
     },
@@ -682,12 +741,25 @@ const testkit_dir = {
             //this requires css_manager + dom_reporter
             let navi_export = {};
             if (typeof lain.rom.reportDOM === 'function' && typeof lain.rom.manageCSS === 'function'){
-                navi_export.proc = lain.proc;
+                navi_export.proc = structuredClone(lain.proc);
                 navi_export.dom = lain.rom.reportDOM();
                 navi_export.css = lain.rom.manageCSS().getCSSProperties();
+                
+                /* trimmer breaks domset atm
+
+                navi_export.proc.forEach((procEntry, index) => {
+                    const stepIndex = index.toString();
+                    const matchingDomEntry = navi_export.dom.find(domEntry => 
+                        domEntry.attributes && domEntry.attributes['data-step'] === stepIndex
+                    );
+        
+                    if (!matchingDomEntry) {
+                        // Update proc entry if no matching dom entry is found
+                        navi_export.proc[index] = ["specialCondition", "document.body"];
+                    }
+                });
+                */
             }
-            // could trim out useless procs but we arent
-            // could also add misc items/files
             return {
                 navi_export
             };
@@ -703,10 +775,23 @@ const testkit_dir = {
         lain.rom.testkit_reassign = (dom_new) => {
             console.log("reassigning dom based on:", dom_new);
             const dom_current_map = new Map();
+        
+            // Populate the map and check for duplicates
             document.querySelectorAll('[data-set]').forEach(element => {
-                dom_current_map.set(element.getAttribute('data-set'), element);
-            });            
-            dom_new.forEach(elementInfo => { 
+                const dataSetValue = element.getAttribute('data-set');
+                if (dom_current_map.has(dataSetValue)) {
+                    // If duplicate, remove the existing element from the DOM
+                    const existingElement = dom_current_map.get(dataSetValue);
+                    existingElement.parentElement.removeChild(existingElement);
+                }
+                dom_current_map.set(dataSetValue, element);
+            });
+        
+            // Set to track data-set values in dom_new for comparison
+            const newDataSets = new Set(dom_new.map(elementInfo => elementInfo.attributes['data-set']));
+        
+            // Proceed with the comparison and reassignment
+            dom_new.forEach(elementInfo => {
                 const entry_domset_value = elementInfo.attributes['data-set'];
                 const element = dom_current_map.get(entry_domset_value); //element is live match
                 if (element) {
@@ -714,12 +799,16 @@ const testkit_dir = {
                     Object.entries(elementInfo.attributes).forEach(([attrName, attrValue]) => {
                         element.setAttribute(attrName, attrValue);
                     });
-
-                    //clear processed entries from current map
+                    
+                    Object.entries(elementInfo.misc).forEach(([attrName, attrValue]) => {
+                        element.style[attrName] = attrValue;
+                    });
+        
+                    // Clear processed entries from current map
                     dom_current_map.delete(entry_domset_value);
         
                     const parentElement = element.parentElement;
-
+        
                     if (parentElement.tagName.toLowerCase() === 'body') {
                         // Check if the body has any child elements
                         if (parentElement.firstChild) {
@@ -732,15 +821,35 @@ const testkit_dir = {
                     }
                 }
             });
+        
+            // Destroy elements not present in dom_new
             dom_current_map.forEach((element, domset) => {
-                const cacheItemIndex = lain.cache.findIndex(item => item.domset && item.domset.includes(parseInt(domset)));
-                if (cacheItemIndex !== -1) {
-                    lain.rom.removeCacheItem({index: cacheItemIndex});
+                if (!newDataSets.has(domset)) {
+
+                    //element.parentElement.removeChild(element);
+                    var dataSet = parseInt(domset, 10);
+                    var cacheIndex = lain.cache.findIndex(function(item) { return item.domset === dataSet; });
+                    if (cacheIndex !== -1) {   
+                        lain.rom.removeCacheItem({ index: cacheIndex });
+                    } else {
+                        console.log('couldnt find cache for destruction of:', element)
+                        element.parentElement.removeChild(element);
+                    }
+
+                    // remove cache item but what is the index?
                 }
             });
+        
             console.log("dom reassigned");
         };
         `
+    },
+    "testkit_grave":{
+        "uri": "xo.166536379998776",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "grave matters",
+        "media": "/flippo/dirmod/testkit_dir/testkit_grave.js"
     },
     "testkit_regen_html":{
         "uri": "xo.7685575453425453742122",
@@ -764,73 +873,33 @@ const testkit_dir = {
         "kind": "js",
         "name": "testkit regen applet",
         "media": `
-        lain.rom.testkit_regen = () => {
-            const removeAllStylesheets = () => {
-                //const linkStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
-                //linkStylesheets.forEach(link => link.parentNode.removeChild(link));
-
-                const styleElements = document.querySelectorAll('style');
-                styleElements.forEach(style => style.parentNode.removeChild(style));
-            };
-            skellygen = () => {
-                try {
-                    console.log("spooky");
-                    let label = testkit_exportName.value;
-                    let skeleton = lain.rom.exporter();
-                    skeleton.name = "skeleton export";
-                    lain.dir[label] = skeleton;
-                    lain.dir[label].file = label;
-                    testkit_exportName.value = '';
-                } catch (error) {
-                    console.log("failed to generate skeleton", error);
-                }
-            }
-            deadgen = () => {
-                try {
-                    let label = testkit_regenImport.value;
-                    let skeleton = lain.dir[label];
-                    if (!skeleton) {
-                        console.log("skeleton not found bro");
-                    }
-                    // the real magic
-                    // first clean up
-                    for (let i = lain.cache.length - 1; i >= 0; i--) {
-                        const cacheItem = lain.cache[i];
-                        if (cacheItem && cacheItem.uri === "xo.15901360516061") {continue;}
-                        lain.rom.removeCacheItem({index: i});
-                    }
-                    const removeCacheItemIndex = lain.cache.findIndex(item => item && item.uri === "xo.15901360516061");
-                    if (removeCacheItemIndex !== -1) {
-                        console.log("manual removal");
-                        lain.rom.removeCacheItem({index: removeCacheItemIndex});  
-                    }
-                    console.log('cache is..');
-                    console.log(lain.cache);
-                    lain.cache = [];
-                    console.log('tossed', lain.cache)
-                    removeAllStylesheets();
-                    lain.domset= 0; // dom is cleared
-                    //run proc, then dom_reassignment, then style
-                    lain.proc = [];
-                    console.log(skeleton.navi_export.proc, 'old proc:', lain.proc);
-                    skeleton.navi_export.proc.forEach(args => {
-                        let specialCondition = "specialCondition";
-                        let rest = args.map(arg => eval(arg));
-                        navi(lain, ...rest);
-                    });
-                    lain.rom.testkit_reassign(skeleton.navi_export.dom.domReport);                
-                    lain.rom.manageCSS().applyStylesheet(skeleton.navi_export.css);
-                    console.log("and we're back");
-
-                } catch (error) {
-                    console.log("failed to regenerate", error);
-                }
-            }
-            
-            document.getElementById('testkit_exportButton').addEventListener('click', function() {skellygen();});
-            document.getElementById('testkit_regenButton').addEventListener('click', function() {console.log('LETS REGEN'); deadgen();});
-        }
-        lain.rom.testkit_regen();
+        document.getElementById('testkit_exportButton').addEventListener('click', function() {lain.rom.testkit_grave().skellygen(testkit_exportName.value);});
+        document.getElementById('testkit_regenButton').addEventListener('click', function() {console.log('LETS REGEN'); lain.rom.testkit_grave().deadgen(testkit_regenImport.value);});
+        `
+    },
+    "testkit_mount_html":{
+        "uri": "xo.56498453388979456",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "satalite mounting widget",
+        "child": "testkit_mount_func",
+        "media": `
+        <div id="testkit_mounting_station">
+        INPUT:<hr>
+        <input type = "text" id = "testkt_mount_input_txid" placeholder = "satalite txid"><br>
+        <textarea = "text" id = "testkit_mount_input_script" placeholder = "lock assembly"></textarea><br>
+        <button id="testkit_mount_button">mount</button><hr>
+        OUTPUT<br>
+        <span id="testkit_mount_output"></span>
+        </div>
+        `
+    },
+    "testkit_mount_func":{
+        "uri": "xo.13213488956468776",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "satalite mounting applet",
+        "media": `
         `
     },
 }

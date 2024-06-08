@@ -9,12 +9,86 @@ import (
 	mrand "math/rand"
 	"net/http"
 	"os"
-	"strconv"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/dop251/goja"
 )
+
+func compileScrypt(code, fileName string) (string, error) {
+	// Define the path to save the file
+	dirPath := filepath.Join("service/compilescrypt", "src", "contracts")
+	filePath := filepath.Join(dirPath, fileName+".ts")
+
+	// Ensure the directory exists
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		return "", fmt.Errorf("directory does not exist: %s", dirPath)
+	}
+
+	// Write the code to the file
+	err := os.WriteFile(filePath, []byte(code), 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to write file: %w", err)
+	}
+
+	// Change directory to compilescript
+	err = os.Chdir("service/compilescrypt")
+	if err != nil {
+		return "", fmt.Errorf("failed to change directory: %w", err)
+	}
+
+	// Run 'npm run compile'
+	cmd := exec.Command("npm", "run", "compile")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to run compile: %w, output: %s", err, string(output))
+	}
+
+	// Run 'npm run generate <fileName>'
+	cmd = exec.Command("npm", "run", "generate", fileName)
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to run generate: %w, output: %s", err, string(output))
+	}
+
+	// Return to the original directory
+	err = os.Chdir("..")
+	if err != nil {
+		return "", fmt.Errorf("failed to change back to original directory: %w", err)
+	}
+
+	return string(output), nil
+}
+func testscrypt() {
+	code := `
+	
+	import { assert, ByteString, method, prop, sha256, Sha256, SmartContract } from 'scrypt-ts'
+
+	export class Helloworld extends SmartContract {
+
+		@prop()
+		hash: Sha256;
+
+		constructor(hash: Sha256){
+			super(...arguments);
+			this.hash = hash;
+		}
+
+		@method()
+		public unlock(message: ByteString) {
+			assert(sha256(message) == this.hash, 'Hash does not match')
+		}
+	}`
+	fileName := "Helloworld"
+	output, err := compileScrypt(code, fileName)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("Output from generate command:", output)
+}
 
 func fetchTX(txid string) (map[string]interface{}, error) {
 	txURL := fmt.Sprintf("https://api.whatsonchain.com/v1/bsv/test/tx/hash/%s", txid)
@@ -173,53 +247,7 @@ func extractTXdata(txDetails map[string]interface{}) (string, string, error) {
 
 	return "", "", fmt.Errorf("no data found with specified markers")
 }
-func compileScrypt(w http.ResponseWriter, r *http.Request) {
-	// Read TypeScript code from the request body
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
-		return
-	}
 
-	// Load the Scrypt compiler JavaScript code (assuming it's stored locally)
-	scryptCompilerJS, err := os.ReadFile("path/to/scrypt-compiler.js")
-	if err != nil {
-		http.Error(w, "Failed to load Scrypt compiler", http.StatusInternalServerError)
-		return
-	}
-
-	// Initialize the JavaScript runtime
-	vm := goja.New()
-	_, err = vm.RunString(string(scryptCompilerJS)) // Load the Scrypt compiler
-	if err != nil {
-		http.Error(w, "Failed to execute Scrypt compiler code", http.StatusInternalServerError)
-		return
-	}
-
-	// Prepare the TypeScript code as a JavaScript string
-	tsCode := string(body)
-
-	// Construct the JavaScript command to compile the TypeScript code
-	compileCmd := fmt.Sprintf(`ScryptCompiler.compile(%s)`, strconv.Quote(tsCode))
-
-	// Run the compilation
-	val, err := vm.RunString(compileCmd)
-	if err != nil {
-		http.Error(w, "Scrypt compilation failed", http.StatusInternalServerError)
-		return
-	}
-
-	// Extract the compiled script from the result
-	compiledScript, ok := val.Export().(string)
-	if !ok {
-		http.Error(w, "Failed to convert compilation result to string", http.StatusInternalServerError)
-		return
-	}
-
-	// Send the compiled script as response
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(compiledScript))
-}
 func loadJavaScriptFile(filepath string) (string, error) {
 	bytes, err := os.ReadFile(filepath)
 	if err != nil {

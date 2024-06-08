@@ -1,0 +1,275 @@
+{
+    "xotestkit_in": {
+        "uri": "xo.05919057190759",
+        "urns": "xotestkit",
+        "kind": "interpreter",
+        "name": "'xotestkit' urns interpreter",
+        "media": "\n        lain.rom.xotestkit_handler= {\n\n            js: (input) => {\n                if (lain.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){\n                    try {eval(input.media); input.step = lain.proc.length; lain.cache.push(input);}\n                    catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}\n                } else {console.log('function(s) already cached')}\n            },\n            jsmod: (input) => {\n                if (lain.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){\n                    try {\n                        const fetchModuleAndImport = async (moduleURL) => {\n                            try {\n                                const module = await import(moduleURL);\n                                if (module.activate_module) {\n                                    module.activate_module(lain);\n                                    console.log('Module imported with activation:', input.name);\n                                } else {\n                                    console.log('Module imported without activation:', input.name);\n                                }\n                            } catch (error) {\n                                console.error('Error importing module:', error);\n                            }\n                        };\n                        const moduleURL = input.media;\n                        const directURL = lain.portal + moduleURL;\n                        console.log('importing async:', input.name);\n                        fetchModuleAndImport(directURL);\n                        input.step = lain.proc.length;\n                        lain.cache.push(input);}\n                    catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}\n                } else {console.log('function(s) already cached')}\n            },\n            html: (input, target) => {\n                if (input.hasOwnProperty('count')) {\n                    const matches = lain.cache.filter(obj => {\n                        return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);\n                    });\n                    if (matches.length >= input.count) {\n                        console.log('item has met cache limit:', matches.length);\n                        return;\n                    }\n                }\n                var container = document.createElement(\"div\");\n                container.innerHTML = input.media;\n                input.step = lain.proc.length;\n                Array.from(container.childNodes).forEach(node => {\n                    if (node.nodeType === 1) {\n                        input.domset = lain.domset++;\n                        node.setAttribute(\"data-set\", input.domset);\n                        node.setAttribute(\"data-step\", input.step);\n                        const assignDataSetsToChildren = (childNode) => {\n                            if (childNode.nodeType === 1) {\n                                childNode.setAttribute(\"data-set\", lain.domset++);\n                                Array.from(childNode.children).forEach(assignDataSetsToChildren);\n                            }\n                        };\n                        Array.from(node.children).forEach(assignDataSetsToChildren);\n                    }\n                });\n                while (container.firstChild) {\n                    target.insertBefore(container.firstChild, target.firstChild);\n                } \n                lain.cache.push(input);\n                let kidfunc = lain.dir[input.child];\n                if (kidfunc !== undefined){\n                    if (kidfunc){eiri(lain, kidfunc);}\n                    else {console.log(\"child func of\", input.name, \"not found\");}\n                }\n            }\n        };\n        console.log('interpreter registered with callback:', lain.portal);\n        "
+    },
+    "testkit_style_html": {
+        "uri": "xo.764906239052624667",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit styles :)",
+        "media": "\n        <style>\n            .draggable {\n            padding: 2px;\n            background-color: gold;\n            line-height: normal;\n            position: absolute;\n            cursor: move;\n            }\n            .dragged_content {\n            padding: 10px;\n            background-color: silver;\n            cursor: auto;\n            user-select: text;\n            }\n        </style>\n        "
+    },
+    "htmx_observe": {
+        "uri": "xo.12985719056914601",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "dynamic htmx observer",
+        "media": "/flippo/dirmod/testkit_dir/htmx_observe.js"
+    },
+    "bsv_script": {
+        "uri": "xo.12591903790136",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "bsv library 1.5.6",
+        "media": "\n        new Promise((resolve, reject) => {\n            const script = document.createElement('script');\n            script.src = \"https://unpkg.com/bsv@1.5.6/bsv.min.js\";\n            script.onload = () => resolve(window.bsv);\n            script.onerror = reject;\n            document.head.appendChild(script);\n        });"
+    },
+    "testkit_shop_html": {
+        "uri": "xo.1294189056906",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit shop widget",
+        "child": "testkit_shop_func",
+        "count": 1,
+        "media": "\n        <div>\n        <div id=\"testkit_shop\">\n        <b>department:</b>\n        <input type = \"text\" id=\"testkit_shop_depart\" placeholder=\"department\" value=\"Bob's Shop\">\n        <button id=\"testkit_shop_refresh\">refresh</button>\n        <br><i>receipts must have offer hash in memo</i>\n        <hr>\n        <div id=\"testkit_shop_list\"></div>\n        </div>\n        </div>\n        "
+    },
+    "testkit_shop_func": {
+        "uri": "xo.1051901904694690906",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit shop applet",
+        "media": "/flippo/dirmod/testkit_dir/testkit_shop.js"
+    },
+    "fishtext": {
+        "uri": "xo.1358356737564645646",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "fishtext",
+        "child": "testkit_maritime",
+        "media": "<div id=\"fishtext\"></div>"
+    },
+    "testkit_maritime": {
+        "uri": "xo.10597953363777764",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit maritime",
+        "media": "/flippo/dirmod/fish.js"
+    },
+    "navi_splash": {
+        "uri": "xo.5906239056059015",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "navi splash",
+        "media": "/quest/dirmod/splash.js"
+    },
+    "testkit_kiosk_html": {
+        "uri": "xo.1294189056906",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit kiosk widget",
+        "child": "testkit_kiosk_func",
+        "count": 1,
+        "media": "\n        <div>\n        <div id=\"testkit_kiosk\">\n        <input type = \"text\" id = \"testkit_kiosk_keygen_derive\" placeholder = \"optional hd key\">\n        <input type = \"checkbox\" id = \"testkit_kiosk_keygen_hdcheck\" name=\"confirm\"/>hd\n        <button id=\"testkit_kiosk_keygen_button\">generate keys</button>\n        <span id=\"testkit_kiosk_keygen_privKey\"></span>\n        <span id=\"testkit_kiosk_keygen_pubKey\"></span>\n        <span id=\"testkit_kiosk_keygen_pubAddr\"></span>\n        <hr>\n        <input type = \"text\" id = \"testkit_kiosk_inputKeyForUTXO\" placeholder = \"insert an address\">\n        <input type = \"checkbox\" id = \"testkit_kiosk_confirmForUTXO\" name=\"confirm\"/>confirmed\n        <button id=\"testkit_kiosk_getUTXO_button\">get utxo</button>\n        <span id=\"testkit_kiosk_UTXO_total\"></span>\n        <hr>\n        <br><input type = \"text\" id = \"testkit_kiosk_inputForTX_utxo\" placeholder = \"UTXO address\">\n        <input type = \"text\" id = \"testkit_kiosk_inputForTX_pubkey\" placeholder = \"UTXO public key\">\n        <input type = \"checkbox\" id = \"testkit_kiosk_inputForTX_confirm\" name=\"confirm\"/>confirmed\n        <br><input type = \"text\" id = \"testkit_kiosk_inputForTX_change\" placeholder = \"change address\">\n        <input type = \"text\" id = \"testkit_kiosk_inputForTX_amount\" placeholder = \"spend amount\">\n        <!--\n        <br><input type = \"text\" id = \"testkit_kiosk_inputForTX_script\" placeholder = \"memo\">\n        <select id=\"testkit_inputForTX_script_select\">\n        <option value = \"data\">memo</option>\n        <option value = \"asm\">asm</option>\n        </select>\n        -->\n        <br><select id=\"testkit_inputForTX_lock_select\">\n        <option value = \"satalite\">Satalite Ordinance</option>\n        <option value = \"ordtxtpkh\">Text Ordinal(P2PKH)</option>\n        <option value = \"ordtxtcustom\">Text Ordinal(custom)</option>\n        <option value = \"asm\">Custom ASM</option>\n        </select>\n        \n        <span id=\"testkit_lock_inputfield\">\n        <br><textarea id=\"testkit_kiosk_inputForTX_lock\" name=\"lockvalue\" rows=\"1\" cols=\"44\" placeholder=\"memo\"></textarea>\n        </span>\n        <br><input type = \"text\" id = \"testkit_kiosk_inputForTX_sign\" placeholder = \"signing private key\"><button id=\"testkit_kiosk_fireTX_button\">fire tx</button>\n        <p><span id=\"testkit_kiosk_TX_ID\"></span></p>\n        </div>\n        </div>\n        "
+    },
+    "testkit_kiosk_func": {
+        "uri": "xo.1051901904694690906",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit kiosk applet",
+        "media": "/flippo/dirmod/testkit_dir/testkit_kiosk.js"
+    },
+    "htmx_import": {
+        "uri": "xo.103901390590134576",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "htmx library 1.9.11",
+        "media": "\n            import('https://unpkg.com/htmx.org@1.9.11')\n            .then(htmx => {\n                // Now htmx library is available, and you can use it\n                console.log('htmx is from https://unpkg.com/htmx.org@1.9.11');\n            })\n            .catch(error => {\n                // Handle error\n                console.error('Failed to load htmx library:', error);\n            });\n            console.log('htmx imported');"
+    },
+    "htmx_script": {
+        "uri": "xo.5906239056059015",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "htmx script 1.9.11",
+        "media": "\n        <script src=\"https://unpkg.com/htmx.org@1.9.11\"></script>"
+    },
+    "testkit_dragtest": {
+        "uri": "xo.307902690246343334",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit_dragtest",
+        "media": "\n        <div class=\"draggable\">Drag me 1</div>\n        <div class=\"draggable\">Drag me 2</div>\n        <div class=\"draggable\">Drag me 3</div>\n        <div class=\"draggable\"><div class=\"dragged_content\"><i>boom</i></div></div>"
+    },
+    "testkit_atc_html": {
+        "uri": "xo.9672303456646593015",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit atc widget via quest",
+        "child": "testkit_atc_func",
+        "count": 1,
+        "media": "\n        <div>\n        <div id=\"testkit_atc\" style=\"width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;\">\n        <ul id=\"qomms\">\n        </ul>\n        </div>\n        <form onsubmit=\"alice.rom.testkit_atc('callback')\" hx-post=\"https://star.xomud.quest/quest/command/\" hx-trigger=\"submit\" hx-target=\"#qomms\" hx-swap=\"beforeend\">\n        <input type = \"text\" name = \"set-message\" id = \"qomms-entry\" placeholder = \"/quest/...\">\n        <input type = \"submit\" value = \"send\">\n        </form>\n        </div>\n        "
+    },
+    "testkit_atc_func": {
+        "uri": "xo.13905760624562462",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit atc applet",
+        "media": "\n        lain.rom.testkit_atc = (action = 'init_and_callback') => {\n            if (action === 'init_and_callback' || action === 'init') {\n                const stringArray = [\"/quest/ testkit cli (type & send 'help')\", \"(っ◔◡◔)っ✩\"];\n                stringArray.forEach(item => {\n                    commandFeed.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');\n                });\n            }\n            if (action === 'callback') {\n                commandFeed.insertAdjacentHTML('beforeend', '<li><b><i>' + lain.sign + '></i></b> ' + entryMessage.value + '</li>');\n                scrollCli.scrollTop = scrollCli.scrollHeight;\n                setTimeout(() => { entryMessage.value = ''; }, 0);\n            }\n        };\n\n            const commandFeed = document.getElementById(\"qomms\");\n            const scrollCli = document.getElementById('testkit_atc');\n            const entryMessage = document.getElementById('qomms-entry');\n        lain.rom.testkit_atc('init_and_callback');\n\n        // client side template handling\n\n        const atc_templates = {\n            'atc_temp_portal': (element) => {\n                element.innerHTML = lain.portal;\n            },\n            'atc_temp_uri': (element) => {\n                element.innerHTML = document.querySelector('meta[portal][uri]').getAttribute('uri');\n            },\n        };\n\n        const observer = new MutationObserver((mutations) => {\n            mutations.forEach((mutation) => {\n                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {\n                    // Check the last list item in the <ul>\n                    scrollCli.scrollTop = scrollCli.scrollHeight;\n                    const lastListItem = commandFeed.lastElementChild;\n                    if (lastListItem) {\n                        Object.keys(atc_templates).forEach((templateId) => {\n                            const templateElement = lastListItem.querySelector('#' + templateId);\n                            if (templateElement) {\n                                atc_templates[templateId](templateElement);\n                    }\n               \t});\n            \t};\n        \t};\n    \t\t});\n\t\t});\n        observer.observe(commandFeed, { childList: true, });\n        "
+    },
+    "testkit_menu_html": {
+        "uri": "xo.10357109570198666",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit menu widget",
+        "child": "testkit_menu_func",
+        "count": 1,
+        "media": "\n        <span>\n        <div id=\"testkit_menu\">\n        <i>testkit tools</i><hr>\n        <select id=\"testkit_menuSelect\" size=\"7\">\n        <option value = \"testkit_atc_html\">atc</option>\n        <option value = \"testkit_clerk_html\">clerk</option>\n        <option value = \"testkit_kiosk_html\">kiosk</option>\n        <option value = \"testkit_csspaint_html\">csspaint</option>\n        <option value = \"testkit_regen_html\">regen</option>\n        <option value = \"testkit_shop_html\">shop</option>\n        <option value = \"testkit_store_gate_html\">storegate</option>\n        </select><br>\n        <button id=\"testkit_menuStart\">start</button>\n        <span id= 'testkit_blinker'></span>\n        </span>\n        "
+    },
+    "testkit_menu_func": {
+        "uri": "xo.1591340569834601786",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit menu applet",
+        "media": "\n        lain.rom.testkit_menu = (() => {\n            // Blinkenlights\n            let console_count = [];\n            let isBlinkerRunning = false;\n            const blinker = document.getElementById('testkit_blinker');\n\n            const flickerBlinker = () => {\n                if (console_count.length > 0) {\n                    isBlinkerRunning = true;\n                    const { color } = console_count.shift();\n                    blinker.style.color = color;\n                    blinker.innerHTML = '';\n                    setTimeout(() => {\n                        blinker.innerHTML = '●';\n                        if (console_count.length > 0) {\n                            setTimeout(flickerBlinker, 30);\n                        } else {\n                            isBlinkerRunning = false;\n                            blinker.style.color = 'grey';\n                        }\n                    }, 60);\n                }\n            };\n\n            document.addEventListener('consolelogged', (event) => {\n                if (console_count.length > 0 && !isBlinkerRunning) {\n                    flickerBlinker();\n                }\n            });\n\n            const originalLog = console.log;\n            console.log = function(...args) {\n                console_count.push({ color: 'lime' });\n                originalLog.apply(console, args);\n                document.dispatchEvent(new CustomEvent('consolelogged', { detail: { error: false } }));\n            };\n\n            const originalError = console.error;\n            console.error = function(...args) {\n                console_count.push({ color: 'red' });\n                originalError.apply(console, args);\n                document.dispatchEvent(new CustomEvent('consolelogged', { detail: { error: true } }));\n            };\n\n            console.log('Hello, world!');\n            // Testkit Apps\n            document.getElementById('testkit_menuStart').addEventListener('click', function() {\n                navi(alice, 'lain.rom.enclose_draggable(alice.dir.' + testkit_menuSelect.value + ')', 'document.body');\n            });\n        })();\n        "
+    },
+    "testkit_destroy": {
+        "uri": "xo.15901360516061",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "destroy via cache",
+        "media": "/flippo/dirmod/testkit_dir/testkit_destroy.js"
+    },
+    "drag_functions": {
+        "uri": "xo.1346901349050946",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "draggable divs controller",
+        "media": "/flippo/dirmod/testkit_dir/drag_functions.js"
+    },
+    "testkit_clerk_html": {
+        "uri": "xo.13904517903346136136",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit clerk widget",
+        "child": "testkit_clerk_func",
+        "count": 1,
+        "media": "\n        <div>\n        <select id=\"testkit_clerkSelect\">\n        <option value = \"cache\">cache</option>\n        <option value = \"rom\">rom</option>\n        <option value = \"dir\">dir</option>\n        <option value = \"ls\">ls</option>\n        <option value = \"db\">db</option>\n        </select>\n        <button id=\"testkit_clerkButton\">refresh</button>\n        <input type = \"text\" id = \"testkit_clerk_rqinput\" placeholder = 'request module via path'>\n        <button id=\"testkit_clerk_rqButton\">request</button>\n        <br><span id=\"testkit_clerkSelectDesc\"></span><hr>\n        <div id=\"testkit_clerk\" style=\"max-height: 400px; overflow-y: auto;\"></div>\n        </div>\n        "
+    },
+    "testkit_clerk_func": {
+        "uri": "xo.575692746724068956",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit clerk applet",
+        "media": "\n        lain.rom.testkit_clerk = () => {\n            const targetElement = document.getElementById(\"testkit_clerk\");\n            if (!targetElement) {\n                console.error('Target element not found');\n                return;\n            }\n            const clerk_select = document.getElementById('testkit_clerkSelect');\n            const reset = () => {\n                targetElement.innerHTML = ''; // Clear the current content\n                let htmlString = '';\n                if (clerk_select.value === \"cache\") {\n                    document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are cached as staged! (X to destroy)</i>';\n                    lain.cache.forEach(function(item, index) {\n                        htmlString += '<a href=\"#\" id=\"removeCache_' + index + '\">X</a> ' + item.name + '<br>';\n                    });\n                } else if (clerk_select.value === \"rom\") {\n                    document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>da following are activated functions!</i>';\n                    Object.entries(lain.rom).filter(function([key, value]) { return value !== null; })\n                        .forEach(function([key, value]) {\n                            htmlString += key + '()<br>';\n                        });\n                } else if (clerk_select.value === \"dir\") {\n                    document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>heres what directory has indexed! (X to attempt build)</i>';\n                    Object.entries(lain.dir).forEach(function([key, value]) {\n                        if (value !== undefined) {\n                            htmlString += '<a href=\"#\" id=\"dir_' + key + '\">X</a> ' + key + ' <i> - ' + value.name + '</i><br>';\n                        }\n                    });\n                } else if (clerk_select.value === \"ls\") {\n                    document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>keys placed in local storage:</i>';\n                    Object.keys(localStorage).forEach(function(key) {\n                        htmlString += + key + '<br>';\n                    });\n                } else if (clerk_select.value === \"db\") {\n                    document.getElementById('testkit_clerkSelectDesc').innerHTML = '<i>here are objects in IndexedDB: (X to attempt dir)</i>';\n                    lain.rom.dbModule.openDB().then(function() {\n                        lain.db.forEach(function(id) {\n                            lain.rom.dbModule.getData(id).then(function(data) {\n                                if (typeof data === 'object' && data !== null) {\n                                    htmlString += '<a href=\"#\" id=\"moveToDir_' + id + '\">X</a>' + ' id(' + id + '): ' + ( (data.file + ' ' + data.name) || 'data.name' || 'unnamed') + '<br>';\n                                    targetElement.innerHTML = htmlString;\n                                    document.getElementById('moveToDir_' + id).onclick = function() {\n                                        alice.dir[data.file] = data;\n                                        console.log('Moved ' + data.name + ' to directory under key ' + data.file);\n                                        lain.rom.dbModule.deleteData(id);\n                                        reset();\n                                        return false;\n                                    };\n                                }\n                            });\n                        });\n                    });\n                }\n                targetElement.innerHTML = htmlString;\n\n                // Attach event listeners after elements are added to the DOM\n                if (clerk_select.value === \"cache\") {\n                    lain.cache.forEach(function(item, index) {\n                        document.getElementById('removeCache_' + index).onclick = function() {\n                            console.log(item)\n                            lain.rom.removeCacheItem({index: index});\n                            reset();\n                            return false;\n                        };\n                    });\n                } else if (clerk_select.value === \"dir\") {\n                    Object.keys(lain.dir).forEach(function(key) {\n                        var element = document.getElementById('dir_' + key);\n                        if (element) {\n                            element.onclick = function() {\n                                navi(alice, \"alice.dir.\" + key, \"document.body\");\n                                return false;\n                            };\n                        }\n                    });\n                }\n                \n            };\n            reset();\n            document.getElementById('testkit_clerkButton').addEventListener('click', reset);\n            document.getElementById('testkit_clerk_rqButton').addEventListener('click', function() {\n                let calling = \"/quest/dirmod/\" + testkit_clerk_rqinput.value;\n                testkit_clerk_rqinput.value = '';\n                chisa({msg: calling});\n            });\n        }\n        lain.rom.testkit_clerk();\n        "
+    },
+    "testkit_csspaint_html": {
+        "uri": "xo.96290760257023536",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit csspaint widget",
+        "child": "testkit_csspaint_func",
+        "media": "\n        <div id=\"testkit_csspaint\">\n        <table>\n            <tr><td>class:</td><td><select id=\"retouchClass\"></select>\n            <button id=\"testkit_csspaint_refresh\">refresh</button></td></tr>\n            <tr><td>property:</td><td><input type=\"text\" id=\"retouchProperty\" value=\"background-color\"></td></tr>\n            <tr><td>value:</td><td><input type=\"text\" id=\"retouchValue\" value=\"cyan\"></td></tr>\n        </table>\n        <button id=\"testkit_csspaint_retouch\">retouch</button>\n        </div>\n        "
+    },
+    "testkit_csspaint_func": {
+        "uri": "xo.8957893475923050246",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit csspaint applet",
+        "media": "/flippo/dirmod/testkit_dir/testkit_csspaint_func.js"
+    },
+    "enclose_draggable": {
+        "uri": "xo.9076309520571515566",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "enclose x in draggable div",
+        "media": "/flippo/dirmod/testkit_dir/enclose_draggable.js"
+    },
+    "testkit_indexedDB": {
+        "uri": "xo.098067293572359340",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "indexedDB functions",
+        "media": "/flippo/dirmod/testkit_dir/indexeddb.js"
+    },
+    "testkit_store_gate_html": {
+        "uri": "xo.346975705910570175",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit move! widget",
+        "child": "testkit_store_gate_func",
+        "media": "\n        <div id=\"testkit_store_gate\">\n        <input type = \"text\" id = \"testkit_store_gate_Entry\" placeholder = \"index / key\">\n        <select id=\"testkit_store_gate_mode\">\n        <option value = \"cut\"> cut </option>\n        <option value = \"copy\"> copy </option>\n        </select>\n        <select id=\"testkit_store_gate_select\">\n        <option value = \"b2ls\">dir -> ls</option>\n        <option value = \"ls2b\">ls -> dir</option>\n        <option value = \"b2db\">dir -> db</option>\n        <option value = \"db2b\">db -> dir</option>\n        </select>\n        <button id=\"testkit_store_gate_Button\">move!</button>\n        </div>\n        "
+    },
+    "testkit_store_gate_func": {
+        "uri": "xo.6767690457739309523",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit move! applet",
+        "media": "/flippo/dirmod/testkit_dir/testkit_store_gate_func.js"
+    },
+    "demo_proc": {
+        "uri": "xo.190571057013560106038",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit demo setup!",
+        "media": "\n        lain.rom.demo_proc = () => {\n            //if (localStorage.getItem('default_navi')\n            eiri(lain, lain.dir.navi_splash);\n            eiri(lain, lain.dir.testkit_style_html, document.head);  \n            eiri(lain, lain.dir.drag_functions);\n            eiri(lain, lain.dir.enclose_draggable);\n            eiri(lain, lain.dir.testkit_indexedDB);\n            eiri(lain, lain.dir.bsv_script);\n            eiri(lain, lain.dir.htmx_import);\n            eiri(lain, lain.dir.css_manager);\n            eiri(lain, lain.dir.dom_reporter);\n            eiri(lain, lain.dir.dom_reassignment);\n            eiri(lain, lain.dir.navi_exporter);\n            eiri(lain, lain.dir.testkit_grave);\n            eiri(lain, lain.dir.htmx_observe);\n            eiri(lain, lain.dir.testkit_destroy);\n           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_regen_html), document.body);  \n           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_csspaint_html), document.body);\n           //eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);\n           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_clerk_html), document.body);\n           // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_kiosk_html), document.body);\n        }\n        lain.rom.demo_proc();\n        "
+    },
+    "test_name_reproc": {
+        "uri": "xo.2346903701358935",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit transform content!",
+        "media": "\n            // DRY style -> list spitter interpreter future\n            console.log('transform?');\n            document.querySelectorAll('*').forEach((element) => {\n                if (element.childNodes.length === 1 && element.textContent.trim() === 'URLMUD') {\n                    const text = element.textContent;\n                    const index = text.indexOf('LM');\n                    if (index !== -1) {\n                        const link = document.createElement('a');\n                        link.href = 'https://wikipedia.org';\n                        link.textContent = 'LM'; // Text to be wrapped in the hyperlink\n                        const newText = text.substring(0, index) + '<a>' + link.outerHTML + '</a>' + text.substring(index + 2);\n                        element.innerHTML = newText; // Update the element with the new HTML\n                    }\n                }\n            });\n        "
+    },
+    "css_manager": {
+        "uri": "xo.87468435648701234",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "edit/create css manager",
+        "media": "/flippo/dirmod/testkit_dir/css_manager.js"
+    },
+    "dom_reporter": {
+        "uri": "xo.5475837342346844768768",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "data-set tree reporter",
+        "media": "\n        lain.rom.reportDOM = () => {\n            const allElements = document.querySelectorAll('*');\n            const domReport = [];\n            allElements.forEach(element => {\n                if (element.hasAttribute(\"data-set\")) {\n                    const tagName = element.tagName.toLowerCase();\n                    const attributes = element.attributes;\n                    const elementInfo = {\n                        tagName: tagName,\n                        attributes: {}\n                    };\n                    for (let i = 0; i < attributes.length; i++) {\n                        const attr = attributes[i];\n                        elementInfo.attributes[attr.nodeName] = attr.nodeValue;\n                    }\n                    domReport.push(elementInfo);\n                }\n            });\n            return domReport;\n        }\n        "
+    },
+    "navi_exporter": {
+        "uri": "xo.73687385434867682",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "exporter of navi",
+        "media": "\n        lain.rom.exporter = () => {\n            //this requires css_manager + dom_reporter\n            let navi_export = {};\n            if (typeof lain.rom.reportDOM === 'function' && typeof lain.rom.manageCSS === 'function'){\n                navi_export.proc = structuredClone(lain.proc);\n                navi_export.dom = lain.rom.reportDOM();\n                navi_export.css = lain.rom.manageCSS().getCSSProperties();\n                \n                /* trimmer breaks domset atm\n\n                navi_export.proc.forEach((procEntry, index) => {\n                    const stepIndex = index.toString();\n                    const matchingDomEntry = navi_export.dom.find(domEntry => \n                        domEntry.attributes && domEntry.attributes['data-step'] === stepIndex\n                    );\n        \n                    if (!matchingDomEntry) {\n                        // Update proc entry if no matching dom entry is found\n                        navi_export.proc[index] = [\"specialCondition\", \"document.body\"];\n                    }\n                });\n                */\n            }\n            return {\n                navi_export\n            };\n        }\n        "
+    },
+    "dom_reassignment": {
+        "uri": "xo.58753544223475875324",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "reassign elements to export",
+        "media": "\n        lain.rom.testkit_reassign = (dom_new) => {\n            console.log(\"reassigning dom based on:\", dom_new);\n            const dom_current_map = new Map();\n        \n            // Populate the map and check for duplicates\n            document.querySelectorAll('[data-set]').forEach(element => {\n                const dataSetValue = element.getAttribute('data-set');\n                if (dom_current_map.has(dataSetValue)) {\n                    // If duplicate, remove the existing element from the DOM\n                    const existingElement = dom_current_map.get(dataSetValue);\n                    existingElement.parentElement.removeChild(existingElement);\n                }\n                dom_current_map.set(dataSetValue, element);\n            });\n        \n            // Set to track data-set values in dom_new for comparison\n            const newDataSets = new Set(dom_new.map(elementInfo => elementInfo.attributes['data-set']));\n        \n            // Proceed with the comparison and reassignment\n            dom_new.forEach(elementInfo => {\n                const entry_domset_value = elementInfo.attributes['data-set'];\n                const element = dom_current_map.get(entry_domset_value); //element is live match\n                if (element) {\n                    // Update the attributes of the matched element to match those in dom_new\n                    Object.entries(elementInfo.attributes).forEach(([attrName, attrValue]) => {\n                        element.setAttribute(attrName, attrValue);\n                    });\n        \n                    // Clear processed entries from current map\n                    dom_current_map.delete(entry_domset_value);\n        \n                    const parentElement = element.parentElement;\n        \n                    if (parentElement.tagName.toLowerCase() === 'body') {\n                        // Check if the body has any child elements\n                        if (parentElement.firstChild) {\n                            parentElement.insertBefore(element, parentElement.firstChild);\n                        } else {\n                            parentElement.appendChild(element);\n                        }\n                    } else {\n                        parentElement.appendChild(element);\n                    }\n                }\n            });\n        \n            // Destroy elements not present in dom_new\n            dom_current_map.forEach((element, domset) => {\n                if (!newDataSets.has(domset)) {\n\n                    //element.parentElement.removeChild(element);\n                    var dataSet = parseInt(domset, 10);\n                    var cacheIndex = lain.cache.findIndex(function(item) { return item.domset === dataSet; });\n                    if (cacheIndex !== -1) {   \n                        lain.rom.removeCacheItem({ index: cacheIndex });\n                    } else {\n                        console.log('couldnt find cache for destruction of:', element)\n                        element.parentElement.removeChild(element);\n                    }\n\n                    // remove cache item but what is the index?\n                }\n            });\n        \n            console.log(\"dom reassigned\");\n        };\n        "
+    },
+    "testkit_grave": {
+        "uri": "xo.166536379998776",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "grave matters",
+        "media": "/flippo/dirmod/testkit_dir/testkit_grave.js"
+    },
+    "testkit_regen_html": {
+        "uri": "xo.7685575453425453742122",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "testkit regen widget",
+        "child": "testkit_regen_func",
+        "media": "\n        <div id=\"testkit_regenerator\">\n        <input type = \"text\" id = \"testkit_exportName\" placeholder = \"new skeleton label\">\n        <button id=\"testkit_exportButton\">export skeleton</button>\n        <br>\n        <input type = \"text\" id = \"testkit_regenImport\" placeholder = \"skeleton label\">\n        <button id=\"testkit_regenButton\">regen navi</button>\n        </div>\n        "
+    },
+    "testkit_regen_func": {
+        "uri": "xo.1321346875468776",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit regen applet",
+        "media": "\n        document.getElementById('testkit_exportButton').addEventListener('click', function() {lain.rom.testkit_grave().skellygen(testkit_exportName.value);});\n        document.getElementById('testkit_regenButton').addEventListener('click', function() {console.log('LETS REGEN'); lain.rom.testkit_grave().deadgen(testkit_regenImport.value);});\n        "
+    }
+}

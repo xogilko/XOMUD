@@ -60,6 +60,9 @@ export function activate_module(lain) {
         };
     
         const modifyCSSProperty = (selector, property, value) => {
+            if (selector === "body") {
+                selector = "html body";
+            }
             let ruleFound = false;
             for (let i = 0; i < document.styleSheets.length; i++) {
                 const styleSheet = document.styleSheets[i];
