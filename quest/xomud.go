@@ -125,7 +125,10 @@ func main() {
 		}
 		http.Error(w, "Service not available", http.StatusServiceUnavailable)
 	})
-
+	//service worker scoper
+	http.HandleFunc("/service-worker.js", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/service-worker.js")
+	})
 	//serve website
 	http.HandleFunc("/", seed)
 	//global service

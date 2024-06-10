@@ -5,16 +5,19 @@ const testkit_dir = {
         "kind": "interpreter",
         "name": "'xotestkit' urns interpreter",
         "media": `
-        lain.rom.xotestkit_handler= {
-
+        lain.rom.xotestkit_handler = {
+            pendingAsyncOps: 0,
+            allAsyncOpsResolvedCallback: null,
+        
             js: (input) => {
-                if (lain.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){
-                    try {eval(input.media); input.step = lain.proc.length; lain.cache.push(input);}
-                    catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
-                } else {console.log('function(s) already cached')}
+                if (lain.cache.find(obj => { return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]); }) === undefined) {
+                    try { eval(input.media); input.step = lain.proc.length; lain.cache.push(input); }
+                    catch (error) { console.log('failed to evaluate function(s)', input.name, 'due to error:', error) }
+                } else { console.log('function(s) already cached') }
             },
+        
             jsmod: (input) => {
-                if (lain.cache.find(obj => {return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]);}) === undefined){
+                if (lain.cache.find(obj => { return Object.keys(input).every(key => obj.hasOwnProperty(key) && obj[key] === input[key]); }) === undefined) {
                     try {
                         const fetchModuleAndImport = async (moduleURL) => {
                             try {
@@ -27,17 +30,24 @@ const testkit_dir = {
                                 }
                             } catch (error) {
                                 console.error('Error importing module:', error);
+                            } finally {
+                                lain.rom.xotestkit_handler.pendingAsyncOps--;
+                                if (lain.rom.xotestkit_handler.pendingAsyncOps === 0 && lain.rom.xotestkit_handler.allAsyncOpsResolvedCallback) {
+                                    lain.rom.xotestkit_handler.allAsyncOpsResolvedCallback();
+                                }
                             }
                         };
                         const moduleURL = input.media;
                         const directURL = lain.portal + moduleURL;
                         console.log('importing async:', input.name);
+                        lain.rom.xotestkit_handler.pendingAsyncOps++;
                         fetchModuleAndImport(directURL);
                         input.step = lain.proc.length;
-                        lain.cache.push(input);}
-                    catch (error) {console.log('failed to evaluate function(s)', input.name, 'due to error:', error)}
-                } else {console.log('function(s) already cached')}
+                        lain.cache.push(input);
+                    } catch (error) { console.log('failed to evaluate function(s)', input.name, 'due to error:', error) }
+                } else { console.log('function(s) already cached') }
             },
+        
             html: (input, target) => {
                 if (input.hasOwnProperty('count')) {
                     const matches = lain.cache.filter(obj => {
@@ -67,17 +77,16 @@ const testkit_dir = {
                 });
                 while (container.firstChild) {
                     target.insertBefore(container.firstChild, target.firstChild);
-                } 
+                }
                 lain.cache.push(input);
                 let kidfunc = lain.dir[input.child];
-                if (kidfunc !== undefined){
-                    if (kidfunc){eiri(lain, kidfunc);}
-                    else {console.log("child func of", input.name, "not found");}
+                if (kidfunc !== undefined) {
+                    if (kidfunc) { eiri(lain, kidfunc); }
+                    else { console.log("child func of", input.name, "not found"); }
                 }
             }
         };
-        console.log('interpreter registered with callback:', lain.portal);
-        `
+        console.log('interpreter registered with callback:', lain.portal);`
     },
     "testkit_style_html":{
         "uri": "xo.764906239052624667",
@@ -375,7 +384,8 @@ const testkit_dir = {
         <option value = "testkit_mount_html">satamount</option>
         </select><br>
         <button id="testkit_menuStart">start</button>
-        <span id= 'testkit_blinker'></span>
+        <span id= 'testkit_blinker'></span><hr>
+        <button id="testkit_menuClear">clear navi</button>
         </span>
         `
     },
@@ -433,6 +443,44 @@ const testkit_dir = {
             // Testkit Apps
             document.getElementById('testkit_menuStart').addEventListener('click', function() {
                 navi(alice, 'lain.rom.enclose_draggable(alice.dir.' + testkit_menuSelect.value + ')', 'document.body');
+            });
+            document.getElementById('testkit_menuClear').addEventListener('click', function() {
+                if (confirm("clearing navi to default!!")){
+                    if ('serviceWorker' in navigator) {
+                        // Get all service worker registrations
+                        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                            for (let registration of registrations) {
+                                // Unregister each service worker
+                                registration.unregister().then(function(success) {
+                                    if (success) {
+                                        console.log('Service worker unregistered successfully.');
+                                    } else {
+                                        console.log('Service worker unregistration failed.');
+                                    }
+                                });
+                            }
+                        }).catch(function(error) {
+                            console.error('Error getting service worker registrations:', error);
+                        });
+                    } else {
+                        console.log('Service workers are not supported in this browser.');
+                    }
+                    
+                    const request = indexedDB.open('tomb', 2);
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        const transaction = db.transaction(['pyre'], 'readwrite');
+                        const pyre = transaction.objectStore('pyre');
+                        const deleteRequest = pyre.delete('1');
+                        deleteRequest.onsuccess = function() {
+                            location.reload();
+                            console.log("Datastore deleted successfully");
+                        };
+                        deleteRequest.onerror = function() {
+                            console.error("Error deleting datastore");
+                        };
+                    };
+                }
             });
         })();
         `
@@ -639,6 +687,13 @@ const testkit_dir = {
         "name": "testkit move! applet",
         "media": "/flippo/dirmod/testkit_dir/testkit_store_gate_func.js" 
     },
+    "testkit_suddendeath":{
+        "uri": "xo.987349053796",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "testkit suddendeath",
+        "media": "/flippo/dirmod/testkit_dir/suddendeath.js" 
+    },
     "demo_proc":{
         "uri": "xo.190571057013560106038",
         "urns": "xotestkit",
@@ -661,6 +716,7 @@ const testkit_dir = {
             eiri(lain, lain.dir.testkit_grave);
             eiri(lain, lain.dir.htmx_observe);
             eiri(lain, lain.dir.testkit_destroy);
+            eiri(lain, lain.dir.testkit_suddendeath);
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_regen_html), document.body);  
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_csspaint_html), document.body);
            //eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_atc_html), document.body);
@@ -668,6 +724,31 @@ const testkit_dir = {
            // eiri(lain, lain.rom.enclose_draggable(lain.dir.testkit_kiosk_html), document.body);
         }
         lain.rom.demo_proc();
+        `
+    },
+    "skelly_proc":{
+        "uri": "xo.981896021340505556",
+        "urns": "xotestkit",
+        "kind": "js",
+        "name": "testkit skelly setup!",
+        "media": `
+        lain.rom.skelly_proc = () => {
+            //if (localStorage.getItem('default_navi')
+            eiri(lain, lain.dir.testkit_destroy);
+            eiri(lain, lain.dir.css_manager);
+            eiri(lain, lain.dir.dom_reassignment);
+            eiri(lain, lain.dir.testkit_grave);
+            const wake = () => {
+                if (typeof lain.rom.removeCacheItem === 'function' && typeof lain.rom.manageCSS === 'function' && typeof lain.rom.testkit_grave === 'function') {
+                    console.log('...mourning!');
+                    lain.rom.testkit_grave().deadgen('suddendeath');
+                } else {
+                    setTimeout(wake, 200); // Check again after 200ms if functions are not available
+                }
+            };
+            wake();
+        }
+        lain.rom.skelly_proc();
         `
     },
     "test_name_reproc":{
@@ -873,7 +954,8 @@ const testkit_dir = {
         "kind": "js",
         "name": "testkit regen applet",
         "media": `
-        document.getElementById('testkit_exportButton').addEventListener('click', function() {lain.rom.testkit_grave().skellygen(testkit_exportName.value);});
+        document.getElementById('testkit_exportButton').addEventListener('click', function() {lain.rom.testkit_grave().skellygen(testkit_exportName.value); 
+            testkit_exportName.value = '';});
         document.getElementById('testkit_regenButton').addEventListener('click', function() {console.log('LETS REGEN'); lain.rom.testkit_grave().deadgen(testkit_regenImport.value);});
         `
     },
@@ -908,7 +990,88 @@ Object.keys(testkit_dir).forEach(key => {
     alice.dir[key] = testkit_dir[key];
 });
 console.log("xotestkit directory deployed")
-navi(alice, 'alice.dir.demo_proc');
+
+//service worker
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(function(registration) {
+            console.log('service Worker registered with scope:', registration.scope);
+            if (!navigator.serviceWorker.controller) {
+                console.log('service Worker is not controlling the page. Reloading...');
+                window.location.reload();
+            }
+        }).catch(function(error) {
+            console.error('service Worker registration failed:', error);
+        });
+} else {
+    console.log('no service worker for persistence :( ')
+}
+
+//state persistence logic
+
+function checkIndexedDBAndExecute() {
+    const request = indexedDB.open('tomb', 2);
+    let upgradeNeeded = false;
+    request.onerror = function(event) {
+        console.error('Database error:', event.target.errorCode);
+    };
+    request.onupgradeneeded = function(event) {
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains('pyre')) {
+            db.createObjectStore('pyre', { keyPath: 'id', autoIncrement: true });
+            console.log('...out of nothing...');
+            navi(alice, 'alice.dir.demo_proc');
+            upgradeNeeded = true;
+        }
+    };
+    request.onsuccess = function(event) {
+        if (upgradeNeeded) return;
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains('pyre')) {
+            // Object store does not exist
+            console.log('...out of oblivion!...');
+            navi(alice, 'alice.dir.demo_proc');
+            return;
+        }
+
+        const transaction = db.transaction(['pyre'], 'readonly');
+        const pyre = transaction.objectStore('pyre');
+        const exhume = pyre.count();
+
+        exhume.onsuccess = function() {
+            if (exhume.result === 0) {
+                console.log('...tomb is empty...')
+                navi(alice, 'alice.dir.demo_proc');
+            } else {
+                console.log('a skeleton remembers...');
+                const getRequest = pyre.getAll();
+                getRequest.onsuccess = function(event) {
+                    const result = event.target.result[0].data; // Assuming only one object
+                    if (result) {
+                        // Move the object to alice.dir
+                        alice.dir[result.file] = result;
+                        
+                        console.log('it turns...');
+                        navi(alice, 'alice.dir.skelly_proc');
+                        
+                    }
+                };
+
+                getRequest.onerror = function(event) {
+                    console.error('Get request error:', event.target.errorCode);
+                };
+            }
+        };
+
+        exhume.onerror = function(event) {
+            console.error('exhumation failed:', event.target.errorCode);
+        };
+    };
+}
+checkIndexedDBAndExecute();
 } catch (error) {
     console.log("failed to append testkit_dir to alice:", error);
 }

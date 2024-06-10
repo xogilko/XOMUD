@@ -7,14 +7,12 @@
 
 current: 
 
-give them new quest and flippo and testkit_dir and enclose draggable
 
 bugs:
 
     testkit_styles is compounding in cache when manually added via dir and reprocced (top of the cache list too)
 
-    reproc should clear out cached tags in head like bsv
-    seems reproc is still broken leaving draggable specks sometimes
+    seems reproc is still broken leaving draggable specks sometimes (IS IT TRUE IDK)
     something about data-step one is preserving a draggable speck
 
     during reproc the css rules added that dont collide stay
@@ -28,6 +26,14 @@ bugs:
     fish get trapped in static window with scroll
 
 tasks:
+
+    chisa anticipates modules but what about html (php) from the url ?
+
+     proc is going to grow fast we need trimming
+        EXPORTER -> check if document.body calls are persisting
+
+    place entire xomud site into a host uri
+    SPA -> PHP https://chatgpt.com/share/0f1e2836-ed0b-461c-b6b7-c4c28fa95a4b
 
     utxo splitter for tx buffer during pending spend
 
@@ -49,11 +55,6 @@ tasks:
     sudden death:
         dom items need a property "persist"  to reproc ?
             instead we could have a parent function for nonpersistent content
-        persistence across page reload
-        streamline regen into db (?)
-        proc check for skelly ( via uri ?)
-            navigating pages, like ssr full html and then reproc onto it maintaining state
-            full pages are a medium
 
     solicitude:
         vendor privacy care:

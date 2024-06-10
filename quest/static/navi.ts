@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', () => { /* phone home */
 
 interface S {
     sign: string;
-    portal: string;                       
+    portal: string;
+    domain: string;                       
     domset: number;                     //dom element counter
     proc: any[];                        //navi session call log
     cache: any[];                       //active state index
@@ -21,7 +22,7 @@ interface S {
     };                      
 }
 
-const navi = function(lain: S, ...rest: string[]) {
+const navi = async function(lain: S, ...rest: string[]) {
     console.log("✩ navi called ✩", arguments);   
     const eiri = (lain: S, input: S['dir'][string], ...rest: string[]) => {
         const initInterpreter = (interpreter: S['dir'][string]) => {
@@ -114,7 +115,7 @@ function chisa(request?: { [key: string]: any }): void {
             Object.assign(req_headers, request.headers);
         }
         const bodyData = {
-            ...request,  // Spread other properties of request into the body
+            ...request, 
         };
         const requestOptions = {
             method: 'POST',
@@ -146,23 +147,18 @@ function chisa(request?: { [key: string]: any }): void {
             return;
         } else {
             alice.portal = meta['portal'];
+            alice.domain = meta['domain'];
         }
-
-        const req_headers = {
-            'Content-Type': 'application/json', 
-        };
         const bodyData = {
             client: {
                 href: window.location.href,
-                touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-                connection: (navigator as any).connection ? (navigator as any).connection.effectiveType : 'unknown',
                 uri: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
             }
         };
         console.log(bodyData, "requesting service ✩");
         const requestOptions = {
             method: 'POST',
-            headers: req_headers,
+            headers: {'Content-Type': 'application/json',},
             body: JSON.stringify(bodyData)
         };
         fetch(alice.portal + '/collect_dir/', requestOptions)
@@ -198,6 +194,7 @@ function chisa(request?: { [key: string]: any }): void {
 const alice: S = {
     sign: 'xo',
     portal: '',
+    domain: '',
     domset: 0,
     proc: [],
     cache: [],

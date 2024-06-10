@@ -15,12 +15,23 @@ lain.rom.testkit_grave = () => {
             skeleton.name = "skeleton export";
             lain.dir[label] = skeleton;
             lain.dir[label].file = label;
-            testkit_exportName.value = '';
+            alice.dir[label].domain = alice.domain;
         } catch (error) {
             console.log("failed to generate skeleton", error);
         }
     }
-    const deadgen = (label) => {
+
+    const waitForAllAsyncOps = () => {
+        return new Promise((resolve) => {
+            if (lain.rom.xotestkit_handler.pendingAsyncOps === 0) {
+                resolve();
+            } else {
+                lain.rom.xotestkit_handler.allAsyncOpsResolvedCallback = resolve;
+            }
+        });
+    };
+
+    const deadgen = async (label) => {
         try {
             let skeleton = lain.dir[label];
             if (!skeleton) {
@@ -55,11 +66,12 @@ lain.rom.testkit_grave = () => {
             lain.domset= 0; // dom is cleared
             //run proc, then dom_reassignment, then style
             lain.proc = [];
-            skeleton.navi_export.proc.forEach(args => {
+            for (const args of skeleton.navi_export.proc) {
                 let specialCondition = "specialCondition";
                 let rest = args.map(arg => arg); //(arg => eval(arg));
-                navi(lain, ...rest);
-            });
+                await navi(lain, ...rest);
+                await waitForAllAsyncOps();
+            }
             lain.rom.testkit_reassign(skeleton.navi_export.dom);                
             lain.rom.manageCSS().applyStylesheet(skeleton.navi_export.css);
             console.log("and we're back");

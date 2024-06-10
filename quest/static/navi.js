@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 });
-const navi = function (lain, ...rest) {
+const navi = async function (lain, ...rest) {
     console.log("✩ navi called ✩", arguments);
     const eiri = (lain, input, ...rest) => {
         const initInterpreter = (interpreter) => {
@@ -96,7 +96,7 @@ const navi = function (lain, ...rest) {
     return { lain };
 };
 function chisa(request) {
-    if (request && request.msg) { //request.msg is the http path for module
+    if (request && request.msg) {
         const req_headers = {
             'Content-Type': 'application/json',
         };
@@ -125,7 +125,7 @@ function chisa(request) {
             console.error('Error loading module:', error);
         });
     }
-    else { //when request.msg does not exist
+    else {
         const meta = {};
         Array.from(document.getElementsByTagName('meta')).forEach(tag => {
             Array.from(tag.attributes).forEach(attr => {
@@ -137,23 +137,19 @@ function chisa(request) {
             return;
         }
         else {
-            alice.portal = meta['portal'];
+            alice.portal = meta['portal'];      
+            alice.domain = meta['domain'];
         }
-        const req_headers = {
-            'Content-Type': 'application/json',
-        };
         const bodyData = {
             client: {
                 href: window.location.href,
-                touch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-                connection: navigator.connection ? navigator.connection.effectiveType : 'unknown',
                 uri: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
             }
         };
         console.log(bodyData, "requesting service ✩");
         const requestOptions = {
             method: 'POST',
-            headers: req_headers,
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(bodyData)
         };
         fetch(alice.portal + '/quest/dirbox/', requestOptions)
@@ -181,13 +177,14 @@ function chisa(request) {
             });
         })
             .catch(error => {
-            console.error('failed to collect dir:', error);
+            console.error('failed service:', error);
         });
     }
 }
 const alice = {
     sign: 'xo',
     portal: '',
+    domain: '',
     domset: 0,
     proc: [],
     cache: [],
