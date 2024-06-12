@@ -86,6 +86,25 @@ const testkit_dir = {
                 }
             }
         };
+
+        class MySecureElement extends HTMLElement {
+            constructor() {
+                super();
+                const shadowRoot = this.attachShadow({ mode: 'closed' });
+            
+                const wrapper = document.createElement('div');
+                
+                shadowRoot.appendChild(wrapper);
+                this.wrapper = wrapper;
+            }
+            secure(child) {
+                this.wrapper.appendChild(child);
+            }
+        }
+        if (!customElements.get('testkit-shadow')) {
+            customElements.define('testkit-shadow', MySecureElement);
+        }
+
         console.log('interpreter registered with callback:', lain.portal);`
     },
     "testkit_style_html":{
@@ -295,14 +314,20 @@ const testkit_dir = {
         "count": 1,
         "media": `
         <div>
-        <div id="testkit_atc" style="width:500px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
+        <div id="testkit_atc" style="width:555px;height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
         <ul id="qomms">
         </ul>
         </div>
+        <select id="testkit_atc_mode">
+        <option value = "server">server</option>
+        <option value = "client">client</option>
+        </select>
+        <span id="atc_inputarea">
         <form onsubmit="alice.rom.testkit_atc('callback')" hx-post="https://star.xomud.quest/quest/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend">
-        <input type = "text" name = "set-message" id = "qomms-entry" placeholder = "/quest/...">
+        <input type = "text" name = "set-message" id = "qomms_entry" placeholder = "/quest/...">
         <input type = "submit" value = "send">
         </form>
+        </span>
         </div>
         `
     },
@@ -320,20 +345,46 @@ const testkit_dir = {
                 });
             }
             if (action === 'callback') {
-                commandFeed.insertAdjacentHTML('beforeend', '<li><b><i>' + lain.sign + '></i></b> ' + entryMessage.value + '</li>');
+                commandFeed.insertAdjacentHTML('beforeend', '<li><b><i>' + lain.sign + '></i></b> ' + qomms_entry_value + '</li>');
                 scrollCli.scrollTop = scrollCli.scrollHeight;
-                setTimeout(() => { entryMessage.value = ''; }, 0);
+                setTimeout(() => { qomms_entry.value = ''; }, 0);
             }
         };
 
             const commandFeed = document.getElementById("qomms");
             const scrollCli = document.getElementById('testkit_atc');
-            const entryMessage = document.getElementById('qomms-entry');
         lain.rom.testkit_atc('init_and_callback');
 
+       
+        testkit_atc_mode.addEventListener('change', function() {
+            if (this.value === 'server') {
+                atc_inputarea.innerHTML = '<form onsubmit="alice.rom.testkit_atc(\\'callback\\')" hx-post="https://star.xomud.quest/quest/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend"><input type = "text" name = "set-message" id = "qomms_entry" placeholder = "/quest/..."><input type = "submit" value = "send"></form>';
+                htmx.process(atc_inputarea);
+            }
+            if (this.value === 'client') {
+                atc_inputarea.innerHTML = '<br><input type = "text" id="qomms_entry" placeholder = ">..."><button id="testkit_atc_client_submit">eval</button>';
+                testkit_atc_client_submit.addEventListener('click', function() {
+                    if (confirm("ATC requests permission to execute a command!")){
+                        commandFeed.insertAdjacentHTML('beforeend', '<li>' + qomms_entry.value + '</li>');
+                        try {
+                            const result = eval(qomms_entry.value);
+                            commandFeed.insertAdjacentHTML('beforeend', '<li><i>' + result + '</i></li>');
+                        } catch (error) {
+                            commandFeed.insertAdjacentHTML('beforeend', '<li><i>' + error + '</i></li>');
+                        }
+                        qomms_entry.value = '';
+                    }
+                })
+            }
+
+        });
+        testkit_atc_mode.dispatchEvent(new Event('change'));
         // client side template handling
 
         const atc_templates = {
+            'atc_temp_domain': (element) => {
+                element.innerHTML = lain.domain;
+            },
             'atc_temp_portal': (element) => {
                 element.innerHTML = lain.portal;
             },
@@ -983,6 +1034,24 @@ const testkit_dir = {
         "name": "satalite mounting applet",
         "media": `
         `
+    },
+    "testkit_keychain_html":{
+        "uri": "xo.9090876265572",
+        "urns": "xotestkit",
+        "kind": "html",
+        "name": "shadow keychain widget",
+        "child": "testkit_keychain_func",
+        "media": `
+        <testkit-shadow id="testkit_keychain">
+        </testkit-shadow>
+        `
+    },
+    "testkit_keychain_func":{
+        "uri": "xo.90390009377332",
+        "urns": "xotestkit",
+        "kind": "jsmod",
+        "name": "shadow keychain applet",
+        "media": "/quest/dirmod/testkit_dir/testkit_keychain.js"
     },
 }
 try{

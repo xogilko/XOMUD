@@ -61,8 +61,8 @@
         }
     },
     "command": {
-        "help": "/quest/ command list:<br>help - this! <br>status - report uri and portal",
-        "status": "current uri: <b><span id='atc_temp_uri'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
+        "help": "/quest/ command list:<br>help - this! <br>status - report uri portal and domain",
+        "status": "current domain: <b><span id='atc_temp_domain'></span></b> with uri: <b><span id='atc_temp_uri'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
     },
     "script": {
         "id": "",

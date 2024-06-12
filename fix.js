@@ -27,20 +27,24 @@ bugs:
 
 tasks:
 
+    keychain:
+        ask browser to treat like username pass for autofill
+            create a seperate php page for logging in the browser needs a static entry point
+
+    Utilize service workers to intercept and control requests to IndexedDB, enforcing any access control or encryption logic before allowing access to the data.
+
     chisa anticipates modules but what about html (php) from the url ?
 
-     proc is going to grow fast we need trimming
+    proc is going to grow fast we need trimming
         EXPORTER -> check if document.body calls are persisting
-
-    place entire xomud site into a host uri
-    SPA -> PHP https://chatgpt.com/share/0f1e2836-ed0b-461c-b6b7-c4c28fa95a4b
 
     utxo splitter for tx buffer during pending spend
 
     costly http requests (splash green) http signer app
         fetch alt for paidfetch() -> header tx -> check on server -> func call
-
-    splash - explain phoning home
+        server checker for ANY url via header and path/query
+            quest/httx/...
+            <a href="" data-htxo="" data-addr=""></a>
     
     open atc to sse
 
@@ -51,10 +55,6 @@ tasks:
             etc
         <meta> specify method <custodial signs on behalf of email conf etc>
         need a base identity handler that plugs into methods
-
-    sudden death:
-        dom items need a property "persist"  to reproc ?
-            instead we could have a parent function for nonpersistent content
 
     solicitude:
         vendor privacy care:

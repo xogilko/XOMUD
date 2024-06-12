@@ -286,6 +286,15 @@ func dirbox_send(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 }
+func sitelist_send(w http.ResponseWriter, r *http.Request) {
+
+}
+func site_serve(w http.ResponseWriter, r *http.Request) {
+
+}
+func httx_pass(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func main() {
 	initLogger()
@@ -297,10 +306,16 @@ func main() {
 	//a request is received for a list of imports
 	router.HandleFunc("/dirmod/", dirmod_send)
 	//a request is received for import of module
+	router.HandleFunc("/sitelist/", sitelist_send)
+	//a request is received for domains cache
+	router.HandleFunc("/site/", site_serve)
+	//a request to target a domain php
 	router.HandleFunc("/vending/", vending_send)
 	//a request for a list of contents from department
 	router.HandleFunc("/solicit/", solicit_offer)
 	//a request for an offer to be generated for a module
+	router.HandleFunc("/httx/", httx_pass)
+	//hypertext transaction -> pay vendor for http request
 
 	fmt.Println("Command server is active")
 	log.Fatal(http.ListenAndServe(":8081", router))
