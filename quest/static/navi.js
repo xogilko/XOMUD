@@ -1,5 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-});
 const navi = async function (lain, ...rest) {
     console.log("✩ navi called ✩", arguments);
     const eiri = (lain, input, ...rest) => {
@@ -49,10 +47,10 @@ const navi = async function (lain, ...rest) {
             else {
                 try {
                     initInterpreter(input);
-                    console.log(`urns ${input.urns} mounted`);
+                    console.log(`${input.urns} interpreter mounted`);
                 }
                 catch (error) {
-                    console.log(`Failed to mount urns ${input.urns}`, error);
+                    console.log(`Failed to mount ${input.urns} interpreter`, error);
                 }
             }
         }
@@ -60,7 +58,10 @@ const navi = async function (lain, ...rest) {
             if (!canInterpret) {
                 console.log(`Interpreter for ${input.urns} not found. Attempting to mount...`);
                 try {
-                    let interpreter = lain.dir.xotestkit_in; // Simulate fetching urns interpreter
+                    let interpreter = Object.values(lain.dvr).find(d => d.urns === input.urns && d.kind === 'interpreter');
+                    if (!interpreter) {
+                        throw new Error(`Interpreter for ${input.urns} not found`);
+                    }
                     initInterpreter(interpreter);
                     console.log(`Interpreter for urns ${input.urns} mounted`);
                 }
@@ -78,117 +79,81 @@ const navi = async function (lain, ...rest) {
         }
     };
     try {
-        const specialCondition = "specialCondition";
         const evaluatedArgs = rest.map(arg => eval(arg));
-        if (evaluatedArgs.length > 0 && typeof evaluatedArgs[0] === 'string' && evaluatedArgs[0] === specialCondition) {
-            // a special request eiri doesn't need
-            console.log('special', rest);
-        }
-        else {
-            // Otherwise, proceed as normal
+        if (!(evaluatedArgs.length > 0 && typeof evaluatedArgs[0] === 'string' && evaluatedArgs[0] === "specialCondition")) {
             eiri(lain, ...evaluatedArgs);
         }
         lain.proc.push(rest);
     }
     catch (error) {
-        console.log('navi has failed', error);
+        console.log('navi error: ', error);
     }
     return { lain };
 };
-function chisa(request) {
-    if (request && request.msg) {
-        const req_headers = {
-            'Content-Type': 'application/json',
-        };
-        if (request.headers) {
-            Object.assign(req_headers, request.headers);
-        }
-        const bodyData = {
-            ...request, // Spread other properties of request into the body
-        };
-        const requestOptions = {
-            method: 'POST',
-            headers: req_headers,
-            body: JSON.stringify(bodyData)
-        };
-        fetch(alice.portal + request.msg, requestOptions)
-            .then(response => {
-            if (!response.ok) {
-                throw new Error(`Failed to load module ${request.msg}`);
-            }
-            return response.text();
-        })
-            .then(moduleScript => {
-            eval(moduleScript);
-        })
-            .catch(error => {
-            console.error('Error loading module:', error);
+function chisa() {
+    const meta = {};
+    Array.from(document.getElementsByTagName('meta')).forEach(tag => {
+        Array.from(tag.attributes).forEach(attr => {
+            meta[attr.name] = attr.value;
         });
+    });
+    if (!meta['portal']) {
+        console.error('navi has no portal key');
+        return;
     }
     else {
-        const meta = {};
-        Array.from(document.getElementsByTagName('meta')).forEach(tag => {
-            Array.from(tag.attributes).forEach(attr => {
-                meta[attr.name] = attr.value;
-            });
-        });
-        if (!meta['portal']) {
-            console.error('navi has no portal key');
-            return;
-        }
-        else {
-            alice.portal = meta['portal'];      
-            alice.domain = meta['domain'];
-        }
-        const bodyData = {
-            client: {
-                href: window.location.href,
-                uri: Array.from(document.querySelectorAll('meta[uri]')).map(tag => tag.getAttribute('uri')),
-            }
-        };
-        console.log(bodyData, "requesting service ✩");
-        const requestOptions = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(bodyData)
-        };
-        fetch(alice.portal + '/quest/dirbox/', requestOptions)
-            .then(response => {
-            if (!response.ok) {
-                throw new Error('no response');
-            }
-            return response.json();
-        })
-            .then((urls) => {
-            urls.forEach((url) => {
-                fetch(alice.portal + url, requestOptions)
-                    .then(modResponse => {
-                    if (!modResponse.ok) {
-                        throw new Error(`Failed to load module ${url}`);
-                    }
-                    return modResponse.text();
-                })
-                    .then(moduleScript => {
-                    eval(moduleScript);
-                })
-                    .catch(error => {
-                    console.error('Error loading module:', error);
-                });
-            });
-        })
-            .catch(error => {
-            console.error('failed service:', error);
-        });
+        alice.portal = meta['portal'];
+        alice.chan = meta['chan'];
     }
+    const bodyData = {
+        client: {
+            href: window.location.href,
+            aux: Array.from(document.querySelectorAll('meta[aux]')).map(tag => tag.getAttribute('aux')),
+        }
+    };
+    console.log(bodyData, "requesting service ✩");
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', },
+        body: JSON.stringify(bodyData)
+    };
+    fetch(alice.portal + '/quest/dvrbox/', requestOptions)
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('no response');
+        }
+        return response.json();
+    })
+        .then((urls) => {
+        urls.forEach((url) => {
+            fetch(alice.portal + url, requestOptions)
+                .then(modResponse => {
+                if (!modResponse.ok) {
+                    throw new Error(`Failed to load module ${url}`);
+                }
+                return modResponse.text();
+            })
+                .then(moduleScript => {
+                eval(moduleScript);
+            })
+                .catch(error => {
+                console.error('Error loading module:', error);
+            });
+        });
+    })
+        .catch(error => {
+        console.error('failed download to dvr:', error);
+    });
 }
 const alice = {
     sign: 'xo',
     portal: '',
-    domain: '',
+    chan: '',
+    subs: {},
     domset: 0,
     proc: [],
     cache: [],
     rom: {},
-    dir: {}
+    dvr: {}
 };
 document.addEventListener('DOMContentLoaded', function () { chisa(); });

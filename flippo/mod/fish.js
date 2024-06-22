@@ -1,7 +1,6 @@
-function fishFunction() {
+function fishFunction(fish) {
     
-    const fish = document.createElement('span');
-    fish.className = 'hyperfish';
+
     fish.innerHTML = '<span>fish</span>';
     fish.style.position = 'absolute';
     fish.style.left = `${Math.random() * window.innerWidth}px`;
@@ -141,12 +140,14 @@ function isNearMouse(element, mouseX, mouseY) {
 
 // Initialize the observer to monitor DOM changes
 function initializeObserver() {
+    const processedNodes = new Set();
+
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
-                if (node.id === 'fishtext') {
-                    document.body.removeChild(node); // Remove the detected node
-                    fishFunction(); // Trigger the fish function
+                if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('hyperfish') && !processedNodes.has(node)) {
+                    fishFunction(node); // Trigger the fish function with the correct node
+                    processedNodes.add(node); // Mark this node as processed
                 }
             });
         });
@@ -155,9 +156,11 @@ function initializeObserver() {
     const config = { childList: true, subtree: true };
     observer.observe(document.body, config);
 
-    document.querySelectorAll('#fishtext').forEach(node => {
-        document.body.removeChild(node);
-        fishFunction();
+    document.querySelectorAll('.hyperfish').forEach(node => {
+        if (!processedNodes.has(node)) {
+            fishFunction(node); // Initialize existing nodes with the class 'hyperfish'
+            processedNodes.add(node); // Mark this node as processed
+        }
     });
 }
 

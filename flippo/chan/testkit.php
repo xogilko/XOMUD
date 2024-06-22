@@ -98,8 +98,11 @@ HTML;
 default:
 http_response_code(404);
 return <<<HTML
-<div class="navigation">
+<div class="navigation"><table class="horizon"><tr><td>
 <nav>✰ <a href="/">home</a> / <a href="/about">about</a> / <a href="/navi">navi</a> ✰</nav>
+</td>
+</tr>
+</table>
 </div>
 <div class="container">
 <br>
@@ -124,9 +127,9 @@ exit;
 <!DOCTYPE html>
 <html>
 <head>
-<script src="https://unpkg.com/simpercell@1.1.0/navi.js"></script>
-<meta portal="https://star.xomud.quest" uri="testkit" domain="/testkit">
-<title>★_xomud.quest_★</title>
+<script src="https://unpkg.com/simpercell@1.4.7/navi.js"></script>
+<meta uri="testkit" channel="/testkit" portal="https://star.xomud.quest">
+<title>★ xomud.quest ★</title>
 <link rel="stylesheet" type="text/css" href="<?php echo $cssURL; ?>">
 <link rel="manifest" href="/manifest.json">
 <meta property="og:title" content="XOMUD" />
@@ -176,6 +179,5 @@ window.onpopstate = function(event) {
         .catch(error => console.error('Error loading the page: ', error));
 };
 </script>
-<div id="end"></div>
 </body>
 </html>

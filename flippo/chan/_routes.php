@@ -1,8 +1,8 @@
 // server-side script: routes.php
 <?php
 $routes = [
-    'testkit' => 'https://star.xomud.quest/quest/domain/testkit.php',
-    'default' => 'https://star.xomud.quest/quest/domain/default.php',
+    'testkit' => 'https://star.xomud.quest/quest/channel/testkit.php',
+    'default' => 'https://star.xomud.quest/quest/channel/default.php',
     'example' => 'hypertext/example.php',
 ];
 

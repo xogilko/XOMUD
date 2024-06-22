@@ -17,30 +17,33 @@ export function activate_module(lain) {
             var styleSheets = document.styleSheets;
         
             // Collect styles from external and internal stylesheets
-            for (var i = 0; i < styleSheets.length; i++) {
-                var styleSheet = styleSheets[i];
-                try {
-                    var cssRules = styleSheet.cssRules || styleSheet.rules;
-                    for (var j = 0; j < cssRules.length; j++) {
-                        var rule = cssRules[j];
-                        if (rule instanceof CSSStyleRule) {
-                            var selectors = rule.selectorText.split(/\s*,\s*/);
-                            selectors.forEach(function(selector) {
-                                if (!styleProperties[selector]) {
-                                    styleProperties[selector] = {};
-                                }
-                                var styleDeclaration = rule.style;
-                                for (var k = 0; k < styleDeclaration.length; k++) {
-                                    var property = styleDeclaration[k];
-                                    styleProperties[selector][property] = styleDeclaration.getPropertyValue(property);
-                                }
-                            });
+            // Collect styles from dynamically added stylesheets
+for (var i = 0; i < styleSheets.length; i++) {
+    var styleSheet = styleSheets[i];
+    if (styleSheet.ownerNode && styleSheet.ownerNode.tagName === 'STYLE') {
+        try {
+            var cssRules = styleSheet.cssRules || styleSheet.rules;
+            for (var j = 0; j < cssRules.length; j++) {
+                var rule = cssRules[j];
+                if (rule instanceof CSSStyleRule) {
+                    var selectors = rule.selectorText.split(/\s*,\s*/);
+                    selectors.forEach(function(selector) {
+                        if (!styleProperties[selector]) {
+                            styleProperties[selector] = {};
                         }
-                    }
-                } catch (error) {
-                    console.error('Access to stylesheet ' + styleSheet.href + ' is denied.', error);
+                        var styleDeclaration = rule.style;
+                        for (var k = 0; k < styleDeclaration.length; k++) {
+                            var property = styleDeclaration[k];
+                            styleProperties[selector][property] = styleDeclaration.getPropertyValue(property);
+                        }
+                    });
                 }
             }
+        } catch (error) {
+            console.error('Access to stylesheet ' + styleSheet.href + ' is denied.', error);
+        }
+    }
+}
         
             // Collect inline styles only from elements with inline styles
             document.querySelectorAll('[style]').forEach((element, index) => {

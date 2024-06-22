@@ -3,12 +3,65 @@
 
 /* QUEST */
 
-/*  
+/*  42164
 
-current: 
-
+CURRENT REPO PREPPED FOR 1.5
+    
+    renaming channel
+        fix meta tag last
+            requires latest navi
+ x       rename uri to aux
+ x           atc
+ x           flippo dvrbox
+ x   make sure regen doesnt strip static css
+ x  fixed navi.js
+ x       rename module mod
+ x           routed jsmods to /mod/
+ x   remove complex vending
+ x       logs new address per vendor
+ x           i think i will keep the hash strategy
+ x               try out example_cost via request (?)
+ x                   place receipt in subscription
+ x   shop calls interpreter directly instead of chisa
+ x       shop checks and adds subscriptions
+    finish php server proxy -> update dispatcher with links
+ x   finish httx header handling
+ x       httx checks queryparam after header
+ x       serve works
+ x   give the damn fish proper caching
+ x       discovered and solved caching of pointers
+ x   dirbox serves /
+ x   interpreter sends subscription txids
+ x   changed dir -> dvr all files
+ x   removed hardcoded interpreter from navi
+ x   fineprint class added
+ x   added subscription in navi
+ x       rewrite dispatcher html to place subscription httxid into request for php file
+ x           handle a failure with defaulting etc.
+ x   modify clerk request bc chisa is one use 
+ x   repair atc with channel
+ x   splash chan
+ x   clerk has no proc call
+ x   split splash modes vertically
+ x   shop calls navi instead of interpreter so we keep addons
+ x   example_cost needs updating (alice.dir)
+ x   check out 'problems' tab
+    cssmanager should not overwrite bc then they dont get collected as cascade
+    splash absolute view posting not inline window
+ x   built keychain autologin page
+ x   solve navi proc pruning now navi proc is perfected ! :)))
+ x       higher domset c-z each subtract distance a-b in destroy, trace children updates
+    reproc could include ordering of elements to preserve whos in front
+ x   can only test live : sw.js + php(origin root) + mod complete
+ x   pass dispatcher chan directly instead of via suddendeath
+ x   draft webcentury /20XX/
+    explain portal and user rights in xo page
 
 bugs:
+
+    change bgcolor 20xx go to xo go back it doesnt reproc
+
+    only reassign styles that are custom so we dont spread site styles
 
     testkit_styles is compounding in cache when manually added via dir and reprocced (top of the cache list too)
 
@@ -25,7 +78,24 @@ bugs:
     why cant i add fish offline
     fish get trapped in static window with scroll
 
-tasks:
+tasks: 
+
+    webRTC signalling server encryptsafe to create p2p interactions
+
+    draft political architecture /polarch/
+
+    indexer WALTAR xo@waltar
+
+    url shortenr
+
+    offline mode page (world?)
+        static off air -> logo on air
+
+    reverse engineer opns minting
+
+    mongodb
+
+    assess permissions for every new program (alice variable)
 
     keychain:
         ask browser to treat like username pass for autofill
@@ -43,8 +113,18 @@ tasks:
     costly http requests (splash green) http signer app
         fetch alt for paidfetch() -> header tx -> check on server -> func call
         server checker for ANY url via header and path/query
-            quest/httx/...
+            quest/httx/... UNNECESSARY - HEADERSZ
             <a href="" data-htxo="" data-addr=""></a>
+            feed receipts if <duration
+                <div hx-get="/path/to/resource" hx-headers='{"httx": "your_custom_string"}' hx-trigger="click">
+                    const headers = new Headers();
+                    headers.append("httx", "your_custom_string");
+                    fetch('/path/to/resource', {
+                        method: 'GET', // or 'POST'
+                        headers: headers,
+                    })
+
+                    SET UP PHP-FPM TO RUN A DEDICATED PHP SERVER FOR FLIPPO
     
     open atc to sse
 
@@ -62,6 +142,8 @@ tasks:
             automatically generate new addresses when nearing sat-limit and switch
                 negotiate address index size
 
+    csspaint - remove or toggle rules , bg-color for text cannot be set to nothing etc
+
     simpage:
         chain events and server 0conf (permissive multisig)
 
@@ -73,6 +155,9 @@ tasks:
     point and click css like inspect
 
 status:
+
+    validation metric-
+            if u cant validate layer 1 u use a trusted indexer
 
     does the server need to be trusted with vendor balances (zk?)
         design server to refer to vendors by pubkey (ppl can create hyper-solicitude)
@@ -104,6 +189,8 @@ status:
     Public Key: 02843e3df01460e099dcf5cfb4f1cd190fae50fac53f28f5b24197aec325fff55d
     Public Address: mpyuybyu8suYfjDumBtp5KoXQo8QxqfrMK
 
+    costly_module 942bbdcb05d578301775c6a129f926dd44a8a06fe9e5118e907ab7056ae0045e
+
     fb923ef3bae5d823e747506472c4aaba06caa681a6a7920af09c1526f8da8791
 */
 
@@ -122,3 +209,4 @@ chisa()
 navi(alice, 'alice.rom.enclose_draggable(alice.dir.testkit_menu_html)', 'document.body')
 
 /////////////////////////////////////////////////
+

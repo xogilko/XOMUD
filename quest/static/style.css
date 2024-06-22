@@ -1,0 +1,73 @@
+html, body {
+    -webkit-text-size-adjust: none;
+}
+body {
+  background-color: #00FFFF;
+  background-position: fixed;
+}
+.horizon{
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+.primitive{
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+.header {
+  text-shadow: 0px 0px 11px #ffffff;
+  color: #000000;
+  box-sizing: border-box;
+  margin: 0 auto;
+  line-height: 1.0;
+  max-width: 888px;
+  padding: 3px;
+  border-radius: 6px 6px 0px 0px;
+}
+.navigation {
+  text-shadow: 0px 0px 11px #ffffff;
+  color: #000000;
+  box-sizing: border-box;
+  margin: 0 auto;
+  line-height: 1.0;
+  max-width: 888px;
+  padding: 3px;
+  border-radius: 0px 0px 6px 6px;
+  margin-bottom: 9px;
+}
+.container {
+    background-image: url("/static/resources/truthparchbgnew.jpg");
+    box-shadow: 0 3px 3px #FFFF00;
+      text-shadow: 0px 0px 11px #ffffff;
+        color: #000000;
+  box-sizing: border-box;
+  margin: 0 auto;
+  line-height: 1.0;
+  max-width: 888px;
+  padding: 3px;
+  margin-bottom: 9px;
+}
+.container:nth-child(1) {
+  padding: 3px;
+}
+h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  margin: 0;
+  color: #333;
+  font-weight: 300;
+  font-size: 66 px;
+}
+h1 span {
+  font-size: auto;
+}
+@media (max-width: 666px) {
+body {
+  font-size: 14px;
+}
+.primitive img {
+  width: 69%;
+}
+}

@@ -2,35 +2,18 @@
     "dirDatabase": {
         "priv": "cMr9x7JtgEdXTS6vFxa9UHNzVsYWcPM9vwtziepTCJGX7dVnyrXe",
         "skellykey": "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6",
-        "uri": {
-            "testkit": ["testkit_dir.js"]
+        "aux": {
+            "testkit": ["/mod/_testkit.js"]
         },
         "hosts": {
             "http://localhost:8083/": {
-                "uri": {
+                "aux": {
                     "testkit": ["example_dir.js"]
                 }
             },
             "https://xomud.quest/": {
-                "uri": {
+                "aux": {
                     "testkit": ["xomudsite.js"]
-                }
-            }
-        },
-        "domains": {
-            "test_game": {
-                "ordinance": ["txid"],
-                "condition": {
-                    "join condition": "",
-                    "leave condition": ""
-                },
-                "hosts": {
-                    "*://*/*": {
-                        "condition": {}
-                    },
-                    "http://localhost:8083/": {
-                        "condition": {}
-                    }
                 }
             }
         },
@@ -44,12 +27,145 @@
         },
         "department": {
             "Bob's Shop": {
-                "example_cost.js": {
-                    "desc": "this is an example",
-                    "vendor":"Bob",
+                "costly module": {
+                    "desc": "interactive sound",
+                    "vendor": "Bob",
+                    "index": "/mod/example_cost.js",
                     "price": 5000,
                     "expiration": null
                 }
+            }
+        }
+    },
+    "index": {
+        "/service": {
+            "/compilescrypt/package.json": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            }
+        },
+        "/chan": {
+            "/default.php": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/testkit.php": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            }
+        },
+        "/mod": {
+            "/_testkit.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/example_cost.js": {
+                "fee": 5000,
+                "vendor": "Bob",
+                "duration": null
+            },
+            "/example_dir.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/fish.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/fish_skin.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/splash.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/xomudsite.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/testkit_dir": {
+                "/css_manager.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/drag_functions.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/enclose_draggable.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/htmx_observe.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/indexeddb.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/suddendeath.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_csspaint_func.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_destroy.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_grave.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_keychain.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_kiosk.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_shop.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_store_gate_func.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                }
+            }
+        },
+        "/lib": {
+            "/bsv.min.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
             }
         }
     },
@@ -62,7 +178,7 @@
     },
     "command": {
         "help": "/quest/ command list:<br>help - this! <br>status - report uri portal and domain",
-        "status": "current domain: <b><span id='atc_temp_domain'></span></b> with uri: <b><span id='atc_temp_uri'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
+        "status": "current channel: <b><span id='atc_temp_channel'></span></b> with aux: <b><span id='atc_temp_aux'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
     },
     "script": {
         "id": "",

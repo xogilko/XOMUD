@@ -201,9 +201,9 @@ export function activate_module(lain) {
                 } else {
                     generation = genKey(testkit_kiosk_keygen_hdcheck.checked, testkit_kiosk_keygen_derive.value);
                 }
-                testkit_kiosk_keygen_privKey.innerHTML = '<br>Private Key: ' + generation.gen_privateKey.toString();
-                testkit_kiosk_keygen_pubKey.innerHTML = '<br>Public Key: ' + generation.gen_publicKey.toString();
-                testkit_kiosk_keygen_pubAddr.innerHTML = '<br>Public Address: ' + generation.gen_pubAddress.toString();
+                testkit_kiosk_keygen_privKey.innerHTML = '<br>Private Key: <span class="fineprint">' + generation.gen_privateKey.toString() + '</span>';
+                testkit_kiosk_keygen_pubKey.innerHTML = '<br>Public Key: <span class="fineprint">' + generation.gen_publicKey.toString() + '</span>';
+                testkit_kiosk_keygen_pubAddr.innerHTML = '<br>Public Address: <span class="fineprint">' + generation.gen_pubAddress.toString() + '</span>';
             });
             testkit_kiosk_getUTXO_button.addEventListener('click', function() {
                 getUTXO(testkit_kiosk_inputKeyForUTXO.value, testkit_kiosk_confirmForUTXO.checked).then(xo => {
@@ -233,7 +233,7 @@ export function activate_module(lain) {
                         let tx = xo;
                         console.log('will broadcast:', tx)
                         broadcast(tx).then(bres => {
-                            testkit_kiosk_TX_ID.innerHTML = "txid: " + bres.toString();
+                            testkit_kiosk_TX_ID.innerHTML = 'txid: <span class="fineprint">' + bres.toString() + '</span>';
                             // You can use bres here as needed
                         }).catch(error => {
                             console.error('error broadcasting tx:', error);

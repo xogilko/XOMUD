@@ -101,7 +101,7 @@ func fetchTX(txid string) (map[string]interface{}, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Non-OK HTTP status: %d", resp.StatusCode)
-		return nil, fmt.Errorf("error fetching transaction details: status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("httx error: status code %d", resp.StatusCode)
 	}
 
 	// Decode the JSON response

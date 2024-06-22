@@ -31,7 +31,7 @@ return <<<HTML
 welcome to the homepage</p>
 <p><i>what is xomud?</i></p>
 <p>xomud is a real-time multiplayer hypermedia agency</p>
-<button onclick="navi(alice, 'alice.rom.enclose_draggable(alice.dir.testkit_menu_html)', 'document.body')">Click Me</button>
+<button onclick="navi(alice, 'alice.rom.enclose_draggable(alice.dvr.testkit_menu_html)', 'document.body')">Click Me</button>
 <p><u><b>everything is subject to change</b></u></p>
 <p>join discord using this <a href= "https://discord.gg/9U48T5UNJN"> hyperlink</a></p>
 </td>

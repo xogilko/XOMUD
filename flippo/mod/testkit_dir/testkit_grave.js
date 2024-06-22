@@ -2,20 +2,17 @@ export function activate_module(lain) {
 
 lain.rom.testkit_grave = () => {
     const removeAllStylesheets = () => {
-        //const linkStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
-        //linkStylesheets.forEach(link => link.parentNode.removeChild(link));
-
         const styleElements = document.querySelectorAll('style');
         styleElements.forEach(style => style.parentNode.removeChild(style));
     };
     const skellygen = (label) => {
         try {
-            console.log("spooky");
+            console.log("embalming navi state");
             let skeleton = lain.rom.exporter();
             skeleton.name = "skeleton export";
-            lain.dir[label] = skeleton;
-            lain.dir[label].file = label;
-            alice.dir[label].domain = alice.domain;
+            lain.dvr[label] = skeleton;
+            lain.dvr[label].file = label;
+            lain.dvr[label].subs = lain.subs;
         } catch (error) {
             console.log("failed to generate skeleton", error);
         }
@@ -23,17 +20,17 @@ lain.rom.testkit_grave = () => {
 
     const waitForAllAsyncOps = () => {
         return new Promise((resolve) => {
-            if (lain.rom.xotestkit_handler.pendingAsyncOps === 0) {
+            if (lain.rom.testkit_handler.pendingAsyncOps === 0) {
                 resolve();
             } else {
-                lain.rom.xotestkit_handler.allAsyncOpsResolvedCallback = resolve;
+                lain.rom.testkit_handler.allAsyncOpsResolvedCallback = resolve;
             }
         });
     };
 
     const deadgen = async (label) => {
         try {
-            let skeleton = lain.dir[label];
+            let skeleton = lain.dvr[label];
             if (!skeleton) {
                 console.log("skeleton not found bro");
                 return;

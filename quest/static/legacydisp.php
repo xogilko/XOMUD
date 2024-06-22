@@ -2,28 +2,12 @@
 session_start();
 
 // Mapping of routes to their corresponding PHP files
-function fetchRoutes() {
-    $cacheFile = 'route_cache.json';
-    $cacheTime = 3600; // Cache duration in seconds, e.g., 1 hour
-
-    // Check if cache file exists and is still valid
-    if (file_exists($cacheFile) && (filemtime($cacheFile) + $cacheTime > time())) {
-        // Use cached routes
-        $json = file_get_contents($cacheFile);
-    } else {
-        // Fetch new routes and cache them
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://star.xomud.quest/quest/dombox/');
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $json = curl_exec($curl);
-        curl_close($curl);
-        file_put_contents($cacheFile, $json);
-    }
-    
-    return json_decode($json, true);
-}
-
-$routes = fetchRoutes();
+$routes = [
+    'testkit' => 'hypertext/testkit.php',
+    // Add other routes and their corresponding files here
+    'default' => 'hypertext/default.php',
+    'example' => 'hypertext/example.php',
+];
 
 // Function to determine the entry point based on the request URI
 function getEntryPoint($uri, $routes) {
@@ -55,7 +39,7 @@ if ($entryPoint) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dynamic Entry Point Dispatcher</title>
+    <title>★ xomud.quest ★</title>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let page_uri = '/default';
@@ -73,15 +57,15 @@ if ($entryPoint) {
 
                 getAllKeysRequest.onsuccess = function() {
                     if (getAllKeysRequest.result.length === 0) {
-                        console.log("zero domain");
+                        console.log("zero channel");
                         window.location.href = page_uri;
                     } else {
                         const getAllRequest = store.getAll();
                         getAllRequest.onsuccess = function() {
                             const data = getAllRequest.result[0].data;
                             console.log(data) // Assuming there's only one object
-                            if (data && data.domain) {
-                                page_uri = data.domain;
+                            if (data && data.channel) {
+                                page_uri = data.channel;
                                 console.log(page_uri)
                                 window.location.href = page_uri;
                             } else {
@@ -102,7 +86,7 @@ if ($entryPoint) {
 </head>
 <body>
     <div id="content" style="display: grid; place-items: center; height: 100vh">
-        <center><img src="/static/resources/xologo.png" alt="loading..."></center>
+        <center><img src="/static/resources/xologo.png"><br>hello, world</center>
     </div>
 </body>
 </html>
