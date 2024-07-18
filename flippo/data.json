@@ -46,17 +46,75 @@
             }
         },
         "/chan": {
-            "/default.php": {
-                "fee": 0,
-                "vendor": null,
-                "duration": null
+            "/xo": {
+                "/index.php": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                    }
+                },
+            "/static": {
+                "/xo": {
+                    "/style.css": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/truthparchbgnew.jpg": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/logo.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/compliance_certificate_xomud.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/compliance_certificate_xomud.png.sig.asc.html": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/dialup.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/wthought.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/meridian": {
+                        "/01.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            },
+                        "/02.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            },
+                        "/03.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            },
+                        "/04.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            }
+                        }
+                    }
+                }
             },
-            "/testkit.php": {
-                "fee": 0,
-                "vendor": null,
-                "duration": null
-            }
-        },
         "/mod": {
             "/_testkit.js": {
                 "fee": 0,
@@ -119,7 +177,7 @@
                     "vendor": null,
                     "duration": null
                 },
-                "/suddendeath.js": {
+                "/memory.js": {
                     "fee": 0,
                     "vendor": null,
                     "duration": null

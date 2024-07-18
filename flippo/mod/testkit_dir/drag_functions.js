@@ -52,6 +52,9 @@ export function activate_module(lain) {
             if (!initializedElements.has(element)) {
                 initializedElements.add(element);
             }
+            element.style.position = 'absolute';
+                element.style.left = '12px';
+                element.style.top = '12px';
         };
 
         // Event delegation for drag events
@@ -80,16 +83,16 @@ export function activate_module(lain) {
                             view: window,
                             bubbles: true,
                             cancelable: true,
-                            clientX: node.getBoundingClientRect().left,
-                            clientY: node.getBoundingClientRect().top
+                            clientX: node.getBoundingClientRect().left + 12,
+                            clientY: node.getBoundingClientRect().top + 12
                         });
                         node.dispatchEvent(simMouseDown);
                         const simMouseUp = new MouseEvent('mouseup', {
                             view: window,
                             bubbles: true,
                             cancelable: true,
-                            clientX: node.getBoundingClientRect().left,
-                            clientY: node.getBoundingClientRect().top
+                            clientX: node.getBoundingClientRect().left + 12,
+                            clientY: node.getBoundingClientRect().top + 12
                         });
                         node.dispatchEvent(simMouseUp);
                     }

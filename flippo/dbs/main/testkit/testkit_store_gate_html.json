@@ -1,0 +1,8 @@
+{
+  "uri": "xo.346975705910570175",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit move! widget",
+  "child": "testkit_store_gate_func",
+  "media": "\n        <div id=\"testkit_store_gate\">\n        <input type = \"text\" id = \"testkit_store_gate_Entry\" placeholder = \"index / key\">\n        <select id=\"testkit_store_gate_mode\">\n        <option value = \"cut\"> cut </option>\n        <option value = \"copy\"> copy </option>\n        </select>\n        <select id=\"testkit_store_gate_select\">\n        <option value = \"b2ls\">dvr -> ls</option>\n        <option value = \"ls2b\">ls -> dvr</option>\n        <option value = \"b2db\">dvr -> db</option>\n        <option value = \"db2b\">db -> dvr</option>\n        </select>\n        <button id=\"testkit_store_gate_Button\">move!</button>\n        </div>\n        "
+}

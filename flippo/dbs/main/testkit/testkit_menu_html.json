@@ -1,0 +1,9 @@
+{
+  "uri": "xo.10357109570198666",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit menu widget",
+  "child": "testkit_menu_func",
+  "count": 1,
+  "media": "\n        <span>\n        <div id=\"testkit_menu\">\n        <i>testing remote</i><hr>\n        <span id=\"currentChannel\"></span><br>\n        <form id=\"setchannel_form\">\n            <input style=\"max-width: 66px\" id=\"setchannel\" type=\"text\" placeholder=\"channel\"><br>\n        </form>\n        <select id=\"testkit_menuSelect\" size=\"8\">\n        <option value = \"testkit_atc_html\">atc</option>\n        <option value = \"testkit_clerk_html\">clerk</option>\n        <option value = \"testkit_kiosk_html\">kiosk</option>\n        <option value = \"testkit_csspaint_html\">csspaint</option>\n        <option value = \"testkit_regen_html\">regen</option>\n        <option value = \"testkit_shop_html\">shop</option>\n        <option value = \"testkit_store_gate_html\">storegate</option>\n        <option value = \"testkit_keychain_html\">keychain</option>\n        </select><br>\n        <button id=\"testkit_menuStart\">start</button>\n        <span id= 'testkit_blinker'></span><hr>\n        <button id=\"testkit_menuClear\">clear navi</button><br>\n        <button id=\"testkit_menuSave\">save navi</button><br>\n        <span id= 'testkit_hiddenlist'></span>\n        </span>\n        "
+}

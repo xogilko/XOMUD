@@ -49,7 +49,7 @@
         "kind": "html",
         "name": "fishtext",
         "child": "testkit_maritime",
-        "media": "<div id=\"fishtext\"></div>"
+        "media": "<div class=\"hyperfish\"></div>"
     },
     "testkit_maritime": {
         "uri": "xo.10597953363777764",

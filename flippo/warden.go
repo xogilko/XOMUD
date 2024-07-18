@@ -1,12 +1,12 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	mrand "math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -125,17 +125,17 @@ func generateAddress(pubkey string) (string, error) {
 		return "", fmt.Errorf("error executing bsv library: %w", err)
 	}
 
-	src := mrand.NewSource(time.Now().UnixNano())
-	rnd := mrand.New(src)
-	randomIndex := rnd.Intn(1000000)
+	// Get the current date in mmddyyyy format
+	currentTime := time.Now()
+	dateString := currentTime.Format("0102200615") // mmddyyyy format
 
 	// JavaScript to generate the address
 	jsCode := fmt.Sprintf(`
         const hdPublicKey = bsv.HDPublicKey.fromString('%s');
-        const childKey = hdPublicKey.deriveChild('m/0/0/' + %d);
+        const childKey = hdPublicKey.deriveChild('m/0/0/' + %s);
         const address = childKey.publicKey.toAddress('testnet');
         address.toString();
-    `, pubkey, randomIndex)
+    `, pubkey, dateString)
 
 	val, err := vm.RunString(jsCode)
 	if err != nil {
@@ -277,4 +277,197 @@ func loadData() map[string]interface{} {
 	}
 
 	return jsonData
+}
+func checkFee(auxPath, artName string, feeParts []string, fee, vendor, subfee interface{}) bool {
+	// Check for direct fee
+	if fee != nil {
+		if fee == 0 { //free regardless of parent
+			return true
+		}
+		if artName != "" {
+			// Validate the art for the direct fee
+			for _, part := range feeParts {
+				if strings.HasPrefix(part, auxPath+":&:"+artName+";fee") {
+					receipt := strings.TrimPrefix(part, auxPath+":&:"+artName+";fee;")
+					// Placeholder for actual receipt validation
+					// if fee is null
+					if validateReceipt(receipt, fee, subfee, vendor) {
+						return true
+					}
+				}
+			}
+			if subfee != nil {
+				for _, part := range feeParts {
+					if strings.HasPrefix(part, auxPath+":&:"+artName+";sub") {
+						receipt := strings.TrimPrefix(part, auxPath+":&:"+artName+";sub;")
+						// Placeholder for actual receipt validation
+						if validateReceipt(receipt, fee, subfee, vendor) {
+							return checkParentFee(auxPath, feeParts)
+						}
+					}
+				}
+				return false // Subfee exists but no valid receipt found
+			}
+		}
+		// Validate the aux for the direct fee
+		for _, part := range feeParts {
+			if strings.HasPrefix(part, auxPath+";fee") {
+				receipt := strings.TrimPrefix(part, auxPath+";fee;")
+				// Placeholder for actual receipt validation
+				if validateReceipt(receipt, fee, subfee, vendor) {
+					return true
+				}
+			}
+		}
+		//client gave no valid directfee
+		return false
+	}
+
+	// Check for subfee
+	if subfee != nil {
+		// Validate the receipt for the subfee
+		for _, part := range feeParts {
+			if strings.HasPrefix(part, auxPath+";sub") {
+				receipt := strings.TrimPrefix(part, auxPath+";sub;")
+				// Placeholder for actual receipt validation
+				if validateReceipt(receipt, fee, subfee, vendor) {
+					// Check parent directories for a direct fee
+					return checkParentFee(auxPath, feeParts)
+				}
+			}
+		}
+		return false
+	}
+
+	// No fee or subfee found, check parent directories
+	return checkParentFee(auxPath, feeParts)
+}
+
+func checkParentFee(auxPath string, feeParts []string) bool {
+	parentPath := auxPath
+	for {
+		parentPath = filepath.Dir(parentPath)
+		if parentPath == "." || parentPath == "/" {
+			break
+		}
+		// Read the meta JSON file for the parent aux
+		metaFilePath := filepath.Join("dbs/main", parentPath, "_"+filepath.Base(parentPath)+".json")
+		metaFileData, err := readJSONFile(metaFilePath)
+		if err != nil {
+			continue
+		}
+
+		// Check for direct fee in the parent directory
+		if fee, ok := metaFileData["fee"]; ok {
+			if fee == nil {
+				return true // No fee required
+			}
+			// Validate the receipt for the direct fee
+			for _, part := range feeParts {
+				if strings.HasPrefix(part, parentPath+";fee") {
+					receipt := strings.TrimPrefix(part, parentPath+";fee;")
+					// Placeholder for actual receipt validation
+					if validateReceipt(receipt, fee, metaFileData["subfee"], metaFileData["vendor"]) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+		if subfee, ok := metaFileData["subfee"]; ok {
+			// Validate the receipt for the subfee
+			for _, part := range feeParts {
+				if strings.HasPrefix(part, parentPath+";sub") {
+					receipt := strings.TrimPrefix(part, parentPath+";sub;")
+					// Placeholder for actual receipt validation
+					// Check parent directories for a direct fee
+					if validateReceipt(receipt, metaFileData["fee"], subfee, metaFileData["vendor"]) {
+						// Continue to the next parent directory
+						break
+					}
+				}
+			}
+			return false // Subfee exists but no valid receipt found
+		}
+	}
+	return false
+}
+
+func validateReceipt(receipt string, fee, subfee, vendor interface{}) bool {
+	// Implement your receipt validation logic here
+	// Use fee, subfee, and vendor as needed
+	log.Printf("Handling receipt: %s", receipt)
+	txDetails, err := fetchTX(receipt)
+	if err != nil {
+		log.Printf("error: %v", err)
+		return false
+	}
+	extractHash, address, err := extractTXdata(txDetails)
+	if err != nil {
+		log.Printf("Error extracting data: %v", err)
+		return false
+	}
+	// recreate the hash
+	// this style of address hash confirm is called skelly method tx
+	// the skellykey is always the following, it is used by generateAddress and in validateReceipt
+	skellykey := "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6"
+	constructedString := fmt.Sprintf("%s %s %s", address, vendor, skellykey)
+	hasher := sha256.New()
+	hasher.Write([]byte(constructedString))
+	fullHash := hasher.Sum(nil)
+	hexhash := hex.EncodeToString(fullHash)
+	hashed := hexhash[:32]
+	//compare to verify transaction
+	if extractHash != hashed {
+		log.Printf("hash mismatch: %s vs %s", hashed, extractHash)
+		return false
+	}
+	log.Printf("receipt cleared validation: %s", receipt)
+	return true
+}
+
+func readJSONFile(path string) (map[string]interface{}, error) {
+	// Prepend "dbs/main" to the file path
+
+	fileContent, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var fileData map[string]interface{}
+	err = json.Unmarshal(fileContent, &fileData)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the fileData contains a "reference" property
+	if reference, ok := fileData["reference"].(string); ok {
+		// Perform the function again on the referenced path
+		refpath := filepath.Join("dbs/main", reference)
+		return readJSONFile(refpath)
+	}
+
+	return fileData, nil
+}
+
+func readJSONDir(dirPath string) (map[string]interface{}, error) {
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	dirData := make(map[string]interface{})
+	for _, file := range files {
+		if filepath.Ext(file.Name()) == ".json" {
+			filePath := filepath.Join(dirPath, file.Name())
+			fileData, err := readJSONFile(filePath)
+			if err != nil {
+				dirData[file.Name()] = map[string]interface{}{
+					"error": fmt.Sprintf("Error reading file: %v", err),
+				}
+				continue
+			}
+			key := strings.TrimSuffix(file.Name(), ".json")
+			dirData[key] = fileData
+		}
+	}
+	return dirData, nil
 }

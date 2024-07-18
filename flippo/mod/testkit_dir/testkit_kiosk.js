@@ -92,6 +92,7 @@ export function activate_module(lain) {
                 return fetch(lookup)
                     .then(response => response.json())
                     .then(data => {
+                        console.log(data)
                         if (!data || typeof data !== 'object' || !data.result) {
                             console.error('Unexpected data structure:', data);
                             return [];

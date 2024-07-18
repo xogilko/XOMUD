@@ -1,0 +1,7 @@
+{
+  "uri": "xo.12591903790136",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "bsv library 1.5.6",
+  "media": "\n        new Promise((resolve, reject) => {\n            var src = lain.portal + \"/quest/lib/bsv.min.js\";\n            // Check if the script already exists\n            if (!document.querySelector('script[src=\"' + src + '\"]')) {\n                var script = document.createElement('script');\n                script.src = src;\n                script.onload = function() { resolve(window.bsv); };\n                script.onerror = reject;\n                document.head.appendChild(script);\n            } else {\n                // Resolve with the existing script\n                resolve(window.bsv);\n            }\n        });"
+}

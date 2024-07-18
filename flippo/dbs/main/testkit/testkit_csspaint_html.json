@@ -1,0 +1,8 @@
+{
+  "uri": "xo.96290760257023536",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit csspaint widget",
+  "child": "testkit_csspaint_func",
+  "media": "\n        <div id=\"testkit_csspaint\">\n        <table>\n            <tr><td>class:</td><td><select id=\"retouchClass\"></select>\n            <button id=\"testkit_csspaint_refresh\">refresh</button></td></tr>\n            <tr><td>property:</td><td><input type=\"text\" id=\"retouchProperty\" value=\"background-color\"></td></tr>\n            <tr><td>value:</td><td><input type=\"text\" id=\"retouchValue\" value=\"cyan\"></td></tr>\n        </table>\n        <button id=\"testkit_csspaint_retouch\">retouch</button>\n        </div>\n        "
+}

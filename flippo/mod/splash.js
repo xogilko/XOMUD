@@ -15,10 +15,11 @@ function createDisplayElement(innerHTML, mode) {
     if (mode === 'mode1') {
         displayElement.style.left = '-100%'; // Start off-screen to the left
         displayElement.style.padding = '5px';
-        displayElement.style.backgroundColor = 'black';
-        displayElement.style.borderRadius = '5px';
+        displayElement.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+        displayElement.style.borderRadius = '4px';
         displayElement.style.color = 'white';
-        displayElement.style.transition = 'left 0.5s ease-out, transform 0.5s ease-out, opacity 0.5s ease-out'; // Custom transition for mode1
+        displayElement.style.textShadow = '2px 2px 2px black'; // Add text shadow with black color
+        displayElement.style.transition = 'left 0.8s ease-out, transform 0.4s ease-out, opacity 0.2s ease-out'; // Custom transition for mode1
         document.body.appendChild(displayElement);
 
         // Calculate the top position based on the number of active displays
@@ -29,11 +30,11 @@ function createDisplayElement(innerHTML, mode) {
         // Slide in the element
         setTimeout(() => {
             displayElement.style.left = '18px'; // Move into view
-        }, 100); // Start sliding in shortly after adding to the document
+        }, 1); // Start sliding in shortly after adding to the document
 
-        // Prepare for shrink and fade out after 3 seconds
         setTimeout(() => {
-            displayElement.style.transform = 'scale(0)'; // Shrink
+            displayElement.style.transition = 'left 2.6s ease-out, opacity 0.4s ease-out';
+            displayElement.style.left = '100%'; // Move out of view to the right
             displayElement.style.opacity = '0'; // Fade out
             // Remove the element after the transition
             setTimeout(() => {

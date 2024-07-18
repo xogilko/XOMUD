@@ -12,9 +12,8 @@ var serviceURLs = map[string]string{ //:>>> server map
 func seed(w http.ResponseWriter, r *http.Request) {
 
 	rootmap := []map[string]interface{}{
-		{"xomud_title": template.HTML(`<center><img src="https://xomud.quest/static/resources/starquest.png" alt="star"><br>`)},
-		{"xomud_button": template.HTML(`<button onclick="navi(alice, 'alice.rom.enclose_draggable(alice.dvr.testkit_menu_html)', 'document.body')">⋆⋅☆⋅⋆</button><br>`)},
-		{"xomud_button": template.HTML(`<p>POLITICAL ARCHITECTURE 2024<br><a href="https://xomud.quest/">xomud.quest</a></p></center>`)},
+		{"xomud_img": template.HTML(`<center><img src="https://xomud.quest/static/resources/politicalarchitecture.png" alt="star"><br>`)},
+		{"xomud_text": template.HTML(`<p>POLITICAL ARCHITECTURE<br><a href="https://xomud.quest/">xomud.quest</a></p></center>`)},
 	}
 
 	tmpl := template.Must(template.ParseFiles("static/index.html"))

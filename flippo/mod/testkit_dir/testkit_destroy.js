@@ -16,12 +16,12 @@ export function activate_module(lain) {
                         }
 
                         // Calculate the domset difference
-                        const domsetDiff = nextDomset !== null ? nextDomset - cacheItem.domset : 0;
+                        const domsetDiff = nextDomset !== null ? nextDomset - cacheItem.domset : lain.domset - cacheItem.domset;
 
                         // Remove the element and update the cache
                         element.remove();
                         lain.cache.splice(item.index, 1);
-                        console.log('Element removed successfully');
+                        console.log('Element removed successfully', lain.domset, domsetDiff);
 
                         // Update domset values in the cache and DOM
                         if (domsetDiff > 0) {
@@ -32,7 +32,6 @@ export function activate_module(lain) {
                                     const domElement = document.querySelector('[data-set="' + oldDomset + '"]');
                                     if (domElement) {
                                         domElement.setAttribute('data-set', lain.cache[i].domset);
-
                                         // Update children domset values
                                         let newDomset = lain.cache[i].domset + 1;
                                         const updateChildrenDomset = (parent) => {
@@ -46,9 +45,11 @@ export function activate_module(lain) {
                                         };
                                         updateChildrenDomset(domElement);
                                     }
-                                }
+                                } 
                             }
+                            lain.domset -= domsetDiff;
                         }
+                        
                         if (cacheItem.child) {
                             const childItemIndex = lain.cache.findIndex(ci => ci.uri === lain.dvr[cacheItem.child].uri && (ci.kind === 'js' || ci.kind === 'jsmod'));
                             if (childItemIndex !== -1) {

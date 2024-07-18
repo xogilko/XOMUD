@@ -1,0 +1,7 @@
+{
+  "uri": "xo.103901390590134576",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "htmx library 1.9.11",
+  "media": "\n            new Promise((resolve, reject) => {\n                var src = \"https://unpkg.com/htmx.org@1.9.11\";\n                // Check if the script already exists\n                if (!document.querySelector('script[src=\"' + src + '\"]')) {\n                    var script = document.createElement('script');\n                    script.src = src;\n                    script.onload = function() { \n                        resolve(window.htmx); \n                        console.log('htmx is from https://unpkg.com/htmx.org@1.9.11');\n                    };\n                    script.onerror = reject;\n                    document.head.appendChild(script);\n                } else {\n                    // Resolve with the existing script\n                    resolve(window.htmx);\n                    console.log('htmx is from https://unpkg.com/htmx.org@1.9.11');\n                }\n            })\n            console.log('htmx imported');"
+}

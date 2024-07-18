@@ -1,0 +1,7 @@
+{
+  "uri": "xo.764906239052624667",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit styles :)",
+  "media": "\n        <style>\n            .resizable {\n                overflow: auto;\n                resize: both; /* Allow both horizontal and vertical resizing */\n                box-sizing: border-box; /* Include padding and border in element's total width and height */\n            }\n            .draggable {\n            padding: 2px;\n            background-color: gold;\n            line-height: normal;\n            position: absolute;\n            cursor: move;\n            }\n            .dragged_content {\n            padding: 10px;\n            background-color: silver;\n            cursor: auto;\n            user-select: text;\n            }\n            .fineprint {\n                font-size: 13px;\n                font-weight: 300;\n                text-shadow: 0px 0px 2px SteelBlue;\n                letter-spacing: -1px;\n            }\n        </style>\n        "
+}

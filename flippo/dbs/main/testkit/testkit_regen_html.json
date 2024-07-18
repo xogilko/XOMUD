@@ -1,0 +1,8 @@
+{
+  "uri": "xo.7685575453425453742122",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit regen widget",
+  "child": "testkit_regen_func",
+  "media": "\n        <div id=\"testkit_regenerator\">\n        <input type = \"text\" id = \"testkit_exportName\" placeholder = \"new skeleton label\">\n        <button id=\"testkit_exportButton\">export skeleton</button>\n        <br>\n        <input type = \"text\" id = \"testkit_regenImport\" placeholder = \"skeleton label\">\n        <button id=\"testkit_regenButton\">regen navi</button>\n        </div>\n        "
+}

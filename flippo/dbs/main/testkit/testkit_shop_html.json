@@ -1,0 +1,9 @@
+{
+  "uri": "xo.1294189056906",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit shop widget",
+  "child": "testkit_shop_func",
+  "count": 1,
+  "media": "\n        <div>\n        <div id=\"testkit_shop\">\n        <b>department:</b>\n        <input type = \"text\" id=\"testkit_shop_depart\" placeholder=\"department\" value=\"Bob's Shop\">\n        <button id=\"testkit_shop_refresh\">refresh</button>\n        <br><i>receipts must have offer hash in memo</i>\n        <hr>\n        <div id=\"testkit_shop_list\"></div>\n        </div>\n        </div>\n        "
+}

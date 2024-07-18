@@ -1,182 +1,278 @@
-
-
+//flippo = fossos
 
 /* QUEST */
 
 /*  42164
 
-CURRENT REPO PREPPED FOR 1.5
-    
-    renaming channel
-        fix meta tag last
-            requires latest navi
- x       rename uri to aux
- x           atc
- x           flippo dvrbox
- x   make sure regen doesnt strip static css
- x  fixed navi.js
- x       rename module mod
- x           routed jsmods to /mod/
- x   remove complex vending
- x       logs new address per vendor
- x           i think i will keep the hash strategy
- x               try out example_cost via request (?)
- x                   place receipt in subscription
- x   shop calls interpreter directly instead of chisa
- x       shop checks and adds subscriptions
-    finish php server proxy -> update dispatcher with links
- x   finish httx header handling
- x       httx checks queryparam after header
- x       serve works
- x   give the damn fish proper caching
- x       discovered and solved caching of pointers
- x   dirbox serves /
- x   interpreter sends subscription txids
- x   changed dir -> dvr all files
- x   removed hardcoded interpreter from navi
- x   fineprint class added
- x   added subscription in navi
- x       rewrite dispatcher html to place subscription httxid into request for php file
- x           handle a failure with defaulting etc.
- x   modify clerk request bc chisa is one use 
- x   repair atc with channel
- x   splash chan
- x   clerk has no proc call
- x   split splash modes vertically
- x   shop calls navi instead of interpreter so we keep addons
- x   example_cost needs updating (alice.dir)
- x   check out 'problems' tab
-    cssmanager should not overwrite bc then they dont get collected as cascade
-    splash absolute view posting not inline window
- x   built keychain autologin page
- x   solve navi proc pruning now navi proc is perfected ! :)))
- x       higher domset c-z each subtract distance a-b in destroy, trace children updates
-    reproc could include ordering of elements to preserve whos in front
- x   can only test live : sw.js + php(origin root) + mod complete
- x   pass dispatcher chan directly instead of via suddendeath
- x   draft webcentury /20XX/
-    explain portal and user rights in xo page
+current
 
+    *****arch*****
+
+    live notes:
+
+    it seems like the next big move is offline mode. this will begin to resolve other pieces like dvr/subs dialectic
+    try to keep things as optional as possible to avoid scaling issues... dvr should remain super lightweight.
+    
+    dynamic dvr recall & alice() secure passage
+
+    update list attempt
+        x   /quest -> /arch
+        x   navi.js urns -> aux
+
+		x	turned all art into json grouped by aux, containing vendor info
+        uniform art state
+        x    demo in atc(lazily attached to domset)
+        x    grave skellygen -> return alice
+            in the interest of speed:
+            memory.js -> eject alice into sw before skellygen
+            this is better than processing alice in skellygen
+             x   MEM_SET pass id
+             x       now we do mem_set for alice then genskelly
+             x   MEM_GET should specify id
+             x   correct navi since memory.return wont exist
+                write init_proc -> uses mem_get to id if demo or skellyproc
+        x    aux ex dependency: art has reference prop with path
+        x    art has receipt and subs is replaced with dvr.receipt
+             x   navi updated does not chisa() art unless no aux fee (art fees)
+             x   testkit_shop updated, also adds to dvr before navi()
+             x    verify aux is user-friendly on server level (implicitly true unless defined)
+
+
+    x    make sure navi passes any subkeys for arts in any aux
+    x    seems like we are going to put vending info in dvr items ?
+            what exactly are we redownloading if we preserve dvr
+            we dont preserve dvr
+            we only preserve proc, dom, css
+            every reset loses dvr.
+    >>          it appears we will need to begin work on ^offline mode
+                preserve dvr in realworld
+                chisa needs to check realworld dvr against aux b4 add2 list
+        lua server functions
+        navi starboard does not account for individual art properly,
+        it only does to the extent that some art is missing from an aux when its needed
+        somehow i need to record individual art requirements and also should i ?
+        revisit after making offline mode work
+
+    OFFLINE MODE-
+        automatic caching:
+            only cache html files ? perhaps the user configures?
+
+    [navi
+    x    protocol calls alice(), gets memory, inserts memory into lain.profile
+    x    protocol calls chisa()
+    ?        lain.profile confirms chisa to complete the following:
+    x            match portal with memory portal {IMPORTANT}
+    x                match aux with memory aux
+    x                    if present( check _aux.meta for discrepency )
+    x                        enumerate missing into LIST(obj [name]:[prop]) -corrosponds-> (name.json:{prop})
+    x                    if not present
+    x                        enumerate into LIST (check subs for receipts)
+    X                IF ONLINE
+    X                    /arch/dbs LIST -> dvr
+                            /dbs inserts receipt into item object, path = [aux/name]
+    x                _aux.meta instructs init_proc navi() command (OR loop LIST for dependencies?)
+    X                    init_proc (with activation) -> decides demo/skelly_proc
+    ]
+    [testkit
+    X    skellygen -> pass alice.dvr into memory
+        clerk -> json -> mod
+    ]
+    [flippo
+        [aux/name]	each dvr entry should contain its path httxid and vendor info
+        /dbs
+            recieve LIST -> compile json w fee check (if prop in json) -> respond compilation
+    ]
+    [dispatch
+
+    ]
+    [service worker
+
+    x    protecting indexeddb read/writes so i can feed lain into memory
+    x    give lain a JWT JSON web token to verify that it is authentic and pass to sw
+    x        include session specific information into JWT
+    x            lain fetches 
+    x            flippo /user handler
+    x            give sw token for auth
+    x            instead of dvr, pass all of lain via memory
+    x            no more manual db access
+    x               x navi.js, x service, x dispatch, x grave, x memory
+    x    // therefore remove db_memory manual
+    x        // CHAIN DB_MEMORY TO SW_MEMORY INSIDE SW
+    x            x navi, x service, x dispatch, x grave, x memory
+
+        host aux should work on the same level of aux
+        cache all documents; dispatcher, channels, navi.js (for offline use)
+
+        INITIAL LOAD
+            if we cannot reach xomud.quest(dispatcher) then proceed OFFLINE MODE
+        OFFLINE MODE
+            extract db.dispatch
+                does this behave extremely different? (routes obviously different..)
+                perhaps this should not be a cache of dispatch but a seperate file
+                    that dispatch will allow sw to download discretely <offline_mode>
+    ]
+
+    //work on dbs
+    fee check:
+        fee property ensures individual fee
+        subfee ensures parent fee
+        no prop ensures parent fee / no fee
+    i want art1 to be free regardless of aux1?
+    art fee = null;
+    'if u buy the 20 dollar package each item is 10 dollars, or if u dont, each item is 20 dollars'
+        4 items: 60 dollars, or 80 dollars
+    this is a slightly complex logic , need two types of fees.
+    fee, subfee,
+        art can bypass aux fee via 'fee' , does not with 'subfee'
+    how do u handle aux/aux/art fees with 1 tx
+        fee is always 1 tx, subfees should be append
+            subs key should mention fee/subfee
+    RECEIPTS NEED TO MENTION THEIR TARGET OTHERWISE SERVER IS CONFUSED
+
+    page has aux 
+    */
+    /*    server gets aux/aux/../ (will compile -> send)
+            aux dir has _aux.json
+                $$ fee check _aux.json
+                YES
+                    PASS
+                        if end of path
+                            *compile registry art, next
+                        else iterate
+                    FAIL
+                        compile error, next
+                NO
+                    if end of path
+                        *compile registry art, next
+                    else iterate
+            else: compile error, next
+    */
+    /*    *server gets aux:art (will compile -> send)
+            aux dir has _aux.json
+                $$ fee check _aux.json
+                YES
+                    PASS
+                        compile art, next
+                    FAIL
+                        compile error, next
+                NO
+                    $$ fee check aux/art.json
+                    YES
+                        PASS
+                            compile art, next
+                        FAIL
+                            compile error, next
+                    NO
+                        compile art, next
+            else: compile error, next
+    */
+    /*
+
+    //simple profile preferences
+        required tags for aux
+        therefore page aux gets ignored at server level
+        because of tag mismatch with profile :)
+            lain.profile['select']= {"user-friendly" : true}
+
+    HTTX PAYMENT CONFIRMATION
+
+    SKELLYKEY METHOD HASH CONFIRMS
+        below is temporarily resolved with current hour as string mmddyyyyhh
+        vendor gets a new address every hour, and can derive using every hour since registry
+        therefore log every new vendor registry
+    replace randseed in generation of address with a counter for each vendor
+        redis
+            redis server
+                vendor key = pubkey, iteration
+            concurrently += iteration every generate address
+
+    modules should include json vendor details so i can query it like art
+
+
+    *//*
+
+    *****HYPERCLOUD*****
+
+    optional if u have satoshis
+    faucet makes satoshis optional
+    base registry requires sms conf
+        assigns/accepts pubkey
+
+
+    httx
+        currently:
+            a transaction adjacent to an http request
+                example_cost.js?httxid=x
+        [
+            php: <>
+            html: <>
+            js: <> 
+            static resources (?)
+        ]
+        incoming/outgoing: quest/httx/target/path.js?httxid=id (or headers)
+        target:
+            address - fast/public
+            uri@cert - fast/pseudo
+            offerhash - slow/anon
+        dynamic target generation-
+            requires httx module
+            special element requests href generation recolors hyperlink
+
+        btw atc upgraded to handle data
+    
 bugs:
 
+    if dispatch cant find the route it loops
+
+    cssmanager should not overwrite bc then they dont get collected as cascade
     change bgcolor 20xx go to xo go back it doesnt reproc
-
-    only reassign styles that are custom so we dont spread site styles
-
     testkit_styles is compounding in cache when manually added via dir and reprocced (top of the cache list too)
-
-    seems reproc is still broken leaving draggable specks sometimes (IS IT TRUE IDK)
-    something about data-step one is preserving a draggable speck
-
     during reproc the css rules added that dont collide stay
-
     cant uncache hyperlink proc
-
     atc scrolls to top when dragged
-
-    fish dont have any cache accountability
     why cant i add fish offline
     fish get trapped in static window with scroll
 
-tasks: 
-
-    webRTC signalling server encryptsafe to create p2p interactions
-
-    draft political architecture /polarch/
-
-    indexer WALTAR xo@waltar
-
-    url shortenr
-
-    offline mode page (world?)
-        static off air -> logo on air
-
-    reverse engineer opns minting
-
-    mongodb
-
-    assess permissions for every new program (alice variable)
-
-    keychain:
-        ask browser to treat like username pass for autofill
-            create a seperate php page for logging in the browser needs a static entry point
-
-    Utilize service workers to intercept and control requests to IndexedDB, enforcing any access control or encryption logic before allowing access to the data.
-
-    chisa anticipates modules but what about html (php) from the url ?
-
-    proc is going to grow fast we need trimming
-        EXPORTER -> check if document.body calls are persisting
-
-    utxo splitter for tx buffer during pending spend
-
-    costly http requests (splash green) http signer app
-        fetch alt for paidfetch() -> header tx -> check on server -> func call
-        server checker for ANY url via header and path/query
-            quest/httx/... UNNECESSARY - HEADERSZ
-            <a href="" data-htxo="" data-addr=""></a>
-            feed receipts if <duration
-                <div hx-get="/path/to/resource" hx-headers='{"httx": "your_custom_string"}' hx-trigger="click">
-                    const headers = new Headers();
-                    headers.append("httx", "your_custom_string");
-                    fetch('/path/to/resource', {
-                        method: 'GET', // or 'POST'
-                        headers: headers,
-                    })
-
-                    SET UP PHP-FPM TO RUN A DEDICATED PHP SERVER FOR FLIPPO
+tasks:
     
-    open atc to sse
-
-    identity address [secured] - ZKKSP + custodial 2fa
-            vanity address [gen]
-            opns [sign?]
-            email [confirm]
-            etc
-        <meta> specify method <custodial signs on behalf of email conf etc>
-        need a base identity handler that plugs into methods
-
+    RESTFUL ART: art (js?) has callback api(node?php?) code for atomized rest(htmx?)
+    style reassign exemption in dvr,
+        what if item turns blue after initialization process, reproc would do it too early
+    add z-dist attribute to preserve layers
+    reorder proc to datastep
+    webRTC signalling server encryptsafe to create p2p interactions
+    draft political architecture /polarch/
+    url shortenr
+    splash absolute view posting not inline window
+    offline mode page (world?)
+    reverse engineer opns minting
+    utxo splitter for tx buffer during pending spend
+    costly http requests (splash green) http signer app
     solicitude:
-        vendor privacy care:
         sat-limit = the most u would want in one address
-            automatically generate new addresses when nearing sat-limit and switch
-                negotiate address index size
-
+        automatically generate new addresses when nearing sat-limit and switch
+        negotiate address index size
     csspaint - remove or toggle rules , bg-color for text cannot be set to nothing etc
-
-    simpage:
-        chain events and server 0conf (permissive multisig)
-
+    simpage: chain events and server 0conf (permissive multisig)
     exposing settings for functions in modules to drop into a settings applet
         those settings can be accessed at cache
-
     positional append of html
-
     point and click css like inspect
+    flippo php handling
+        still broken. debug at star/flippo/chan/xo
+        in the meantime permit channels with html / javascript plain
+    server function execution store, command + receipt in request
 
 status:
 
-    validation metric-
-            if u cant validate layer 1 u use a trusted indexer
-
     does the server need to be trusted with vendor balances (zk?)
         design server to refer to vendors by pubkey (ppl can create hyper-solicitude)
-
     dir generation:
         dir machines are generated and assigned uri outside of the direct application
-
     logging tx:
         logging solicit generation and valid receipts for use limit,
         keeping hash memo for fallback point of failure.
             long - nft holder signing etc.
-
-    uri may be domain based
-        i suppose uri can look at domains but to be in a domain is to stake
-
-    server function execution store, command + receipt in request
-
-    streamline dependencies reporting and collection for modules
-  
 */
 
 
@@ -209,4 +305,3 @@ chisa()
 navi(alice, 'alice.rom.enclose_draggable(alice.dir.testkit_menu_html)', 'document.body')
 
 /////////////////////////////////////////////////
-

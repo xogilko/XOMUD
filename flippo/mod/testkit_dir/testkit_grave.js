@@ -1,5 +1,5 @@
 export function activate_module(lain) {
-
+//memory overhaul
 lain.rom.testkit_grave = () => {
     const removeAllStylesheets = () => {
         const styleElements = document.querySelectorAll('style');
@@ -9,10 +9,12 @@ lain.rom.testkit_grave = () => {
         try {
             console.log("embalming navi state");
             let skeleton = lain.rom.exporter();
-            skeleton.name = "skeleton export";
+            skeleton.name = "navi state export";
             lain.dvr[label] = skeleton;
             lain.dvr[label].file = label;
+           // lain.dvr[label].return = lain;
             lain.dvr[label].subs = lain.subs;
+            lain.dvr[label].chan = lain.chan;            
         } catch (error) {
             console.log("failed to generate skeleton", error);
         }
@@ -35,43 +37,23 @@ lain.rom.testkit_grave = () => {
                 console.log("skeleton not found bro");
                 return;
             }
-            // the real magic
-            // first clean up
-            const specialUri = "xo.15901360516061";
-            let specialIndex = -1; // To hold the index of the special item if found
-
-            // Process all items except the special one
+            //clean up
             for (let i = lain.cache.length - 1; i >= 0; i--) {
                 const cacheItem = lain.cache[i];
-                if (cacheItem && cacheItem.uri === specialUri) {
-                    specialIndex = i; // Save the index of the special item
-                    continue; // Skip this iteration
-                }
                 lain.rom.removeCacheItem({index: i});
             }
-
-            // Now handle the special item if it was found
-            if (specialIndex !== -1) {
-                console.log("manual removal of special item");
-                lain.rom.removeCacheItem({index: specialIndex});
-            }
-            console.log('cache is..');
-            console.log(lain.cache);
-            //lain.cache = [];
-            console.log('tossed', lain.cache)
             removeAllStylesheets();
-            lain.domset= 0; // dom is cleared
+            lain.domset= 0;
             //run proc, then dom_reassignment, then style
             lain.proc = [];
             for (const args of skeleton.navi_export.proc) {
-                let specialCondition = "specialCondition";
                 let rest = args.map(arg => arg); //(arg => eval(arg));
                 await navi(lain, ...rest);
                 await waitForAllAsyncOps();
             }
             lain.rom.testkit_reassign(skeleton.navi_export.dom);                
             lain.rom.manageCSS().applyStylesheet(skeleton.navi_export.css);
-            console.log("and we're back");
+            console.log("& we're back");
 
         } catch (error) {
             console.log("failed to regenerate", error);

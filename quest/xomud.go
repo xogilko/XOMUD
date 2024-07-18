@@ -109,9 +109,8 @@ func main() {
 		handlerPath := "/" + prefix + "/"
 		http.HandleFunc(handlerPath, proxyHandler(proxyUrl, handlerPath))
 	}
-
-	// /quest/ courtier proxy
-	http.HandleFunc("/quest/", func(w http.ResponseWriter, r *http.Request) {
+	// /arch/ courtier proxy
+	http.HandleFunc("/arch/", func(w http.ResponseWriter, r *http.Request) {
 		// Dynamically select the first service URL for demonstration
 		for _, urlString := range serviceURLs {
 			proxyUrl, err := url.Parse(urlString)
@@ -120,7 +119,7 @@ func main() {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
-			proxyHandler(proxyUrl, "/quest/")(w, r)
+			proxyHandler(proxyUrl, "/arch/")(w, r)
 			return
 		}
 		http.Error(w, "Service not available", http.StatusServiceUnavailable)

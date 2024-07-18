@@ -1,0 +1,9 @@
+{
+  "uri": "xo.13904517903346136136",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit clerk widget",
+  "child": "testkit_clerk_func",
+  "count": 1,
+  "media": "\n        <div>\n        <select id=\"testkit_clerkSelect\">\n        <option value = \"cache\">cache</option>\n        <option value = \"rom\">rom</option>\n        <option value = \"dvr\">dvr</option>\n        <option value = \"ls\">ls</option>\n        <option value = \"db\">db</option>\n        </select>\n        <button id=\"testkit_clerkButton\">refresh</button>\n        <input type = \"text\" id = \"testkit_clerk_rqinput\" placeholder = 'request mod via path'>\n        <button id=\"testkit_clerk_rqButton\">request</button>\n        <br><span id=\"testkit_clerkSelectDesc\"></span><hr>\n        <div id=\"testkit_clerk\" style=\"max-height: 400px; overflow-y: auto;\"></div>\n        </div>\n        "
+}

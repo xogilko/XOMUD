@@ -25,7 +25,7 @@ export function activate_module(lain) {
                         solicitButton.textContent = 'solicit offer';
                         solicitButton.id = `solicit-${item.keyName}`;
                         solicitor.appendChild(solicitButton);
-                        if (lain.subs[item.path]) {
+                        if (lain.dvr[item.keyName].receipt.fee) { //add subfee logic one dae
                             const subscriptionInfo = document.createElement('div');
                             subscriptionInfo.innerHTML = `receipt found:<br><span class="fineprint">${lain.subs[item.path]}</span>`;
 
@@ -47,14 +47,15 @@ export function activate_module(lain) {
                             const submitButton = document.createElement('button');
                             submitButton.textContent = 'submit receipt';
                             submitButton.addEventListener('click', () => {
-                                if (inputField.value.trim() !== "") {
+                                if (inputField.value.trim() !== "") { //btw this only works for jsmod bc of media
                                     const httxid_receipt = inputField.value;
-                                    navi(lain, `JSON.parse('` + JSON.stringify({urns: `testkit`, kind: `jsmod`, name: item.keyName, media: `/flippo${item.path}`, httxid: httxid_receipt})+ `')`);
+                                    lain.dvr[item.keyName] = {urns: `testkit`, kind: `jsmod`, name: item.desc, media: `/flippo${item.path}`, receipt: {fee: httxid_receipt}};
+                                    navi(lain, `'` + lain.dvr[item.keyName] + `'`);
                                     itemElement.innerHTML = itemContext + '<div><i>service of listing requested</i></div>';
                                     const subscribeButton = document.createElement('button');
                                     subscribeButton.textContent = 'subscribe receipt';
                                     subscribeButton.addEventListener('click', () => {
-                                        lain.subs[item.path] = httxid_receipt;
+                                        lain.dvr[item.keyName].receipt.fee = httxid_receipt;
                                         itemElement.innerHTML = itemContext + '<div><i>subscribed via receipt!</i></div>';
                                     });
                                     itemElement.appendChild(subscribeButton);

@@ -24,7 +24,6 @@ const testkit_dir = {
                         const fetchmod = async (modURL) => {
                             const headers = new Headers();
                             const httxid = input.httxid || lain.subs[modURL];
-                            console.log(modURL)
                             if (httxid) {
                                 headers.append('httx', httxid);
                             }
@@ -109,8 +108,7 @@ const testkit_dir = {
                 }
             }
         };
-
-        class MySecureElement extends HTMLElement {
+        window.MySecureElement = class extends HTMLElement {
             constructor() {
                 super();
                 const shadowRoot = this.attachShadow({ mode: 'closed' });
@@ -127,7 +125,7 @@ const testkit_dir = {
         if (!customElements.get('testkit-shadow')) {
             customElements.define('testkit-shadow', MySecureElement);
         }
-
+        console.log('testkit-shadow element:', MySecureElement);
         console.log('interpreter registered with callback:', lain.portal);`
     },
     "navi_splash":{
@@ -191,7 +189,7 @@ const testkit_dir = {
         "kind": "html",
         "name": "fishtext",
         "child": "testkit_maritime",
-        "media": '<div id="fishtext"></div>'
+        "media": '<div class="hyperfish"></div>'
     },
     "testkit_maritime":{
         "uri": "xo.10597953363777764",
@@ -233,10 +231,10 @@ const testkit_dir = {
         "media": `
         <span>
         <div id="testkit_menu">
-        <i>testkit remote</i><hr>
+        <i>testing remote</i><hr>
         <span id="currentChannel"></span><br>
         <form id="setchannel_form">
-            <input style="max-width: 68px" id="setchannel" type="text" placeholder="channel"><br>
+            <input style="max-width: 66px" id="setchannel" type="text" placeholder="channel"><br>
         </form>
         <select id="testkit_menuSelect" size="8">
         <option value = "testkit_atc_html">atc</option>
@@ -246,11 +244,13 @@ const testkit_dir = {
         <option value = "testkit_regen_html">regen</option>
         <option value = "testkit_shop_html">shop</option>
         <option value = "testkit_store_gate_html">storegate</option>
-        <option value = "testkit_mount_html">satamount</option>
+        <option value = "testkit_keychain_html">keychain</option>
         </select><br>
         <button id="testkit_menuStart">start</button>
         <span id= 'testkit_blinker'></span><hr>
-        <button id="testkit_menuClear">clear navi</button>
+        <button id="testkit_menuClear">clear navi</button><br>
+        <button id="testkit_menuSave">save navi</button><br>
+        <span id= 'testkit_hiddenlist'></span>
         </span>
         `
     },
@@ -265,7 +265,15 @@ const testkit_dir = {
             let console_count = [];
             let isBlinkerRunning = false;
             const blinker = document.getElementById('testkit_blinker');
-
+            //protect menu from idiots
+            const testkitMenuDiv = document.getElementById('testkit_menu');
+            if (testkitMenuDiv && testkitMenuDiv.parentElement && testkitMenuDiv.parentElement.parentElement && testkitMenuDiv.parentElement.parentElement.parentElement) {
+                const parentParentParent = testkitMenuDiv.parentElement.parentElement.parentElement;
+                const buttonsToRemove = parentParentParent.querySelectorAll('button[onclick="alice.rom.hideDraggable(this);"]');
+                buttonsToRemove.forEach(button => {
+                    button.remove();
+                });
+            }
             const flickerBlinker = () => {
                 if (console_count.length > 0) {
                     isBlinkerRunning = true;
@@ -305,8 +313,60 @@ const testkit_dir = {
             };
 
             console.log('Hello, world!');
+
+            const updateHiddenList = () => {
+                const hiddenListSpan = document.getElementById('testkit_hiddenlist');
+                hiddenListSpan.innerHTML = ''; // Clear existing content
+
+                const hiddenItems = lain.cache.filter(item => item.hidden);
+
+                if (hiddenItems.length > 0) {
+                    const select = document.createElement('select');
+                    select.id = 'hiddenItemsSelect';
+                    select.style.maxWidth = '64px';
+
+                    hiddenItems.forEach((item) => {
+                        const index = lain.cache.indexOf(item);
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.text = item.name;
+                        select.appendChild(option);
+                    });
+
+                    const hr = document.createElement('hr');
+                    hiddenListSpan.appendChild(hr);
+                    hiddenListSpan.appendChild(select);
+                    const br = document.createElement('br');
+                    hiddenListSpan.appendChild(br);
+                    const unhideButton = document.createElement('button');
+                    unhideButton.textContent = 'expand';
+                    unhideButton.addEventListener('click', () => {
+                        const selectedIndex = select.value;
+                        if (selectedIndex !== '') {
+                            const cacheItem = lain.cache[selectedIndex];
+                            delete cacheItem.hidden;
+        
+                            const element = document.querySelector('[data-set="' + cacheItem.domset + '"]');
+                            if (element) {
+                                element.style.display = '';
+                                element.style.pointerEvents = '';
+                            }
+                            else {
+                                console.log('cant find element')
+                            }
+                            updateHiddenList(); // Refresh the hidden list
+                        }
+                    });
+
+                    hiddenListSpan.appendChild(unhideButton);
+
+                }
+            };
+            setTimeout(() => {
+                updateHiddenList();
+            }, 500);
             // channel surfing
-            currentChannel.innerText = alice.channel;
+            currentChannel.innerText = alice.chan;
             
             document.getElementById('setchannel_form').addEventListener('submit', function(event) {
                 event.preventDefault();
@@ -317,8 +377,8 @@ const testkit_dir = {
                 if (channelValue.endsWith('/')) {
                     channelValue = channelValue.slice(0, -1);
                 }
-                alice.channel = "/" + channelValue + "/";
-                if (alice.channel == "/" + channelValue + "/"){
+                alice.chan = "/" + channelValue + "/";
+                if (alice.chan == "/" + channelValue + "/"){
                     window.location.href = window.location.origin;
                 }
             });
@@ -326,34 +386,18 @@ const testkit_dir = {
             document.getElementById('testkit_menuStart').addEventListener('click', function() {
                 navi(alice, 'lain.rom.enclose_draggable(alice.dvr.' + testkit_menuSelect.value + ')', 'document.body');
             });
+            document.getElementById('testkit_menuSave').addEventListener('click', function() {
+                alice.rom.memory();
+            });
             document.getElementById('testkit_menuClear').addEventListener('click', function() {
                 if (confirm("clearing navi to default!!")){
-                    if ('serviceWorker' in navigator) {
-                        // Get all service worker registrations
-                        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                            for (let registration of registrations) {
-                                // Unregister each service worker
-                                registration.unregister().then(function(success) {
-                                    if (success) {
-                                        console.log('Service worker unregistered successfully.');
-                                    } else {
-                                        console.log('Service worker unregistration failed.');
-                                    }
-                                });
-                            }
-                        }).catch(function(error) {
-                            console.error('Error getting service worker registrations:', error);
-                        });
-                    } else {
-                        console.log('Service workers are not supported in this browser.');
-                    }
-                    
-                    const request = indexedDB.open('tomb', 2);
+                x   const deleteUpperLayer = new Promise((resolve, reject) => {
+                    const request = indexedDB.open('realworld', 2);
                     request.onsuccess = function(event) {
                         const db = event.target.result;
-                        const transaction = db.transaction(['pyre'], 'readwrite');
-                        const pyre = transaction.objectStore('pyre');
-                        const deleteRequest = pyre.delete('1');
+                        const transaction = db.transaction(['upperlayer'], 'readwrite');
+                        const upperlayer = transaction.objectStore('upperlayer');
+                        const deleteRequest = upperlayer.delete('1');
                         deleteRequest.onsuccess = function() {
                             for (let i = lain.cache.length - 1; i >= 0; i--) {
                                 const cacheItem = lain.cache[i];
@@ -362,15 +406,22 @@ const testkit_dir = {
                                 }
                                 lain.rom.removeCacheItem({index: i});
                             }
+                            console.log(upperlayer)
+                            window.removeEventListener('unload', () => {}, true);
                             location.reload();
-                            console.log("Datastore deleted successfully");
                         };
                         deleteRequest.onerror = function() {
                             console.error("Error deleting datastore");
                         };
                     };
-                }
+                };
             });
+
+            });
+            updateHiddenList();
+            return {
+                updateHiddenList
+            };
         })();
         `
     },
@@ -383,7 +434,7 @@ const testkit_dir = {
         "count": 1,
         "media": `
         <div>
-        <div id="testkit_atc" style="min-width:555px;min-height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
+        <div id="testkit_atc" style="max-width:666px;max-height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;">
         <ul id="qomms">
         </ul>
         </div>
@@ -407,24 +458,36 @@ const testkit_dir = {
         "name": "testkit atc applet",
         "media": `
         lain.rom.testkit_atc = (action = 'init_and_callback') => {
+
+        const commandFeed = document.getElementById("qomms");
+        const scrollCli = document.getElementById('testkit_atc');
+        const atc_key = 'atc_' + scrollCli.getAttribute('data-set');
+
             if (action === 'init_and_callback' || action === 'init') {
+                if (!lain.profile[atc_key].qomms){
                 const stringArray = ["/quest/ testkit cli (type & send 'help')", "(っ◔◡◔)っ✩･ﾟ✧*･ﾟ･✶･ﾟ･ﾟ*･ﾟ･✶･ﾟ"];
                 stringArray.forEach(item => {
                     commandFeed.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');
                 });
+                } else {
+                    lain.profile[atc_key].qomms.forEach(item => {
+                        commandFeed.insertAdjacentHTML('beforeend', '<li>' + item + '</li>');
+                    });
+                }
             }
             if (action === 'callback') {
                 commandFeed.insertAdjacentHTML('beforeend', '<li><b><i>' + lain.sign + '></i></b> ' + qomms_entry.value + '</li>');
                 scrollCli.scrollTop = scrollCli.scrollHeight;
                 setTimeout(() => { qomms_entry.value = ''; }, 0);
+                let qommsList = commandFeed.getElementsByTagName('li');
+                let qommsRecord = [];
+                for (let i = 0; i < qommsList.length; i++) {
+                    qommsRecord.push(qommsList[i].textContent);
+                }
+                lain.profile[atc_key].qomms = qommsRecord;
             }
         };
-
-            const commandFeed = document.getElementById("qomms");
-            const scrollCli = document.getElementById('testkit_atc');
         lain.rom.testkit_atc('init_and_callback');
-
-       
         testkit_atc_mode.addEventListener('change', function() {
             if (this.value === 'server') {
                 atc_inputarea.innerHTML = '<form onsubmit="alice.rom.testkit_atc(\\'callback\\')" hx-post="https://star.xomud.quest/quest/command/" hx-trigger="submit" hx-target="#qomms" hx-swap="beforeend"><input type = "text" name = "set-message" id = "qomms_entry" placeholder = "/quest/..."><input type = "submit" value = "send"></form>';
@@ -453,7 +516,7 @@ const testkit_dir = {
         // client side template handling
 
         const atc_templates = {
-            'atc_temp_chan': (element) => {
+            'atc_temp_channel': (element) => {
                 element.innerHTML = lain.chan;
             },
             'atc_temp_portal': (element) => {
@@ -597,7 +660,7 @@ const testkit_dir = {
             document.getElementById('testkit_clerk_rqButton').addEventListener('click', function() {
                 let rq = testkit_clerk_rqinput.value;
                 testkit_clerk_rqinput.value = '';
-                navi(lain, JSON.parse(JSON.stringify({urns: 'testkit', kind: 'jsmod', name: rq, media: '/flippo/mod' + rq})));
+                navi(lain, JSON.parse(JSON.stringify({urns: 'testkit', kind: 'jsmod', name: rq, media: '/flippo/mod/' + rq})));
                 lain.rom.testkit_handler.jsmod({kind: "jsmod", name: "rqmod: "+ rq, media: "/quest/mod/" + rq});
             });
         }
@@ -903,8 +966,20 @@ const testkit_dir = {
                         const attr = attributes[i];
                         elementInfo.attributes[attr.nodeName] = attr.nodeValue;
                     }
-                    elementInfo.misc['width'] = element.offsetWidth;
-                    elementInfo.misc['height'] = element.offsetHeight;
+                    let parentElement = element;
+                    let allParentsVisible = true;
+                    while (parentElement) {
+                        if (parentElement.style.display === 'none' || parentElement.style.pointerEvents === 'none') {
+                            allParentsVisible = false;
+                            break;
+                        }
+                        parentElement = parentElement.parentElement;
+                    }
+
+                    if (allParentsVisible) {
+                        elementInfo.misc['width'] = element.offsetWidth;
+                        elementInfo.misc['height'] = element.offsetHeight;
+                    }
                     domReport.push(elementInfo);
                 }
             });
@@ -955,9 +1030,8 @@ const testkit_dir = {
         "name": "reassign elements to export",
         "media": `
         lain.rom.testkit_reassign = (dom_new) => {
-            console.log("reassigning dom based on:", dom_new);
-            const dom_current_map = new Map();
-        
+
+            const dom_current_map = new Map();       
             // Populate the map and check for duplicates
             document.querySelectorAll('[data-set]').forEach(element => {
                 const dataSetValue = element.getAttribute('data-set');
@@ -968,7 +1042,7 @@ const testkit_dir = {
                 }
                 dom_current_map.set(dataSetValue, element);
             });
-        
+            console.log("reassigning... to:", dom_new, "from:", dom_current_map); 
             // Set to track data-set values in dom_new for comparison
             const newDataSets = new Set(dom_new.map(elementInfo => elementInfo.attributes['data-set']));
         
@@ -987,7 +1061,13 @@ const testkit_dir = {
                     Object.entries(elementInfo.misc).forEach(([attrName, attrValue]) => {
                         element.style[attrName] = attrValue;
                     });
-        
+                    if (element.style.display === 'none' && element.style.pointerEvents === 'none') {
+                        const dataSet = parseInt(entry_domset_value, 10);
+                        const cacheIndex = lain.cache.findIndex(item => item.domset === dataSet);
+                        if (cacheIndex !== -1) {
+                            lain.cache[cacheIndex].hidden = true;
+                        }
+                    }
                     // Clear processed entries from current map
                     dom_current_map.delete(entry_domset_value);
         
@@ -1005,43 +1085,23 @@ const testkit_dir = {
                     }
                 }
             });
-            
-            let removedParents = new Set();
-
+        
+            // Destroy elements not present in dom_new
             dom_current_map.forEach((element, domset) => {
                 if (!newDataSets.has(domset)) {
-                    var dataSet = parseInt(domset, 10);
-                    var cacheIndex = lain.cache.findIndex(function(item) { return item.domset === dataSet; });
-
-                    if (cacheIndex !== -1) {
-                        lain.rom.removeCacheItem({ index: cacheIndex });
-                    } else {
-                        let parentElement = element.parentElement;
-                        if (parentElement && !removedParents.has(parentElement)) {
-                            console.log('couldnt find cache for destruction of:', element);
-                            parentElement.removeChild(element);
-                            removedParents.add(parentElement);
-                        }
-                    }
-                }
-            });
-            /* Destroy elements not present in dom_new
-            dom_current_map.forEach((element, domset) => {
-                if (!newDataSets.has(domset)) {
-
+                    console.log(newDataSets, domset, element)
                     //element.parentElement.removeChild(element);
                     var dataSet = parseInt(domset, 10);
                     var cacheIndex = lain.cache.findIndex(function(item) { return item.domset === dataSet; });
                     if (cacheIndex !== -1) {   
                         lain.rom.removeCacheItem({ index: cacheIndex });
-                    } else {
-                        console.log('couldnt find cache for destruction of:', element)
+                    } else if (element.parentElement) {
                         element.parentElement.removeChild(element);
                     }
 
                     // remove cache item but what is the index?
                 }
-            });*/
+            });
         
             console.log("dom reassigned");
         };
@@ -1054,12 +1114,12 @@ const testkit_dir = {
         "name": "grave matters",
         "media": "/quest/mod/testkit_dir/testkit_grave.js"
     },
-    "testkit_suddendeath":{
+    "testkit_memory":{
         "uri": "xo.987349053796",
         "urns": "testkit",
         "kind": "jsmod",
-        "name": "testkit suddendeath",
-        "media": "/quest/mod/testkit_dir/suddendeath.js" 
+        "name": "testkit memory",
+        "media": "/quest/mod/testkit_dir/memory.js" 
     },
     "skelly_proc":{
         "uri": "xo.981896021340505556",
@@ -1074,8 +1134,8 @@ const testkit_dir = {
             eiri(lain, lain.dvr.testkit_grave);
             const wake = () => {
                 if (typeof lain.rom.removeCacheItem === 'function' && typeof lain.rom.removeCacheItem === 'function' && typeof lain.rom.manageCSS === 'function' && typeof lain.rom.testkit_grave === 'function') {
-                    console.log('...mourning!');
-                    lain.rom.testkit_grave().deadgen('suddendeath');
+                    console.log('...reborn!');
+                    lain.rom.testkit_grave().deadgen('memory');
                 } else {
                     setTimeout(wake, 200); // Check again after 200ms if functions are not available
                 }
@@ -1107,7 +1167,7 @@ const testkit_dir = {
             eiri(lain, lain.dvr.testkit_grave);
             eiri(lain, lain.dvr.htmx_observe);
             eiri(lain, lain.dvr.testkit_destroy);
-            eiri(lain, lain.dvr.testkit_suddendeath);
+            eiri(lain, lain.dvr.testkit_memory);
            // eiri(lain, lain.rom.enclose_draggable(lain.dvr.testkit_regen_html), document.body);  
            // eiri(lain, lain.rom.enclose_draggable(lain.dvr.testkit_csspaint_html), document.body);
            //eiri(lain, lain.rom.enclose_draggable(lain.dvr.testkit_atc_html), document.body);
@@ -1120,7 +1180,7 @@ const testkit_dir = {
 }
 try{
     //set channel
-    alice.channel = document.querySelector('meta[portal][uri]').getAttribute('chan');
+    alice.chan = document.querySelector('meta[portal][aux]').getAttribute('chan');
     //classify channel body
     document.addEventListener('DOMContentLoaded', () => {
         const route = window.location.pathname.split('/')[1]; // Get the first part of the route
@@ -1128,21 +1188,6 @@ try{
             document.body.classList.add(`chan-${route}`);
         }
     });
-    //service worker re-affirm
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(function(registration) {
-                console.log('service Worker registered with scope:', registration.scope);
-                if (!navigator.serviceWorker.controller) {
-                    console.log('service Worker is not controlling the page. Reloading...');
-                    window.location.reload();
-                }
-            }).catch(function(error) {
-                console.error('service Worker registration failed:', error);
-            });
-    } else {
-        console.log('no service worker for persistence :( ')
-    }
     //deploy testkit directory into session (ALICE)
     Object.keys(testkit_dir).forEach(key => {
         alice.dvr[key] = testkit_dir[key];
@@ -1151,7 +1196,7 @@ try{
     //reload a session if it is found, otherwise launch a fresh session
 
     function checkIndexedDB() {
-        const request = indexedDB.open('tomb', 2);
+        const request = indexedDB.open('realworld', 2);
         let upgradeNeeded = false;
     
         request.onerror = function(event) {
@@ -1160,8 +1205,8 @@ try{
     
         request.onupgradeneeded = function(event) {
             const db = event.target.result;
-            if (!db.objectStoreNames.contains('pyre')) {
-                db.createObjectStore('pyre', { keyPath: 'id', autoIncrement: true });
+            if (!db.objectStoreNames.contains('upperlayer')) {
+                db.createObjectStore('upperlayer', { keyPath: 'id', autoIncrement: true });
                 console.log('...out of nothing...');
                 navi(alice, 'alice.dvr.demo_proc');
                 upgradeNeeded = true;
@@ -1171,26 +1216,26 @@ try{
         request.onsuccess = function(event) {
             if (upgradeNeeded) return;
             const db = event.target.result;
-            if (!db.objectStoreNames.contains('pyre')) {
-                console.log('...out of oblivion!...');
+            if (!db.objectStoreNames.contains('upperlayer')) {
+                console.log('...out of oblivion...');
                 navi(alice, 'alice.dvr.demo_proc');
                 return;
             }
-            const transaction = db.transaction(['pyre'], 'readonly');
-            const pyre = transaction.objectStore('pyre');
-            const exhume = pyre.count();
+            const transaction = db.transaction(['upperlayer'], 'readonly');
+            const upperlayer = transaction.objectStore('upperlayer');
+            const exhume = upperlayer.count();
             exhume.onsuccess = function() {
                 if (exhume.result === 0) {
-                    console.log('...tomb is empty...');
+                    console.log('...no upper layer...');
                     navi(alice, 'alice.dvr.demo_proc');
                 } else {
-                    console.log('a skeleton remembers...');
-                    const getRequest = pyre.getAll();
+                    console.log('Taking a deep breath,');
+                    const getRequest = upperlayer.getAll();
                     getRequest.onsuccess = function(event) {
                         const result = event.target.result[0].data;
                         if (result) {
                             alice.dvr[result.file] = result;
-                            console.log('it turns...');
+                            console.log("I press Lain's doorbell.");
                             navi(alice, 'alice.dvr.skelly_proc');
                         }
                     };
@@ -1206,26 +1251,14 @@ try{
     }
     
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(function(registration) {
-                console.log('service Worker registered with scope:', registration.scope);
-                if (!navigator.serviceWorker.controller) {
-                    console.log('service Worker is not controlling the page. Reloading...');
-                    window.location.reload();
-                }
-            }).catch(function(error) {
-                console.error('service Worker registration failed:', error);
-                checkIndexedDB();
-            });
-    
         navigator.serviceWorker.ready.then(function(registration) {
             if (registration.active) {
                 const messageChannel = new MessageChannel();
                 messageChannel.port1.onmessage = function(event) {
                     const data = event.data;
                     if (data) {
-                        alice.dvr['suddendeath'] = data;
-                        console.log('it turns...');
+                        alice.dvr['memory'] = data;
+                        console.log("I press Lain's doorbell.");
                         navi(alice, 'alice.dvr.skelly_proc');
                     } else {
                         checkIndexedDB();

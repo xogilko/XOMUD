@@ -1,0 +1,7 @@
+{
+  "uri": "xo.73687385434867682",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "exporter of navi",
+  "media": "\n        lain.rom.exporter = () => {\n            //this requires css_manager + dom_reporter\n            let navi_export = {};\n            if (typeof lain.rom.reportDOM === 'function' && typeof lain.rom.manageCSS === 'function'){\n                navi_export.proc = structuredClone(lain.proc);\n                navi_export.dom = lain.rom.reportDOM();\n                navi_export.css = lain.rom.manageCSS().getCSSProperties();\n                navi_export.proc.forEach((procEntry, index) => {\n                    const stepIndex = index.toString();\n                    const matchingDomEntry = navi_export.dom.find(domEntry => \n                        domEntry.attributes && domEntry.attributes['data-step'] === stepIndex\n                    );\n                    if (!matchingDomEntry) {\n                        // Update proc entry if no matching dom entry is found\n                        if (procEntry.length > 1){\n                            navi_export.proc.splice(index, 1);\n                        } else if (!lain.cache.some(item => item.step === index) && index !== 1) {\n                            navi_export.proc.splice(index, 1);\n                        }\n                    } else {\n                        delete matchingDomEntry.attributes['data-step'];   \n                    }\n                });\n            }\n            return {\n                navi_export\n            };\n        }\n        "
+}

@@ -4,6 +4,8 @@ go 1.21.4
 
 require github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2
 
+require github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+
 require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect

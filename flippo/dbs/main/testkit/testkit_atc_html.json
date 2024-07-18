@@ -1,0 +1,9 @@
+{
+  "uri": "xo.9672303456646593015",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit atc widget via quest",
+  "child": "testkit_atc_func",
+  "count": 1,
+  "media": "\n        <div>\n        <div id=\"testkit_atc\" style=\"max-width:666px;min-height:150px;line-height:1em;overflow-y:scroll;padding-bottom:5px;\">\n        <ul id=\"qomms\">\n        </ul>\n        </div>\n        <select id=\"testkit_atc_mode\">\n        <option value = \"server\">server</option>\n        <option value = \"client\">client</option>\n        </select>\n        <span id=\"atc_inputarea\">\n        <form onsubmit=\"alice.rom.testkit_atc('callback')\" hx-post=\"https://star.xomud.quest/quest/command/\" hx-trigger=\"submit\" hx-target=\"#qomms\" hx-swap=\"beforeend\">\n        <input type = \"text\" name = \"set-message\" id = \"qomms_entry\" placeholder = \"/quest/...\">\n        <input type = \"submit\" value = \"send\">\n        </form>\n        </span>\n        </div>\n        "
+}

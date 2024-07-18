@@ -1,0 +1,7 @@
+{
+  "uri": "xo.2346903701358935",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "testkit transform content!",
+  "media": "\n            // DRY style -> list spitter interpreter future\n            console.log('transform?');\n            document.querySelectorAll('*').forEach((element) => {\n                if (element.childNodes.length === 1 && element.textContent.trim() === 'URLMUD') {\n                    const text = element.textContent;\n                    const index = text.indexOf('LM');\n                    if (index !== -1) {\n                        const link = document.createElement('a');\n                        link.href = 'https://wikipedia.org';\n                        link.textContent = 'LM'; // Text to be wrapped in the hyperlink\n                        const newText = text.substring(0, index) + '<a>' + link.outerHTML + '</a>' + text.substring(index + 2);\n                        element.innerHTML = newText; // Update the element with the new HTML\n                    }\n                }\n            });\n        "
+}

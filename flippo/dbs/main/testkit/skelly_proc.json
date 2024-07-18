@@ -1,0 +1,7 @@
+{
+  "uri": "xo.981896021340505556",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "testkit skelly setup!",
+  "media": "\n        lain.rom.skelly_proc = () => {\n            eiri(lain, lain.dvr.testkit_destroy);\n            eiri(lain, lain.dvr.css_manager);\n            eiri(lain, lain.dvr.dom_reassignment);\n            eiri(lain, lain.dvr.testkit_grave);\n            const wake = () => {\n                if (typeof lain.rom.removeCacheItem === 'function' && typeof lain.rom.removeCacheItem === 'function' && typeof lain.rom.manageCSS === 'function' && typeof lain.rom.testkit_grave === 'function') {\n                    console.log('...reborn!');\n                    lain.rom.testkit_grave().deadgen('memory');\n                } else {\n                    setTimeout(wake, 200); // Check again after 200ms if functions are not available\n                }\n            };\n            wake();\n        }\n        lain.rom.skelly_proc();\n        "
+}

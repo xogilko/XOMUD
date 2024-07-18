@@ -1,0 +1,8 @@
+{
+  "uri": "xo.9090876265572",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "shadow keychain widget",
+  "child": "testkit_keychain_func",
+  "media": "\n        <testkit-shadow id=\"testkit_keychain\">\n        </testkit-shadow>\n        "
+}

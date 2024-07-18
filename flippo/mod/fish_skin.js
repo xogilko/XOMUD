@@ -1,8 +1,6 @@
 const applyFishSkin = (node) => {
     // Hide the text inside the element
-    node.querySelectorAll('span').forEach(child => {
-        child.style.visibility = 'hidden'; // Hide text elements specifically
-    });
+   node.style.visibility = 'hidden'; // Hide text elements specifically
 
     // Create and configure the img element
     const img = document.createElement('img');
@@ -64,7 +62,6 @@ const bodyObserver = new MutationObserver(mutations => {
         if (mutation.type === 'childList') {
             mutation.addedNodes.forEach(addedNode => {
                 if (addedNode.classList && addedNode.classList.contains('hyperfish')) {
-                    addedNode.child.style.visibility = 'hidden';
                     applyFishSkin(addedNode);
                 }
                 // Check for nested .hyperfish elements

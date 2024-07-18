@@ -1,0 +1,8 @@
+{
+  "uri": "xo.56498453388979456",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "satalite mounting widget",
+  "child": "testkit_mount_func",
+  "media": "\n        <div id=\"testkit_mounting_station\">\n        INPUT:<hr>\n        <input type = \"text\" id = \"testkt_mount_input_txid\" placeholder = \"satalite txid\"><br>\n        <textarea = \"text\" id = \"testkit_mount_input_script\" placeholder = \"lock assembly\"></textarea><br>\n        <button id=\"testkit_mount_button\">mount</button><hr>\n        OUTPUT<br>\n        <span id=\"testkit_mount_output\"></span>\n        </div>\n        "
+}

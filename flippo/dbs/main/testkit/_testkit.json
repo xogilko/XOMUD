@@ -1,0 +1,8 @@
+{
+  "uri": "xo.09024804588737648009809",
+  "aux": "testkit",
+  "kind": "meta",
+  "name": "testkit meta registry",
+  "registry": ["testkit_in", "navi_splash", "testkit_style_html", "drag_functions", "enclose_draggable", "fishtext", "testkit_maritime", "test_name_replace", "testkit_menu_html", "testkit_menu_func", "testkit_atc_html", "testkit_atc_func", "testkit_clerk_html", "testkit_clerk_func", "testkit_csspaint_html", "testkit_csspaint_func", "testkit_shop_html", "testkit_shop_func", "testkit_kiosk_html", "testkit_kiosk_func", "testkit_store_gate_html", "testkit_store_gate_func", "testkit_regen_html", "testkit_regen_func", "testkit_mount_html", "testkit_mount_func", "testkit_keychain_html", "testkit_keychain_func", "testkit_indexedDB", "bsv_script", "htmx_script", "htmx_observe", "testkit_destroy", "css_manager", "dom_reporter", "navi_exporter", "dom_reassignment", "testkit_grave", "testkit_memory", "skelly_proc"],
+  "init": "init_proc",
+}

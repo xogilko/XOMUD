@@ -1,0 +1,7 @@
+{
+  "uri": "xo.1321346875468776",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "testkit regen applet",
+  "media": "\n        document.getElementById('testkit_exportButton').addEventListener('click', function() {lain.rom.testkit_grave().skellygen(testkit_exportName.value); \n            testkit_exportName.value = '';});\n        document.getElementById('testkit_regenButton').addEventListener('click', function() {console.log('LETS REGEN'); lain.rom.testkit_grave().deadgen(testkit_regenImport.value);});\n        "
+}
