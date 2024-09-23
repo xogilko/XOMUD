@@ -447,24 +447,28 @@ func subscribe(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResponse)
 }
 func dbs(w http.ResponseWriter, r *http.Request) {
+
+	log.Printf("request serving: %s", "dbs begun")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("request serving: %s", "dbs 1")
 	var msg map[string]interface{}
 	err = json.Unmarshal(body, &msg)
 	if err != nil {
 		http.Error(w, "Error parsing request body", http.StatusInternalServerError)
 		return
 	}
-
+	log.Printf("request serving: %s", "dbs 2")
 	ccList, ok := msg["cc"].([]interface{})
 	if !ok {
 		http.Error(w, "Invalid cc list", http.StatusBadRequest)
 		return
 	}
-
+	log.Printf("request serving: %s", "dbs 3")
+	log.Printf("dbs ccList %s", ccList)
 	combinedData := make(map[string]interface{})
 
 	for _, ccItem := range ccList {
@@ -486,6 +490,8 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 		var jsonData map[string]interface{}
 		if artName != "" {
 			// Specific art file
+
+			log.Printf("dbs auxparts %s", auxArtParts)
 			filePath := filepath.Join("dbs/main", auxPath, artName+".json")
 			jsonData, err = readJSONFile(filePath)
 			if err != nil {
