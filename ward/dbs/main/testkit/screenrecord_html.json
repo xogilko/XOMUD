@@ -1,0 +1,8 @@
+{
+  "uri": "xo.820340958701234",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "screen rec widget",
+  "child": "screenrecord_func",
+  "media": "<button id='testkit_screenrec_start'>Start Recording</button><button id='testkit_screenrec_stop' disabled>Stop Recording</button><video id='testkit_screenrec_preview' controls></video>"
+}

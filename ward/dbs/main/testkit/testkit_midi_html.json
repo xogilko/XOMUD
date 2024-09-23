@@ -1,0 +1,8 @@
+{
+  "uri": "xo.82-0293423-92834",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit midi widget",
+  "child": "testkit_midi_func",
+  "media": "<h1>MIDI Keyboard Input</h1><p id='testkit_midi_input_status'>Connecting to MIDI...</p><p id='testkit_midi_input_midiData'></p>"
+}

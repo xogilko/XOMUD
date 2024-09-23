@@ -1,0 +1,7 @@
+{
+  "uri": "xo.82030092384832048430385234",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "testkit midi applet",
+  "media": "document.addEventListener('DOMContentLoaded', () => { const status = document.getElementById('testkit_midi_input_status'); const midiData = document.getElementById('testkit_midi_input_midiData'); if (navigator.requestMIDIAccess) { navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure); } else { status.textContent = 'Web MIDI API is not supported in this browser.'; } function onMIDISuccess(midiAccess) { status.textContent = 'MIDI connected.'; const inputs = midiAccess.inputs.values(); for (let input of inputs) { input.onmidimessage = getMIDIMessage; } } function onMIDIFailure() { status.textContent = 'Failed to access MIDI devices.'; } function getMIDIMessage(midiMessage) { const [command, note, velocity] = midiMessage.data; switch (command) { case 144: if (velocity > 0) { midiData.textContent = `Note On: ${note} (Velocity: ${velocity})`; } else { midiData.textContent = `Note Off: ${note}`; } break; case 128: midiData.textContent = `Note Off: ${note}`; break; default: break; } } });"
+}

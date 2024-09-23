@@ -4,7 +4,89 @@
 
 /*  42164
 
-current
+
+
+// august 24th
+
+today we are working on the navi floating across reloads
+init proc is not launching after sw check
+    this means after checking for madelaine, its not running initproc in navi.js
+
+everything below this line is out-of-bounds process
+---------------------------------------------------
+
+its not regenning thats why atc aint workin
+its refreshing the proc and reassigning good but its building new entry plug and lain dont last
+
+i see- 
+    yahou needs protocol() to tell it that madelaine lain is alice().
+    SERVICE WORKER - sending poor reprocs returning successfully with data undefined
+--------
+
+get my cord back
+
+istream
+hypercloud
+market/register
+
+currently:
+
+update dispatcher
+    php can render php -> working on format for istream php for chan
+    `   // Mapping of routes to their corresponding PHP files
+        //fix:
+        //broadcast(opns_route)->fetch--->safe-eval(routes_list[opns_route]=`chan_php`)->write html
+        //compliment:
+        //xo.php -> op_return -> figure out relative filepaths
+
+make addr
+   1         query woc for init tx,
+   2         then get utxo of addr
+   3             then list of tx of utxo sum, then by order of time, then via (client filter)
+   4             then append to locale ()
+
+        client filter-  
+            navi options to set captcha degree for aux interaction
+            arch api etc:
+                    ieau
+                    ieau/@hypercloud/catproofed/x
+    afaik - html snippets can be interpreted by a universal interpreter php file for channel spas using nesting
+            universally check index of opns find chaninit utxo and use that html full page, children for snippets
+    we can have blinkenlight trigger splash with some context
+    so we can look at whats happening on mobile
+
+   1    init tx shape:
+        type - html ->> html
+        it has to be html to initialize a channel
+                how can it even?
+                    php vs token
+                    token php organizes and sends it :) 
+        use 1sat type field and place raw data after a meta field(?) in script for art
+        sign tx with pubkey that also owns the address etc.
+
+            parent tx: context tree
+            refid: istream.addr.path.type.sum
+            aux:   interpreter
+            perms*: hashtags / user-friendly etc.
+            kind: type/../
+            media: html(<head>< navi v?><meta details><css src="/rootrefid/childrefid"></h><body>)
+
+    tx parent-> cd
+
+    each html page should have txid in meta chan
+shop needs subs taken out
+
+sub -
+
+update - aux dbs update (), navi update, sw update, dispatch
+write init_proc
+it seems corner() is not called, when it is, skeleton not found
+refresh and skelly is forgotten
+
+on edge:
+it appears skelly persists and not found
+
+&(*^&(^ PASTE!))
 
 update - aux dbs update (), navi update, sw update, dispatch
 

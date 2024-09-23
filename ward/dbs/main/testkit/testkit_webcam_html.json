@@ -1,0 +1,8 @@
+{
+  "uri": "xo.962998667157023536",
+  "aux": "testkit",
+  "kind": "html",
+  "name": "testkit webcam widget",
+  "child": "testkit_webcam_func",
+  "media": "<span id='testkit_webcam_span'><video id='testkit_webcam' autoplay></video></span>"
+}

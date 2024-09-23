@@ -1,0 +1,7 @@
+{
+  "uri": "xo.87400988349234",
+  "aux": "testkit",
+  "kind": "js",
+  "name": "create screen rec",
+  "media": "const startButton = document.getElementById('testkit_screenrec_start'); const stopButton = document.getElementById('testkit_screenrec_stop'); const preview = document.getElementById('testkit_screenrec_preview'); let mediaRecorder; let recordedChunks = []; startButton.addEventListener('click', async () => { const stream = await navigator.mediaDevices.getDisplayMedia({ video: { mediaSource: 'screen' } }); mediaRecorder = new MediaRecorder(stream); mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) { recordedChunks.push(event.data); } }; mediaRecorder.onstop = () => { const blob = new Blob(recordedChunks, { type: 'video/webm' }); recordedChunks = []; const url = URL.createObjectURL(blob); preview.src = url; preview.play(); }; mediaRecorder.start(); startButton.disabled = true; stopButton.disabled = false; }); stopButton.addEventListener('click', () => { mediaRecorder.stop(); startButton.disabled = false; stopButton.disabled = true; });"
+}

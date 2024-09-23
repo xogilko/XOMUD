@@ -1,0 +1,7 @@
+{
+    "uri": "xo.9629988009667157023536",
+    "aux": "testkit",
+    "kind": "js",
+    "name": "testkit webcam applet",
+    "media": "const videoElement = document.getElementById('testkit_webcam'); async function startWebcam() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); videoElement.srcObject = stream; } catch (error) { console.error('Error accessing webcam: ', error); }} startWebcam();"
+  }

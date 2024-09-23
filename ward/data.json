@@ -1,0 +1,246 @@
+{
+    "dirDatabase": {
+        "priv": "cMr9x7JtgEdXTS6vFxa9UHNzVsYWcPM9vwtziepTCJGX7dVnyrXe",
+        "skellykey": "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6",
+        "aux": {
+            "testkit": ["/mod/_testkit.js"]
+        },
+        "hosts": {
+            "http://localhost:8083/": {
+                "aux": {
+                    "testkit": ["example_dir.js"]
+                }
+            },
+            "https://xomud.quest/": {
+                "aux": {
+                    "testkit": ["xomudsite.js"]
+                }
+            }
+        },
+        "permit": {
+            "example_cost.js": {
+                "department": ["Bob's Shop"],
+                "vendor":"Bob",
+                "price": 5000,
+                "expiration": null
+            }
+        },
+        "department": {
+            "Bob's Shop": {
+                "costly module": {
+                    "desc": "interactive sound",
+                    "vendor": "Bob",
+                    "index": "/mod/example_cost.js",
+                    "price": 5000,
+                    "expiration": null
+                }
+            }
+        }
+    },
+    "index": {
+        "/service": {
+            "/compilescrypt/package.json": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            }
+        },
+        "/chan": {
+            "/xo": {
+                "/index.php": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                    }
+                },
+            "/static": {
+                "/xo": {
+                    "/style.css": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/truthparchbgnew.jpg": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/logo.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/compliance_certificate_xomud.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/compliance_certificate_xomud.png.sig.asc.html": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/dialup.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/wthought.png": {
+                        "fee": 0,
+                        "vendor": null,
+                        "duration": null
+                        },
+                    "/meridian": {
+                        "/01.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            },
+                        "/02.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            },
+                        "/03.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            },
+                        "/04.png": {
+                            "fee": 0,
+                            "vendor": null,
+                            "duration": null
+                            }
+                        }
+                    }
+                }
+            },
+        "/mod": {
+            "/_testkit.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/example_cost.js": {
+                "fee": 5000,
+                "vendor": "Bob",
+                "duration": null
+            },
+            "/example_dir.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/fish.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/fish_skin.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/splash.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/xomudsite.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/testkit_dir": {
+                "/css_manager.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/drag_functions.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/enclose_draggable.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/htmx_observe.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/indexeddb.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/memory.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_csspaint_func.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_destroy.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_grave.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_keychain.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_kiosk.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_shop.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                },
+                "/testkit_store_gate_func.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
+                }
+            }
+        },
+        "/lib": {
+            "/bsv.min.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            }
+        }
+    },
+    "vendorIndex": {
+        "Bob": {
+        "hdpriv": "xprv9s21ZrQH143K4DaCtayAk8LTdfUEqd2SWUJqe1bqnqzLninEQ3XiCd6d74k42PXoN8jrStLsWU199FoorPgQUBytnvbrFSCQpaQxn7ZrBPb",
+        "hdpub": "xpub661MyMwAqRbcGhefzcWB7GHCBhJjF5kHshESSQ1TMBXKfX7NwaqxkRR6xNhUMETkc5DkpZga1K8uiTsf3hNBiyNfUuX6uAWDqtcbJXyf5gL",
+        "items": ["example_cost.js"]
+        }
+    },
+    "command": {
+        "help": "/quest/ command list:<br>help - this! <br>status - report uri portal and domain",
+        "status": "current channel: <b><span id='atc_temp_channel'></span></b> with aux: <b><span id='atc_temp_aux'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
+    },
+    "script": {
+        "id": "",
+        "compiled": "",
+        "lockscript": ""
+    }
+}
