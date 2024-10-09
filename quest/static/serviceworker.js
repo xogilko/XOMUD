@@ -69,8 +69,9 @@ function handleDBOperation(storeName, operation, data, replyPort) {
             getRequest.onsuccess = function(event) {
                 if (replyPort) {
                     let temp = event.target.result;
-                    if (temp && temp.data){
-                        replyPort.postMessage({ success: true, data: temp.data });
+                    if (temp && temp.value){
+                        console.log('(sw) indexeddb contains entry', temp)
+                        replyPort.postMessage({ success: true, data: temp.value });
                     } else {
                         console.log('(sw) indexeddb does not contain entry', temp)
                         replyPort.postMessage({ success: false, data: undefined });
@@ -87,7 +88,7 @@ function handleDBOperation(storeName, operation, data, replyPort) {
 let memory = null;
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'MEM_SET') {
-        console.log('MEMSETTIN;', memory, event.data.data)
+        console.log('(sw) setting memory:', event.data.data.key, memory)
         if (!memory){
             memory = [];
         }
@@ -113,7 +114,7 @@ self.addEventListener('message', function(event) {
             console.log('(sw)surface memory present. proof:', memory, 'this', event.data.key, 'is', memory[event.data.key])
             event.ports[0].postMessage(memory[event.data.key]);
         } else {
-            console.log('(sw)no matching surface memory. checking indexeddb.', memory, event.data.key)
+            console.log('(sw)no matching surface memory. checking indexeddb.', event.data, event.data.data.key)
             const message = {
                 type: 'REALACCESS',
                 storeName: 'upperlayer',

@@ -130,12 +130,14 @@ const navi = function(lain: S, ...rest: string[]) {
             }
         }
     }
-    try{
+    try {
         const evaluatedArgs = rest.map(arg => eval(arg));
-        if (!(evaluatedArgs.length > 0 && typeof evaluatedArgs[0] === 'string' && evaluatedArgs[0] === "specialCondition")) {
+        if (evaluatedArgs.length > 0 && typeof evaluatedArgs[0] === 'string') {
             eiri(lain, ...evaluatedArgs as [any]);
+            if (evaluatedArgs[0] !== "_ignore") {
+                lain.proc.push(rest);
+            }
         }
-        lain.proc.push(rest);
     }
     catch(error){
         console.log('navi error: ', error)
@@ -143,7 +145,7 @@ const navi = function(lain: S, ...rest: string[]) {
     return { lain };
 };
 const protocol = async function () {
-    console.log('da wings of application state')
+    console.log('"da wings of application state"')
     let lain = alice() as S;
     const meta = Array.from(document.getElementsByTagName('meta')).reduce((acc, tag) => {
         Array.from(tag.attributes).forEach(attr => {
@@ -158,14 +160,13 @@ const protocol = async function () {
     async function onboard() {
         console.log(lain,"client requests init ✩");
         lain.portal = meta['portal'];
-        lain.chan = meta['chan'];
         lain.profile['starboard'] = [];
         const hahahahaha = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ date: new Date().toISOString() })
         };
-        const response = await fetch(lain.portal + '/arch/port', hahahahaha);
+        const response = await fetch(lain.portal + 'arch/port/', hahahahaha);
         if (response.ok) {
             const token = await response.text();
             try {
@@ -181,29 +182,28 @@ const protocol = async function () {
             console.error('error:', response.statusText);
         }
     }
-
     async function bootstrap() {
         return new Promise<void>((resolve) => {
             const messageChannel = new MessageChannel();
             messageChannel.port1.onmessage = function (event) {
-                const madeleine = event.data;
-                console.log('client attempts to bootstrap a navi with', lain, madeleine, ', and here it is:', madeleine.data);
-                if (madeleine.data) {
-                    lain = JSON.parse(madeleine.data.value);
+                if (event.data.data) {    
+                    console.log('navi bootstrap parsing:', lain, event.data);
+                    lain = JSON.parse(event.data.data);
                     alice(lain);
                 } else {
-                    console.log('bootstrap failed, requesting init')
+                    console.log('navi bootstrap failed, requesting init')
                     onboard();
                 }
                 resolve();
             };
+            console.log('navi bootstrap requesting memory');
             (navigator as any).serviceWorker.controller.postMessage({ type: 'MEM_GET', data: { key:"lain", id: 1 }}, [messageChannel.port2]);
         });
     }
     async function preflight() {
         if ('serviceWorker' in navigator) {
             const registration = await (navigator as any).serviceWorker.ready;
-            if (registration.active) {
+            if (registration.active && (navigator as any).serviceWorker.controller) {
                 await bootstrap();
             } else {
                 await (navigator as any).serviceWorker.register('/service-worker.js', { scope: '/' });
@@ -221,7 +221,8 @@ const protocol = async function () {
 
     try {
         await preflight();
-        lain.profile['arch-config'] = { 'user-friendly': true };
+        lain.chan = meta['chan'];
+        lain.profile['arch-config'] = { 'user-friendly': true, 'chan': lain.chan };
         lain.profile['airplane-mode'] = !navigator.onLine;
         if (lain.portal === meta['portal']) {
             lain.profile['starboard'];
@@ -242,7 +243,6 @@ const chisa = (lain: S): void => {
     function series() {
         Object.values(lain.dvr).forEach(value => {
             if (value.init) {
-                console.log(lain)
                 navi(lain, `lain.dvr.${value.init}`);
             }
         });
@@ -310,7 +310,7 @@ const chisa = (lain: S): void => {
         const msg = {
             from: window.location.href,
             to: cc,
-            config: lain.profile['config'],
+            config: lain.profile['arch-config'],
         };
         const email = {
             method: 'POST',
@@ -318,7 +318,7 @@ const chisa = (lain: S): void => {
             body: JSON.stringify(msg)
         };
         console.log(msg, "navi requests art ✩");
-        fetch(lain.portal + '/arch/dbs/', email)
+        fetch(lain.portal + 'arch/dbs/', email)
             .then(response => {
             if (!response.ok) {
                 throw new Error('no response');

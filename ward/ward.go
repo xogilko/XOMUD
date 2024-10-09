@@ -447,33 +447,78 @@ func subscribe(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResponse)
 }
 func dbs(w http.ResponseWriter, r *http.Request) {
-
+	// Load data from JSON file
+	data := loadData() // Ensure loadData() is defined to read from 'data.json'
+	dirDatabase, ok := data["dirDatabase"].(map[string]interface{})
+	if !ok {
+		log.Printf("Error: dirDatabase format incorrect")
+		http.Error(w, "Internal Server Error: dirDatabase format incorrect", http.StatusInternalServerError)
+		return
+	}
+	chanIndex, ok := dirDatabase["chan_register"].(map[string]interface{})
+	if !ok {
+		log.Printf("Error: chan_register format incorrect, dirDatabase: %v, chanIndex: %v", dirDatabase, dirDatabase["chan_register"])
+		http.Error(w, "Internal Server Error: chan_register format incorrect", http.StatusInternalServerError)
+		return
+	}
 	log.Printf("request serving: %s", "dbs begun")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		log.Printf("Error reading request body: %v", err)
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("request serving: %s", "dbs 1")
 	var msg map[string]interface{}
 	err = json.Unmarshal(body, &msg)
 	if err != nil {
+		log.Printf("Error parsing request body: %v", err)
 		http.Error(w, "Error parsing request body", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("request serving: %s", "dbs 2")
-	ccList, ok := msg["cc"].([]interface{})
+	// Extract properties
+	config, ok := msg["config"].(map[string]interface{})
 	if !ok {
+		log.Printf("Error: Invalid config")
+		http.Error(w, "Invalid config", http.StatusBadRequest)
+		return
+	}
+	userfriendly, ok := config["user-friendly"]
+	if !ok {
+		userfriendly = "true" // user-friendly implicitly true unless prop exist
+	}
+	chanValue, ok := config["chan"].(string)
+	if !ok {
+		log.Printf("Error: Invalid chan value")
+		http.Error(w, "Invalid chan value", http.StatusBadRequest)
+		return
+	}
+	ccList, ok := msg["to"].([]interface{})
+	if !ok {
+		log.Printf("Error: Invalid cc list %s", msg)
 		http.Error(w, "Invalid cc list", http.StatusBadRequest)
 		return
 	}
-	log.Printf("request serving: %s", "dbs 3")
-	log.Printf("dbs ccList %s", ccList)
+	log.Printf("dbs ccList %s chan: %s", ccList, chanValue)
 	combinedData := make(map[string]interface{})
-
+	// Create a JSON entry for metadata - address etc.
+	dbsSig := "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6" // skelly pubkey
+	chanAddress, ok := chanIndex[chanValue].(string)
+	if !ok {
+		log.Printf("Error: Invalid chan address")
+		http.Error(w, "Invalid chan address", http.StatusInternalServerError)
+		return
+	}
+	combinedData["_dbs_meta"] = map[string]interface{}{
+		"signature":   dbsSig,
+		"chanValue":   chanValue,
+		"chanAddress": chanAddress,
+		"note":        "this is for metadata from dbs",
+	}
+	// Iterate through ccList
 	for _, ccItem := range ccList {
 		ccStr, ok := ccItem.(string)
 		if !ok {
+			log.Printf("Error: Invalid cc item")
 			http.Error(w, "Invalid cc item", http.StatusBadRequest)
 			return
 		}
@@ -490,11 +535,11 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 		var jsonData map[string]interface{}
 		if artName != "" {
 			// Specific art file
-
 			log.Printf("dbs auxparts %s", auxArtParts)
 			filePath := filepath.Join("dbs/main", auxPath, artName+".json")
 			jsonData, err = readJSONFile(filePath)
 			if err != nil {
+				log.Printf("Error reading file: %v", err)
 				combinedData[artName] = map[string]interface{}{
 					"error": fmt.Sprintf("Error reading file: %v", err),
 				}
@@ -505,14 +550,13 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 			dirPath := filepath.Join("dbs/main", auxPath)
 			jsonData, err = readJSONDir(dirPath)
 			if err != nil {
+				log.Printf("Error reading directory: %v", err)
 				combinedData[auxPath] = map[string]interface{}{
 					"error": fmt.Sprintf("Error reading directory: %v", err),
 				}
 				continue
 			}
 		}
-		// Extract properties
-		var userfriendly interface{} = "true" // user-friendly implicitly true unless prop exist
 		var fee, subfee, vendor interface{}
 		if artName != "" {
 			vendor = jsonData["vendor"]
@@ -554,6 +598,7 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse, err := json.Marshal(combinedData)
 	if err != nil {
+		log.Printf("Error creating JSON response: %v", err)
 		http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
 		return
 	}
