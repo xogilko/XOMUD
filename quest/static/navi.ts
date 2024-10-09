@@ -131,11 +131,20 @@ const navi = function(lain: S, ...rest: string[]) {
         }
     }
     try {
-        const evaluatedArgs = rest.map(arg => eval(arg));
-        if (evaluatedArgs.length > 0 && typeof evaluatedArgs[0] === 'string') {
+        const filteredRest = rest.filter(arg => arg !== '_ignore');
+        console.log('Filtered rest:', filteredRest);
+
+        const evaluatedArgs = filteredRest.map(arg => eval(arg));
+        console.log('Evaluated args:', evaluatedArgs);
+
+        if (evaluatedArgs.length > 0) {
+            console.log('Branch 1: evaluatedArgs is non-empty and first element is a string');
             eiri(lain, ...evaluatedArgs as [any]);
-            if (evaluatedArgs[0] !== "_ignore") {
+            if (!rest.includes('_ignore')) {
+                console.log('Branch 1.1: rest does not include "_ignore"');
                 lain.proc.push(rest);
+            } else {
+                console.log('Branch 1.2: rest includes "_ignore"');
             }
         }
     }
@@ -243,7 +252,7 @@ const chisa = (lain: S): void => {
     function series() {
         Object.values(lain.dvr).forEach(value => {
             if (value.init) {
-                navi(lain, `lain.dvr.${value.init}`);
+                navi(lain, `lain.dvr.${value.init}`, '_ignore');
             }
         });
     }

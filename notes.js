@@ -383,6 +383,12 @@ it seems initproc is reassigning before we get the skelly from sw
                 document.addEventListener('DOMContentLoaded', protocol);
                 //}
         i updated navi and its not executing navi(). prob new logic issue
+        solved.
+        
+    ok i got the ignore to work,
+    i did take out && typeof evaluatedArgs[0] === 'string' and i forgot why that was in there on evalarg check
+    PROBLEM:
+    some reason if i add to the proc, verify true, and then turn a corner, refresh, the sw serves a navi that only has demo_proc recorded
 
 // oct 7
 
@@ -397,6 +403,7 @@ right now it just reassigns because it can. eventually we must optimize this.
         only handle hashes when we get to the precache stage
 
     lain.dvr['_dbs_meta']['chanAddress'] should contain the addy
+
 
 // oct 6
 
