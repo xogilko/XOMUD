@@ -1,9 +1,9 @@
 
-<br><a href="xomud.quest"><img src="https://xomud.quest/static/resources/wordart.png"></a>
+<br><a href="https://xomud.quest"><img src="https://xomud.quest/static/resources/wordart.png"></a>
 
 <br>wip extensible hypermedia client for da browzer <3
 
-<p>navi.js is a cross-platform local-first application layer for user-friendly custom frontends/hypermediators
+<p>navi.js gives a cross-platform local-first persistent stateful layer for user-friendly custom frontends/hypermediators
 sort of like userscripts but also for distributed snippets of html shared by a network of backends/hypervisors
 
 <p>a hypernet webpage has a navi.js script tag and a meta tag with da name of chan (opns) a portal url (api) and aux (json)<br>
@@ -12,4 +12,4 @@ sort of like userscripts but also for distributed snippets of html shared by a n
 /arch/port <i>registers da navi with da trusted portal</i><br>
 /arch/dbs  <i>gives da navi da json dat it wants</i>
 
-more later ty
+<a href="https://xomud.quest">xomud.quest</a>
