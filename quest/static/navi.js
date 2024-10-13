@@ -29,30 +29,30 @@ const alice = (() => {
             return email ? { success: true } : lain;
         }
         else {
-            console.error('Access denied');
+            console.error('(navi) Access denied');
             return email ? { success: false } : null;
         }
     };
 })();
 const navi = function (lain, ...rest) {
-    console.log("✩ navi called ✩", arguments);
+    console.log("(navi) ✩ navi called ✩", arguments);
     const eiri = (lain, input, ...rest) => {
         const initInterpreter = (interpreter) => {
             try {
                 eval(interpreter.media.replace(/\\n/g, '\n'));
                 lain.cache.push(interpreter);
-                console.log(`${interpreter.aux} onboard`);
+                console.log("(navi) ${interpreter.aux} onboard");
             }
             catch (error) {
-                console.log(`Failed to onboard: ${interpreter.aux}`, error);
+                console.log("(navi) Failed to onboard: ${interpreter.aux}", error);
             }
         };
         const interprate = (input) => {
-            console.log("Interpreeting", input.name);
+            console.log("(navi) Interpreeting", input.name);
             let handler_origin = lain.cache.find(obj => obj.kind === "interpreter" && obj.aux === input.aux).media;
             let handler_match = handler_origin.match(/(\S+?)\s*=\s*{/);
             if (!handler_match) {
-                console.log(`Can't find handler obj name`);
+                console.log("(navi) Can't find handler obj name");
                 return;
             }
             const handler = eval(handler_match[1]);
@@ -61,85 +61,78 @@ const navi = function (lain, ...rest) {
                 if (typeof functionHandler === "function") {
                     try {
                         functionHandler(input, ...rest);
-                        console.log(`${input.name} handled`);
+                        console.log("(navi) ${input.name} handled");
                     }
                     catch (error) {
-                        console.log(`Failed to interpret ${input.name}`, error);
+                        console.log("(navi) Failed to interpret ${input.name}", error);
                     }
                 }
                 else {
-                    console.log(`Can't find fooonction: ${input.kind} in handler: ${handler}`, JSON.stringify(handler));
+                    console.log("(navi) Can't find fooonction: ${input.kind} in handler: ${handler}", JSON.stringify(handler));
                 }
             }
             else {
-                console.log(`Can't find handler: ${handler}`);
+                console.log("(navi) Can't find handler: ${handler}");
             }
         };
         const canInterpret = lain.cache.some(obj => obj.kind === "interpreter" && obj.aux === input.aux);
-        console.log('can interpret:', input.name, canInterpret, lain.cache);
+        console.log('(navi) can interpret:', input.name, canInterpret, lain.cache);
         if (input.kind === "interpreter") {
             if (canInterpret) {
-                console.log("Already mounted");
+                console.log("(navi) Already mounted");
             }
             else {
                 try {
                     initInterpreter(input);
-                    console.log(`${input.aux} interpreter mounted`);
+                    console.log("(navi) ${input.aux} interpreter mounted");
                 }
                 catch (error) {
-                    console.log(`Failed to mount ${input.aux} interpreter`, error);
+                    console.log("(navi) Failed to mount ${input.aux} interpreter", error);
                 }
             }
         }
         else {
             if (!canInterpret) {
-                console.log(`Interpreter for ${input.aux} not found. Attempting to mount...`);
+                console.log("(navi) Interpreter for ${input.aux} not found. Attempting to mount...");
                 try {
                     let interpreter = Object.values(lain.dvr).find(d => d.aux === input.aux && d.kind === 'interpreter');
                     if (!interpreter) {
                         throw new Error(`Interpreter for ${input.aux} not found`);
                     }
                     initInterpreter(interpreter);
-                    console.log(`Interpreter for aux ${input.aux} mounted`);
+                    console.log("(navi) Interpreter for aux ${input.aux} mounted");
                 }
                 catch (error) {
-                    console.log(`Failed to mount interpreter for aux ${input.aux}`, error);
+                    console.log("(navi) Failed to mount interpreter for aux ${input.aux}", error);
                     return;
                 }
             }
             try {
-                console.log('u caught the snake');
+                console.log('(navi) u caught the snake');
                 interprate(input);
             }
             catch (error) {
-                console.log(`Failed to interpret ${input.name}`, error);
+                console.log("(navi) Failed to interpret ${input.name}", error);
             }
         }
     };
     try {
         const filteredRest = rest.filter(arg => arg !== '_ignore');
-        console.log('Filtered rest:', filteredRest);
         const evaluatedArgs = filteredRest.map(arg => eval(arg));
-        console.log('Evaluated args:', evaluatedArgs);
         if (evaluatedArgs.length > 0) {
-            console.log('Branch 1: evaluatedArgs is non-empty and first element is a string');
             eiri(lain, ...evaluatedArgs);
             if (!rest.includes('_ignore')) {
-                console.log('Branch 1.1: rest does not include "_ignore"');
                 lain.proc.push(rest);
-            }
-            else {
-                console.log('Branch 1.2: rest includes "_ignore"');
             }
         }
     }
     catch (error) {
-        console.log('navi error: ', error);
+        console.log('(navi) navi error: ', error);
     }
     return { lain };
 };
 const protocol = async function () {
-    console.log('"da wings of application state"');
+    console.log('"(navi) da wings of application state"');
     let lain = alice();
     const meta = Array.from(document.getElementsByTagName('meta')).reduce((acc, tag) => {
         Array.from(tag.attributes).forEach(attr => {
@@ -148,11 +141,11 @@ const protocol = async function () {
         return acc;
     }, {});
     if (!meta['portal']) {
-        console.error('navi has no portal key');
+        console.error('(navi) navi has no portal key');
         return;
     }
     async function onboard() {
-        console.log(lain, "client requests init ✩");
+        console.log("(navi) lain, client requests init ✩");
         lain.portal = meta['portal'];
         lain.profile['starboard'] = [];
         const hahahahaha = {
@@ -165,17 +158,17 @@ const protocol = async function () {
             const token = await response.text();
             try {
                 lain.profile['entry-plug'] = JSON.parse(token);
-                console.log('navi pilot locked! dae/time hash:', lain.profile['entry-plug']);
+                console.log("(navi) navi pilot locked! dae/time hash:", lain.profile['entry-plug']);
             }
             catch (error) {
-                console.error('failed to parse token:', error);
+                console.error('(navi) failed to parse token:', error);
                 return;
             }
             await navigator.serviceWorker.ready;
             navigator.serviceWorker.controller?.postMessage({ type: 'TXENEHT', data: lain.profile['entry-plug'] });
         }
         else {
-            console.error('error:', response.statusText);
+            console.error('(navi) error:', response.statusText);
         }
     }
     async function bootstrap() {
@@ -183,17 +176,17 @@ const protocol = async function () {
             const messageChannel = new MessageChannel();
             messageChannel.port1.onmessage = function (event) {
                 if (event.data.data) {
-                    console.log('navi bootstrap parsing:', lain, event.data);
-                    lain = JSON.parse(event.data.data);
+                    console.log("(navi) navi bootstrap parsing:", lain, event.data);
+                    Object.assign(lain, JSON.parse(event.data.data));
                     alice(lain);
                 }
                 else {
-                    console.log('navi bootstrap failed, requesting init');
+                    console.log("(navi) navi bootstrap failed, requesting init");
                     onboard();
                 }
                 resolve();
             };
-            console.log('navi bootstrap requesting memory');
+            console.log("(navi) navi bootstrap requesting memory");
             navigator.serviceWorker.controller.postMessage({ type: 'MEM_GET', data: { key: "lain", id: 1 } }, [messageChannel.port2]);
         });
     }
@@ -206,7 +199,7 @@ const protocol = async function () {
             else {
                 await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
                 if (!navigator.serviceWorker.controller) {
-                    console.log('service worker is not controlling the page. reloading...');
+                    console.log("(navi) service worker is not controlling the page. reloading...");
                     window.location.reload();
                 }
                 else {
@@ -233,11 +226,11 @@ const protocol = async function () {
             chisa(lain);
         }
         else {
-            console.error('portal mismatch');
+            console.error('(navi) portal mismatch');
         }
     }
     catch (error) {
-        console.error('Error in preflight:', error);
+        console.error('(navi) Error in preflight:', error);
     }
 };
 const chisa = (lain) => {
@@ -320,7 +313,7 @@ const chisa = (lain) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(msg)
         };
-        console.log(msg, "navi requests art ✩");
+        console.log("(navi) msg, navi requests art ✩");
         fetch(lain.portal + 'arch/dbs/', email)
             .then(response => {
             if (!response.ok) {
@@ -334,10 +327,10 @@ const chisa = (lain) => {
                     lain.dvr[key] = value;
                 }
             });
-            console.log("➜✉: art is cast into dvr!", lain);
+            console.log("(navi) ➜✉: art is cast into dvr!", lain);
         })
             .catch(error => {
-            console.error('dvr download error:', error);
+            console.error('(navi) dvr download error:', error);
         })
             .finally(series);
     }

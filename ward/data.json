@@ -18,8 +18,8 @@
             }
         },
         "chan_register": { 
-            "xo": "mydyvA3y4TXeVz75ay9ZKxerXxTeGXukzr",
-            "20xx": "mpYEeYn4omiX151bh8m7s8kQD9y2z9aGgG"
+            "/xo/": "mydyvA3y4TXeVz75ay9ZKxerXxTeGXukzr",
+            "/20xx/": "mpYEeYn4omiX151bh8m7s8kQD9y2z9aGgG"
         },
         "permit": {
             "example_cost.js": {

@@ -61,12 +61,6 @@ import (
     its impossible to know where on the web anyone is
     we can only infer based on the actions that are made
 
-	poc:
-        wiki
-            a series of pages
-            text would be marked up with hyperlinks to other pages
-        dropdown - based on inputs and events
-            requires tom-select.js + plugins OR select2 based on user preference
 */
 
 var serviceURLs = []string{ //:>>> server map
@@ -94,7 +88,7 @@ func enableCORS(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, hx-current-url, hx-request, hx-target")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, hx-current-url, hx-request, hx-target, httx")
 
 		// Log headers for debugging
 		log.Printf("Response Headers: %v", w.Header())

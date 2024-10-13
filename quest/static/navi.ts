@@ -123,7 +123,6 @@ const navi = function(lain: S, ...rest: string[]) {
                 }
             }
             try {
-                console.log('u caught the snake')
                 interprate(input);
             } catch (error) {
                 console.log(`Failed to interpret ${input.name}`, error);
@@ -143,6 +142,7 @@ const navi = function(lain: S, ...rest: string[]) {
             if (!rest.includes('_ignore')) {
                 console.log('Branch 1.1: rest does not include "_ignore"');
                 lain.proc.push(rest);
+                console.log('sus comparison', lain, alice())
             } else {
                 console.log('Branch 1.2: rest includes "_ignore"');
             }
@@ -197,7 +197,7 @@ const protocol = async function () {
             messageChannel.port1.onmessage = function (event) {
                 if (event.data.data) {    
                     console.log('navi bootstrap parsing:', lain, event.data);
-                    lain = JSON.parse(event.data.data);
+                    Object.assign(lain, JSON.parse(event.data.data));
                     alice(lain);
                 } else {
                     console.log('navi bootstrap failed, requesting init')
