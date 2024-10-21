@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
@@ -432,7 +433,7 @@ func subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := requestData["email"]
-	logEntry(fmt.Sprintf("mailing list entry! %s", email))
+	catalog("email", "mailing list entry:"+email)
 	// Here you would add logic to save the email to your mailing list
 	log.Printf("Email subscribed: %s", email)
 
@@ -654,6 +655,60 @@ func port(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
+}
+func httx_get(w http.ResponseWriter, r *http.Request) {
+	// Extract the txid from the URL path
+	txid := r.URL.Path[len("/httx_get/"):]
+
+	// Validate the txid (assuming it should be alphanumeric)
+	if !isAlphanumeric(txid) {
+		http.Error(w, "Invalid txid format", http.StatusBadRequest)
+		return
+	}
+
+	// Construct the path to the JSON file
+	filePath := filepath.Join("httx_raw", txid+".json")
+
+	// Read the JSON file
+	fileContent, err := os.ReadFile(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "HTTX not found", http.StatusNotFound)
+		} else {
+			log.Printf("Error reading HTTX file: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Parse the JSON content
+	var httxData map[string]interface{}
+	if err := json.Unmarshal(fileContent, &httxData); err != nil {
+		log.Printf("Error parsing HTTX JSON: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Extract the "render" property
+	render, ok := httxData["render"].(string)
+	if !ok {
+		http.Error(w, "Invalid HTTX data format", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the content type to HTML and write the render content
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(render))
+}
+
+// Helper function to check if a string is alphanumeric
+func isAlphanumeric(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) && !unicode.IsNumber(r) {
+			return false
+		}
+	}
+	return true
 }
 
 //WARDEN
@@ -1085,13 +1140,49 @@ func readJSONFile(path string) (map[string]interface{}, error) {
 	return fileData, nil
 }
 func readJSONDir(dirPath string) (map[string]interface{}, error) {
+	// Extract the last segment of the path
+	lastSegment := filepath.Base(dirPath)
+	metaFileName := "_" + lastSegment + ".json"
+	metaFilePath := filepath.Join(dirPath, metaFileName)
+
+	// Check if the meta file exists
+	_, err := os.Stat(metaFilePath)
+	if os.IsNotExist(err) {
+		log.Printf("Error: Meta file %s not found in directory %s", metaFileName, dirPath)
+		return nil, fmt.Errorf("meta file %s not found", metaFileName)
+	} else if err != nil {
+		log.Printf("Error checking meta file: %v", err)
+		return nil, err
+	}
+
+	// Read and parse the meta file
+	metaFileData, err := readJSONFile(metaFilePath)
+	if err != nil {
+		log.Printf("Error reading meta file %s: %v", metaFileName, err)
+		return nil, err
+	}
+
+	// Check for "compose" property
+	compose, ok := metaFileData["compose"].(bool)
+	if !ok {
+		log.Printf("Error: 'compose' property not found or not a boolean in %s", metaFileName)
+		return nil, fmt.Errorf("'compose' property not found or not a boolean in %s", metaFileName)
+	}
+
+	if !compose {
+		log.Printf("Compose is set to false in %s, skipping directory reading", metaFileName)
+		return nil, nil
+	}
+
+	// If we've made it here, compose is true, so we proceed with reading the directory
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		return nil, err
 	}
+
 	dirData := make(map[string]interface{})
 	for _, file := range files {
-		if filepath.Ext(file.Name()) == ".json" {
+		if filepath.Ext(file.Name()) == ".json" && file.Name() != metaFileName {
 			filePath := filepath.Join(dirPath, file.Name())
 			fileData, err := readJSONFile(filePath)
 			if err != nil {
@@ -1214,7 +1305,14 @@ func main() {
 	}
 	proxy = httputil.NewSingleHostReverseProxy(apacheServerURL)
 
+	//	OSMOSIS-
+	//upkeep includes checking for updates to cache (calls httx_set)
+
 	router := http.NewServeMux()
+	router.HandleFunc("/httx_get/", httx_get)
+	//a request for html from a httx cached
+	router.HandleFunc("/httx_set/", httx_set)
+	//a request to cache a broadcast(?) httx
 	router.HandleFunc("/command/", atc_com)
 	//atc tower simulation for mud style clients
 	router.HandleFunc("/dvrbox/", dvrbox_send)

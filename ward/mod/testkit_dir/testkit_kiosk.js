@@ -14,7 +14,7 @@ export function activate_module(lain) {
             }
         }
         lain.rom.testkit_kiosk= () => {
-            console.log('kiosk is open');
+            console.log('kiosk is open 2');
             
             const genKey = (hd, derive = '') => { 
                 let randomIndex = Math.floor(Math.random() * 1000000);
@@ -71,28 +71,16 @@ export function activate_module(lain) {
 
             const getScriptPubKey = (pubkey) => {
                 const pubKeyHash = bsv.crypto.Hash.sha256ripemd160(pubkey.toBuffer()).toString('hex')
-                console.log('pkh:', pubKeyHash);
+                console.log('pkh:', pubkey, pubKeyHash);
                 return bsv.Script.fromASM(`OP_DUP OP_HASH160 ${pubKeyHash} OP_EQUALVERIFY OP_CHECKSIG`)
             }
 
-            const getUTXO = async(address, confirm, inputPubkey = null) => {
-                let lookup = `https://api.whatsonchain.com/v1/bsv/test/address/${address}`;
-                if (confirm = true){
-                    lookup += '/confirmed/unspent';
-                } else {
-                    lookup += '/unconfirmed/unspent';
-                }
-                let pubkey = null;
-                if (inputPubkey != null){
-                    try{pubkey = new bsv.PublicKey.fromString(inputPubkey); console.log(pubkey);}
-                    catch(error){console.log('pubkey fail')}
-                } else {
-                    console.log('no pubkey');
-                }
-                return fetch(lookup)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data)
+            const getUTXO = async(address, confirm, inputPubkey = null, inputPrivateKey = null) => {
+                const fetchUTXOs = async (url) => {
+                    try {
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        console.log(data);
                         if (!data || typeof data !== 'object' || !data.result) {
                             console.error('Unexpected data structure:', data);
                             return [];
@@ -106,52 +94,116 @@ export function activate_module(lain) {
                             amount: parseFloat((out.value / 1e8).toFixed(8)),
                             script: pubkey ? getScriptPubKey(pubkey).toString() : out.script
                         }));
-                    })
-                    .catch(error => {
+                    } catch (error) {
                         console.error('Failed to fetch UTXOs:', error);
                         return []; // Return an empty array in case of error
-                    });
+                    }
+                };
+
+                let lookup = `https://api.whatsonchain.com/v1/bsv/test/address/${address}`;
+                let pubkey = null;
+                if (inputPubkey !== "") {
+                    try {
+                        pubkey = new bsv.PublicKey.fromString(inputPubkey);
+                        console.log(pubkey);
+                    } catch (error) {
+                        console.log('pubkey fail!@#', inputPubkey);
+                    }
+                } else if (inputPrivateKey) {
+                    try {
+                        const privateKey = new bsv.PrivateKey.fromString(inputPrivateKey);
+                        pubkey = new bsv.PublicKey.fromPrivateKey(privateKey);
+                        console.log('Derived pubkey:', pubkey);
+                    } catch (error) {
+                        console.log('Failed to derive pubkey from private key:', error);
+                    }
+                } else {
+                    console.log('no pubkey and no private key');
+                }
+
+                let utxos = await fetchUTXOs(`${lookup}/unconfirmed/unspent`);
+                if (utxos.length === 0) {
+                    console.log('No unconfirmed UTXOs found, checking confirmed UTXOs...');
+                    utxos = await fetchUTXOs(`${lookup}/confirmed/unspent`);
+                }
+                return utxos;
             }
 
-            const fireTX = async (inputUTXOaddress, inputUTXOpubkey, confirm, inputTargetAddr = null, spend, inputChangeAddr, inputPrivateKey, scriptType, script, script2 = null) => {
+            const fireTX = async (inputUTXOaddress, inputUTXOpubkey, confirm, inputTargetAddr = null, spend = null, inputChangeAddr, inputPrivateKey, scriptType, script, script2 = null) => {
                 return new Promise(async (resolve, reject) => {
                     try {
-                        const utxos = await getUTXO(inputUTXOaddress, confirm, inputUTXOpubkey);
+                        const utxos = await getUTXO(inputUTXOaddress, confirm, inputUTXOpubkey, inputPrivateKey);
                         if (utxos.length > 0) {
-                            let tx = new bsv.Transaction()
-                                .from(utxos)
-                                if (scriptType === 'satalite') {//satalite currently p2pkh ordinal
-                                    const newAddress = new bsv.Address.fromPrivateKey(new bsv.PrivateKey.fromRandom('testnet'), 'testnet');
-                                    const lockingScript = bsv.Script.buildPublicKeyHashOut(newAddress).toASM();
-                                    const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
-                                    tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.fromASM(customScript),
-                                        satoshis: 1 
-                                    }));
-                                } else if (scriptType === 'ordtxtpkh') {//p2pkh ordinal
-                                    const lockingScript = bsv.Script.buildPublicKeyHashOut(new bsv.Address.fromString(inputTargetAddr, 'testnet')).toASM();
-                                    const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
-                                    tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.fromASM(customScript),
-                                        satoshis: parseInt(spend, 10)
-                                    }));
-                                } else if (scriptType === 'ordtxtcustom') { // old: const fullScript = `${addressScript} ${script}`;
-                                    const customScript = `${script2} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
-                                    tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.fromASM(customScript),
-                                        satoshis: parseInt(spend, 10),
-                                        address: new bsv.Address.fromString(inputTargetAddr, 'testnet')
-                                    }));
-                                } else if (scriptType === 'asm') { // old: const fullScript = `${addressScript} ${script}`;
-                                    tx.addOutput(new bsv.Transaction.Output({
-                                        script: bsv.Script.fromASM(script),
-                                        satoshis: parseInt(spend, 10),
-                                        address: new bsv.Address.fromString(inputTargetAddr, 'testnet')
-                                    }));
+                            let tx = new bsv.Transaction().from(utxos);
+
+                            // Validate and create addresses
+                            let targetAddress, changeAddress;
+                            try {
+                                if (inputTargetAddr) {
+                                    console.log('Converting target address:', inputTargetAddr);
+                                    targetAddress = inputTargetAddr;
                                 }
-                                tx.change(new bsv.Address.fromString(inputChangeAddr, 'testnet'))
-                                .sign(new bsv.PrivateKey.fromString(inputPrivateKey, 'testnet'))
-                                .serialize();
+                                console.log('Converting change address:', inputChangeAddr);
+                                changeAddress = inputChangeAddr;
+                            } catch (error) {
+                                throw new Error('Invalid address format: ' + error.message);
+                            }
+
+                            // Validate spend amount
+                            if (spend !== "") {
+                                console.log('spend not zero', spend)
+                                const spendAmount = parseInt(spend, 10);
+                                if (isNaN(spendAmount) || spendAmount <= 0) {
+                                    throw new Error('Invalid spend amount: ' + spend);
+                                }
+                            }
+
+                            if (scriptType === 'satalite') {
+                                const newAddress = new bsv.Address.fromPrivateKey(new bsv.PrivateKey.fromRandom('testnet'), 'testnet');
+                                const lockingScript = bsv.Script.buildPublicKeyHashOut(newAddress).toASM();
+                                const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
+                                tx.addOutput(new bsv.Transaction.Output({
+                                    script: bsv.Script.fromASM(customScript),
+                                    satoshis: 1 
+                                }));
+                            } else if (scriptType === 'ordtxtpkh') {
+                                console.log('ord2pkh')
+                                const lockingScript = bsv.Script.buildPublicKeyHashOut(targetAddress).toASM();
+                                const customScript = `${lockingScript} OP_FALSE OP_IF 6f7264 OP_TRUE 746578742f706c61696e OP_FALSE ${bsv.deps.Buffer.from(script).toString('hex')} OP_ENDIF`;
+                                tx.addOutput(new bsv.Transaction.Output({
+                                    script: bsv.Script.fromASM(customScript),
+                                    satoshis: 1,
+                                    address: targetAddress
+                                }));
+                            } else if (scriptType === 'ordtxtcustom') {
+                                console.log('ordcustom')
+                                let bsvtarget = new bsv.Address.fromString(targetAddress, 'testnet');
+                                // Create a standard output to the targetAddress
+                                tx.addOutput(new bsv.Transaction.Output({
+                                    script: bsv.Script.buildPublicKeyHashOut(bsvtarget),
+                                    satoshis: 1, // Ensure this is a valid spend amount
+                                    address: targetAddress
+                                }));
+                                console.log('22222222222222222')
+                                // Add an OP_RETURN output with transaction details
+                                const opReturnScript = bsv.Script.buildDataOut(script).toASM();
+                                tx.addOutput(new bsv.Transaction.Output({
+                                    script: bsv.Script.fromASM(opReturnScript),
+                                    satoshis: 0 // OP_RETURN outputs typically have 0 satoshis
+                                }));
+                            } else if (scriptType === 'asm') {
+                                console.log('asm')
+                                tx.addOutput(new bsv.Transaction.Output({
+                                    script: bsv.Script.fromASM(script),
+                                    satoshis: spendAmount,
+                                    address: targetAddress
+                                }));
+                            }
+
+                            tx.change(changeAddress)
+                              .sign(new bsv.PrivateKey.fromString(inputPrivateKey, 'testnet'))
+                              .serialize();
+
                             resolve(tx); // Resolve the promise with the transaction
                         } else {
                             throw new Error("No UTXOs found.");
@@ -260,3 +312,4 @@ export function activate_module(lain) {
     Can also do testnet:
     const address = Address.Testnet()
 */
+

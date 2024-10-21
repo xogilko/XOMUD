@@ -1,7 +1,59 @@
 /*  42164 */
 
+/* october 20
+
+Vstream aux resolve (arch/woc)
+DBS-> host/chan/user context aux ?
+AUX _meta:discriminate logic conditions
+_dbs_meta: rename to handle duplicate
+simpage
+
+AUTH- AT protocol/hypercloud/key?
+add to DBS context user profile
+
+Shop + publishing to aux
+
+vstream mutable state- edit/update ART - datapoints update via simpage
+(flippo must defensively throttle AUX)
+
+
+xxxx
+
+    dbs() checks _aux.json for compose permission which bsv_testnet denies
+
+*/
+
+
+/* october 19
+
+    i need to cache stuff at flippo and check /arch/ for that before whatsonchain
+
+    >____
+        L-- ARCH
+        |    L-FLIPPO
+        L-- WOC
+
+    incase of tx data
+        flippo: "I dont know the latest state but i cache tx"
+        woc: "I know latest state of the chain"
+
+
+    /httx
+    temporarily store httxid as:
+    {
+        render: {ss_extract},
+        origin: {WOC JSON}
+    }
+    returning html ignores pref (?) check attribute resilience
+    return art - uri = httxid
+    
+>>    dbs does not provide host aux alongside rq aux
+
+    */
+
 /* BUGS
 
+    publisher needs to filter out comments
     update ts to match js when u home
     clerk imports may be broken (?) works fine but at reproc:
         importing async: fish_skin.js navi.js line 42 > eval line 7 > eval:43:29
@@ -23,12 +75,14 @@
     fish get trapped in static window with scroll
 */
 /* TASKS:
+
+chunking art to reduce requests
 splash absolute view posting not inline window
 positional append of html
 add z-dist attribute to preserve layers
 robust proc reordering
 url shortenr
-reverse engineer opns minting
+reverse opns minting
 */
 /*(concept) CSS PAINTER+
     csspaint - remove or toggle rules , bg-color for text cannot be set to nothing etc

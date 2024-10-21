@@ -1,7 +1,7 @@
 {
   "uri": "xo.87468435648701234",
   "aux": "testkit",
-  "kind": "jsmod",
-  "name": "host /xo/ dvr example",
-  "media": "/quest/mod/xomudsite.js"
+  "kind": "js",
+  "name": "host+chan quest/xo/ dvr example",
+  "media": "console.log('quest/xo/ aux report!')"
 }
