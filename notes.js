@@ -1,5 +1,11 @@
 /*  42164 */
 
+/* october 22
+
+
+
+*/
+
 /* october 20
 
 Vstream aux resolve (arch/woc)
@@ -53,6 +59,8 @@ xxxx
 
 /* BUGS
 
+    alice() is not secured (search here ALICESEC)
+
     publisher needs to filter out comments
     update ts to match js when u home
     clerk imports may be broken (?) works fine but at reproc:
@@ -83,6 +91,7 @@ add z-dist attribute to preserve layers
 robust proc reordering
 url shortenr
 reverse opns minting
+sidetree didion node
 */
 /*(concept) CSS PAINTER+
     csspaint - remove or toggle rules , bg-color for text cannot be set to nothing etc
@@ -126,6 +135,79 @@ reverse opns minting
         afaik - html snippets can be interpreted by a universal interpreter php file for channel spas using nesting
             universally check index of opns find chaninit utxo and use that html full page, children for snippets
 */
+/*(concept) ALICESEC
+// ... existing code ...
+const alice = (() => { 
+    const lain: S = {
+        profile: { 'sign': 'xo' },
+        portal: '',
+        chan: '',
+        domset: 0,
+        proc: [],
+        cache: [],
+        rom: {},
+        dvr: {}
+    };
+    lain.profile['miho'] = ['protocol', 'navi'];
+
+    const yasuo = () => {
+        // normally, yasuo checks the stack to carefully guard lain, but not todae
+        return true;
+    };
+
+    const getCallerFunctionName = () => {
+        const error = new Error();
+        const stack = error.stack?.split('\n') || [];
+        // The stack trace format may vary, adjust the index if necessary
+        const callerLine = stack[3] || '';
+        const match = callerLine.match(/at (\w+)/);
+        return match ? match[1] : null;
+    };
+
+    return (inputLain?: S | string, email?: string) => {
+        const callerName = getCallerFunctionName();
+        if (!callerName || !lain.profile['miho'].includes(callerName)) {
+            console.error('Access denied: caller not authorized');
+            return null;
+        }
+
+        if (yasuo()) {
+            if (typeof inputLain === 'object') {
+                // If inputLain is an object, assign it to lain
+                Object.assign(lain, inputLain);
+            } else if (typeof inputLain === 'string') {
+                // If inputLain is a string, treat it as an email
+                email = inputLain;
+            }
+            
+            if (email) lain.profile['miho'].push(email);
+            return email ? { success: true } : lain;
+        } else {
+            console.error('Access denied');
+            return email ? { success: false } : null;
+        }
+    };
+})();
+
+const navi = function() {
+    const lain = alice();
+    if (lain) {
+        console.log('navi has access to lain:', lain);
+    }
+};
+
+const boom = function() {
+    const lain = alice();
+    if (lain) {
+        console.log('boom has access to lain:', lain);
+    }
+};
+
+// Example usage
+navi(); // Should log: "navi has access to lain: ..."
+boom(); // Should log: "Access denied: caller not authorized"
+// ... existing code ...
+ */
 /*(concept) AIRPLANE MODE
     it seems like the next big move is offline mode. this will begin to resolve other pieces like dvr/subs dialectic
     try to keep things as optional as possible to avoid scaling issues... dvr should remain super lightweight.

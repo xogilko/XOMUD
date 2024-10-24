@@ -5,6 +5,18 @@
         "aux": {
             "testkit": ["/mod/_testkit.js"]
         },
+        "listen_cycle": {
+            "whatsonchain": {
+                "xo": {
+                    "address": "mydyvA3y4TXeVz75ay9ZKxerXxTeGXukzr",
+                    "minute": 15
+                },
+                "20xx": {
+                    "address": "mydyvA3y4TXeVz75ay9ZKxerXxTeGXukzr",
+                    "minute": 60
+                }
+            }
+        },
         "hosts": {
             "http://localhost:8083/": {
                 "aux": {

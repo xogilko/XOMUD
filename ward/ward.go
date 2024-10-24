@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -23,6 +25,15 @@ import (
 )
 
 var proxy *httputil.ReverseProxy
+
+type RegisterData struct {
+	Username        string `json:"username"`
+	Email           string `json:"email"`
+	EmailVisibility bool   `json:"emailVisibility"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
+	Name            string `json:"name"`
+}
 
 func vending_send(w http.ResponseWriter, r *http.Request) {
 	//access ward database
@@ -1181,6 +1192,9 @@ func readJSONDir(dirPath string) (map[string]interface{}, error) {
 	}
 
 	dirData := make(map[string]interface{})
+	// Include the meta file in the combined data
+	dirData[lastSegment] = metaFileData
+
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".json" && file.Name() != metaFileName {
 			filePath := filepath.Join(dirPath, file.Name())
@@ -1295,7 +1309,6 @@ func atc_com(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	initLogger()
 	logEntry(fmt.Sprintf("ward was activated! %s", time.Now()))
 
@@ -1305,13 +1318,13 @@ func main() {
 	}
 	proxy = httputil.NewSingleHostReverseProxy(apacheServerURL)
 
-	//	OSMOSIS-
-	//upkeep includes checking for updates to cache (calls httx_set)
+	// Start the periodic transaction check
+	startTransactionCheck()
 
 	router := http.NewServeMux()
 	router.HandleFunc("/httx_get/", httx_get)
 	//a request for html from a httx cached
-	router.HandleFunc("/httx_set/", httx_set)
+	//router.HandleFunc("/httx_set/", httx_set)
 	//a request to cache a broadcast(?) httx
 	router.HandleFunc("/command/", atc_com)
 	//atc tower simulation for mud style clients
@@ -1331,9 +1344,266 @@ func main() {
 	//mailing list
 	router.HandleFunc("/", serve)
 	//default to attempting to serve file via route
+	router.HandleFunc("/hypercloud_register/", hypercloud_register)
 
 	fmt.Println("ward transponder is active")
 	catalog("ward", "transponder is active")
 	log.Fatal(http.ListenAndServe(":8081", router))
 	defer close(logEntries)
+}
+
+// /////
+func startTransactionCheck() {
+	data := loadData()
+	dirDatabase, ok := data["dirDatabase"].(map[string]interface{})
+	if !ok {
+		log.Fatal("dirDatabase format incorrect")
+	}
+
+	listenCycle, ok := dirDatabase["listen_cycle"].(map[string]interface{})
+	if !ok {
+		log.Fatal("listen_cycle format incorrect")
+	}
+
+	whatsonchain, ok := listenCycle["whatsonchain"].(map[string]interface{})
+	if !ok {
+		log.Fatal("whatsonchain format incorrect")
+	}
+
+	for key, value := range whatsonchain {
+		prop, ok := value.(map[string]interface{})
+		if !ok {
+			log.Printf("Skipping invalid property: %s", key)
+			continue
+		}
+
+		address, ok := prop["address"].(string)
+		if !ok {
+			log.Printf("Address not found for property: %s", key)
+			continue
+		}
+
+		minutes, ok := prop["minute"].(float64)
+		if !ok {
+			log.Printf("Minute not found for property: %s", key)
+			continue
+		}
+
+		go startCycle(address, int(minutes))
+	}
+}
+
+func startCycle(address string, minutes int) {
+	log.Printf("Starting cycle for address: %s with interval: %d minutes", address, minutes)
+
+	// Perform the initial check immediately
+	log.Printf("Performing initial transaction check for address: %s", address)
+	checkAndFetchTransactions(address)
+
+	ticker := time.NewTicker(time.Duration(minutes) * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			log.Printf("Performing scheduled transaction check for address: %s", address)
+			checkAndFetchTransactions(address)
+		}
+	}
+}
+
+func checkAndFetchTransactions(address string) {
+	log.Printf("Checking transactions for address: %s", address)
+	utxoData, err := fetchUTXOData(address, false) // Fetch unconfirmed UTXOs
+	if err != nil {
+		log.Printf("Error fetching UTXO data: %v", err)
+		return
+	}
+
+	if len(utxoData) == 0 {
+		log.Printf("No unconfirmed UTXO data found for address: %s, checking confirmed UTXOs", address)
+		utxoData, err = fetchUTXOData(address, true) // Fetch confirmed UTXOs if unconfirmed are empty
+		if err != nil {
+			log.Printf("Error fetching confirmed UTXO data: %v", err)
+			return
+		}
+	}
+
+	if len(utxoData) == 0 {
+		log.Printf("No UTXO data found for address: %s", address)
+		return
+	}
+
+	for _, utxo := range utxoData {
+		txHash := utxo["tx_hash"].(string)
+		filePath := filepath.Join("dbs/main/bitcoin_testnet", txHash+".json")
+
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			log.Printf("Transaction %s not found, fetching data...", txHash)
+			txData, err := fetchTransactionData(txHash)
+			if err != nil {
+				log.Printf("Error fetching transaction data for %s: %v", txHash, err)
+				continue
+			}
+
+			err = writeTransactionJSON(filePath, txHash, txData)
+			if err != nil {
+				log.Printf("Error writing JSON file for %s: %v", txHash, err)
+			}
+		} else {
+			log.Printf("Transaction %s already exists, skipping...", txHash)
+		}
+	}
+}
+
+func fetchUTXOData(address string, confirmed bool) ([]map[string]interface{}, error) {
+	log.Printf("Fetching UTXO data for address: %s (confirmed: %t)", address, confirmed)
+	var lookup string
+	if confirmed {
+		lookup = fmt.Sprintf("https://api.whatsonchain.com/v1/bsv/test/address/%s/confirmed/unspent", address)
+	} else {
+		lookup = fmt.Sprintf("https://api.whatsonchain.com/v1/bsv/test/address/%s/unconfirmed/unspent", address)
+	}
+
+	resp, err := http.Get(lookup)
+	if err != nil {
+		log.Printf("HTTP request failed for address %s: %v", address, err)
+		return nil, fmt.Errorf("failed to fetch UTXOs: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Non-OK HTTP status for address %s: %d", address, resp.StatusCode)
+		return nil, fmt.Errorf("unexpected HTTP status: %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading response body for address %s: %v", address, err)
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		log.Printf("Error parsing JSON for address %s: %v", address, err)
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	if result, ok := data["result"].([]interface{}); ok {
+		if len(result) == 0 {
+			log.Printf("No UTXOs found for address: %s", address)
+		} else {
+			log.Printf("Found %d UTXOs for address: %s", len(result), address)
+		}
+
+		var utxos []map[string]interface{}
+		for _, item := range result {
+			if utxo, ok := item.(map[string]interface{}); ok {
+				utxos = append(utxos, utxo)
+			}
+		}
+		return utxos, nil
+	}
+
+	log.Printf("Unexpected data structure for address %s", address)
+	return nil, fmt.Errorf("unexpected data structure: %v", data)
+}
+
+func fetchTransactionData(txid string) (map[string]interface{}, error) {
+	log.Printf("Fetching transaction data for txid: %s", txid)
+	lookup := fmt.Sprintf("https://api.whatsonchain.com/v1/bsv/test/tx/%s", txid)
+	resp, err := http.Get(lookup)
+	if err != nil {
+		log.Printf("HTTP request failed: %v", err)
+		return nil, fmt.Errorf("failed to fetch transaction: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Non-OK HTTP status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected HTTP status: %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading response body: %v", err)
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		log.Printf("Error parsing JSON: %v", err)
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	return data, nil
+}
+
+func writeTransactionJSON(filePath, txHash string, txData map[string]interface{}) error {
+	log.Printf("Writing transaction JSON for txid: %s", txHash)
+	jsonData := map[string]interface{}{
+		"uri":   fmt.Sprintf("httxid:%s", txHash),
+		"aux":   "bitcoin_testnet",
+		"kind":  "httx",
+		"name":  fmt.Sprintf("xomud.quest/xo/httx %s...", txHash[:10]),
+		"media": txData,
+	}
+
+	jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+	if err != nil {
+		log.Printf("Error marshalling JSON: %v", err)
+		return fmt.Errorf("error marshalling JSON: %w", err)
+	}
+
+	err = ioutil.WriteFile(filePath, jsonBytes, 0644)
+	if err != nil {
+		log.Printf("Error writing JSON file: %v", err)
+		return fmt.Errorf("error writing JSON file: %w", err)
+	}
+
+	log.Printf("Transaction JSON written for %s", txHash)
+	return nil
+}
+
+func hypercloud_register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	var data RegisterData
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "Error parsing request body", http.StatusBadRequest)
+		return
+	}
+
+	// Placeholder check (e.g., validate data)
+	if data.Password != data.PasswordConfirm {
+		http.Error(w, "Passwords do not match", http.StatusBadRequest)
+		return
+	}
+
+	// Send data to PocketBase server
+	pbURL := "https://hypercloud.pockethost.io/api/collections/users/records"
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, "Error preparing data for PocketBase", http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := http.Post(pbURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil || resp.StatusCode != http.StatusOK {
+		http.Error(w, "Error sending data to PocketBase", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "User registered successfully")
 }
