@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
@@ -16,15 +17,20 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	"unicode"
+
+	badger "github.com/dgraph-io/badger/v3"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 )
 
 var proxy *httputil.ReverseProxy
+var db *badger.DB
+var dbsDB *badger.DB
 
 type RegisterData struct {
 	Username        string `json:"username"`
@@ -460,26 +466,29 @@ func subscribe(w http.ResponseWriter, r *http.Request) {
 }
 func dbs(w http.ResponseWriter, r *http.Request) {
 	// Load data from JSON file
-	data := loadData() // Ensure loadData() is defined to read from 'data.json'
+	data := loadData()
 	dirDatabase, ok := data["dirDatabase"].(map[string]interface{})
 	if !ok {
 		log.Printf("Error: dirDatabase format incorrect")
 		http.Error(w, "Internal Server Error: dirDatabase format incorrect", http.StatusInternalServerError)
 		return
 	}
+
 	chanIndex, ok := dirDatabase["chan_register"].(map[string]interface{})
 	if !ok {
-		log.Printf("Error: chan_register format incorrect, dirDatabase: %v, chanIndex: %v", dirDatabase, dirDatabase["chan_register"])
+		log.Printf("Error: chan_register format incorrect")
 		http.Error(w, "Internal Server Error: chan_register format incorrect", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("request serving: %s", "dbs begun")
+
+	// Read and parse request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading request body: %v", err)
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
+
 	var msg map[string]interface{}
 	err = json.Unmarshal(body, &msg)
 	if err != nil {
@@ -487,6 +496,7 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing request body", http.StatusInternalServerError)
 		return
 	}
+
 	// Extract properties
 	config, ok := msg["config"].(map[string]interface{})
 	if !ok {
@@ -494,91 +504,101 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid config", http.StatusBadRequest)
 		return
 	}
-	userfriendly, ok := config["user-friendly"]
-	if !ok {
-		userfriendly = "true" // user-friendly implicitly true unless prop exist
-	}
+
 	chanValue, ok := config["chan"].(string)
 	if !ok {
 		log.Printf("Error: Invalid chan value")
 		http.Error(w, "Invalid chan value", http.StatusBadRequest)
 		return
 	}
-	ccList, ok := msg["to"].([]interface{})
-	if !ok {
-		log.Printf("Error: Invalid cc list %s", msg)
-		http.Error(w, "Invalid cc list", http.StatusBadRequest)
-		return
-	}
-	log.Printf("dbs ccList %s chan: %s", ccList, chanValue)
-	combinedData := make(map[string]interface{})
-	// Create a JSON entry for metadata - address etc.
-	dbsSig := "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6" // skelly pubkey
+
 	chanAddress, ok := chanIndex[chanValue].(string)
 	if !ok {
 		log.Printf("Error: Invalid chan address")
 		http.Error(w, "Invalid chan address", http.StatusInternalServerError)
 		return
 	}
+
+	ccList, ok := msg["to"].([]interface{})
+	if !ok {
+		log.Printf("Error: Invalid cc list %s", msg)
+		http.Error(w, "Invalid cc list", http.StatusBadRequest)
+		return
+	}
+
+	// Create a slice to track successful compositions
+	var successfulCompositions []string
+
+	// Initialize combinedData with metadata
+	combinedData := make(map[string]interface{})
 	combinedData["_dbs_meta"] = map[string]interface{}{
-		"signature":   dbsSig,
+		"signature":   "0254578b3cd7bcb348cd97bdd0493ef0f5f336abd2590b2aef34a59bd287bc96a6", // skellykey
 		"chanValue":   chanValue,
 		"chanAddress": chanAddress,
 		"note":        "this is for metadata from dbs",
+		"index":       &successfulCompositions,
 	}
-	// Iterate through ccList
+
 	for _, ccItem := range ccList {
 		ccStr, ok := ccItem.(string)
 		if !ok {
 			log.Printf("Error: Invalid cc item")
-			http.Error(w, "Invalid cc item", http.StatusBadRequest)
-			return
+			continue
 		}
 
-		// Split the entry into aux path and art name
-		auxArtParts := strings.Split(ccStr, ":&:")
-		auxPath := auxArtParts[0]
-		var artName string
-		if len(auxArtParts) > 1 {
-			artName = auxArtParts[1]
+		composition, err := parseCompositionString(ccStr)
+		if err != nil {
+			log.Printf("Error parsing composition string: %v", err)
+			continue
 		}
+
+		var jsonData map[string]interface{}
 
 		// Read JSON data from the file or directory
-		var jsonData map[string]interface{}
-		if artName != "" {
-			// Specific art file
-			log.Printf("dbs auxparts %s", auxArtParts)
-			filePath := filepath.Join("dbs/main", auxPath, artName+".json")
+		if composition.Art != "" {
+			filePath := filepath.Join("dbs/main", composition.Path, composition.Art+".json")
 			jsonData, err = readJSONFile(filePath)
 			if err != nil {
 				log.Printf("Error reading file: %v", err)
-				combinedData[artName] = map[string]interface{}{
-					"error": fmt.Sprintf("Error reading file: %v", err),
-				}
 				continue
 			}
 		} else {
-			// Entire aux directory
-			dirPath := filepath.Join("dbs/main", auxPath)
+			dirPath := filepath.Join("dbs/main", composition.Path)
 			jsonData, err = readJSONDir(dirPath)
 			if err != nil {
 				log.Printf("Error reading directory: %v", err)
-				combinedData[auxPath] = map[string]interface{}{
-					"error": fmt.Sprintf("Error reading directory: %v", err),
-				}
 				continue
 			}
+
+			// NEW CODE: Process registry array if it exists
+			if metaData, ok := jsonData[filepath.Base(composition.Path)].(map[string]interface{}); ok {
+				if registry, ok := metaData["registry"].([]interface{}); ok {
+					log.Printf("Found registry with %d items", len(registry))
+					for _, artName := range registry {
+						if artStr, ok := artName.(string); ok {
+							artPath := filepath.Join(composition.Path, artStr+".json")
+							artData, err := readJSONFile(filepath.Join("dbs/main", artPath))
+							if err != nil {
+								log.Printf("Error reading art file %s: %v", artPath, err)
+								continue
+							}
+							jsonData[artStr] = artData
+							log.Printf("Added art file: %s", artStr)
+						}
+					}
+				}
+			}
 		}
-		var fee, subfee, vendor interface{}
-		if artName != "" {
+
+		var fee, subfee, vendor, userfriendly interface{}
+		if composition.Art != "" {
 			vendor = jsonData["vendor"]
 			fee = jsonData["fee"]
 			subfee = jsonData["subfee"]
 			userfriendly = jsonData["user-friendly"]
 		} else {
-			// Find the key that matches the last portion of the auxPath with an underscore prefix
-			auxPathParts := strings.Split(auxPath, "/")
-			lastPart := auxPathParts[len(auxPathParts)-1]
+			pathParts := strings.Split(composition.Path, "/")
+			lastPart := pathParts[len(pathParts)-1]
 			key := "_" + lastPart
 			if metaData, ok := jsonData[key].(map[string]interface{}); ok {
 				vendor = metaData["vendor"]
@@ -587,20 +607,20 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 				userfriendly = metaData["user-friendly"]
 			}
 		}
+
 		// Only check fee requirements if vendor property exists and userfriendly is nil
 		if vendor != nil && userfriendly == "true" {
-			// Split the remaining parts on ';;' to handle fee and subfee receipts
-			feeParts := strings.Split(ccStr, ";;")
-
-			// Check fee requirements
-			if !checkFee(auxPath, artName, feeParts, fee, vendor, subfee) {
+			if !checkFee(composition, fee, vendor, subfee) {
 				continue
 			}
 		}
 
+		// If we made it here, the composition was successful
+		successfulCompositions = append(successfulCompositions, ccStr)
+
 		// Add JSON data to combinedData
-		if artName != "" {
-			combinedData[artName] = jsonData
+		if composition.Art != "" {
+			combinedData[composition.Art] = jsonData
 		} else {
 			for key, value := range jsonData {
 				combinedData[key] = value
@@ -608,14 +628,13 @@ func dbs(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	jsonResponse, err := json.Marshal(combinedData)
-	if err != nil {
-		log.Printf("Error creating JSON response: %v", err)
-		http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
+	// Send the response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(combinedData); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
 }
 func port(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -961,93 +980,82 @@ func loadJavaScriptFile(filepath string) (string, error) {
 	return string(bytes), nil
 }
 func loadData() map[string]interface{} {
-	// Open the JSON file
-	jsonFile, err := os.Open("data.json")
-	if err != nil {
-		log.Fatalf("Error opening JSON file: %v", err)
-	}
-	defer jsonFile.Close()
+	result := make(map[string]interface{})
 
-	// Read the JSON file into a byte array
-	byteValue, err := io.ReadAll(jsonFile)
+	err := db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k := string(item.Key())
+
+			err := item.Value(func(v []byte) error {
+				var value interface{}
+				if err := json.Unmarshal(v, &value); err != nil {
+					return err
+				}
+				result[k] = value
+				return nil
+			})
+			if err != nil {
+				log.Printf("Error loading key %s: %v", k, err)
+			}
+		}
+		return nil
+	})
+
 	if err != nil {
-		log.Fatalf("Error reading JSON file: %v", err)
+		log.Printf("Error loading data: %v", err)
+		return nil
 	}
 
-	// Use a map of string to interface{} to hold the JSON data
-	var jsonData map[string]interface{}
-	err = json.Unmarshal(byteValue, &jsonData)
-	if err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
-	}
-
-	return jsonData
+	return result
 }
-func checkFee(auxPath, artName string, feeParts []string, fee, vendor, subfee interface{}) bool {
-	// Check for direct fee
+func checkFee(composition CompositionPath, fee, vendor, subfee interface{}) bool {
 	if fee != nil {
 		if fee == 0 { //free regardless of parent
 			return true
 		}
-		if artName != "" {
-			// Validate the art for the direct fee
-			for _, part := range feeParts {
-				if strings.HasPrefix(part, auxPath+":&:"+artName+";fee") {
-					receipt := strings.TrimPrefix(part, auxPath+":&:"+artName+";fee;")
-					// Placeholder for actual receipt validation
-					// if fee is null
-					if validateReceipt(receipt, fee, subfee, vendor) {
-						return true
-					}
-				}
-			}
-			if subfee != nil {
-				for _, part := range feeParts {
-					if strings.HasPrefix(part, auxPath+":&:"+artName+";sub") {
-						receipt := strings.TrimPrefix(part, auxPath+":&:"+artName+";sub;")
-						// Placeholder for actual receipt validation
-						if validateReceipt(receipt, fee, subfee, vendor) {
-							return checkParentFee(auxPath, feeParts)
-						}
-					}
-				}
-				return false // Subfee exists but no valid receipt found
-			}
-		}
-		// Validate the aux for the direct fee
-		for _, part := range feeParts {
-			if strings.HasPrefix(part, auxPath+";fee") {
-				receipt := strings.TrimPrefix(part, auxPath+";fee;")
-				// Placeholder for actual receipt validation
-				if validateReceipt(receipt, fee, subfee, vendor) {
+
+		// Check for direct fee receipt
+		for _, receipt := range composition.Receipts {
+			if receipt.Type == "fee" {
+				if validateReceipt(receipt.TXID, fee, subfee, vendor) {
 					return true
 				}
 			}
 		}
-		//client gave no valid directfee
+
+		if subfee != nil {
+			for _, receipt := range composition.Receipts {
+				if receipt.Type == "sub" {
+					if validateReceipt(receipt.TXID, fee, subfee, vendor) {
+						return checkParentFee(composition.Path, composition.Receipts)
+					}
+				}
+			}
+			return false
+		}
 		return false
 	}
 
 	// Check for subfee
 	if subfee != nil {
-		// Validate the receipt for the subfee
-		for _, part := range feeParts {
-			if strings.HasPrefix(part, auxPath+";sub") {
-				receipt := strings.TrimPrefix(part, auxPath+";sub;")
-				// Placeholder for actual receipt validation
-				if validateReceipt(receipt, fee, subfee, vendor) {
-					// Check parent directories for a direct fee
-					return checkParentFee(auxPath, feeParts)
+		for _, receipt := range composition.Receipts {
+			if receipt.Type == "sub" {
+				if validateReceipt(receipt.TXID, fee, subfee, vendor) {
+					return checkParentFee(composition.Path, composition.Receipts)
 				}
 			}
+			return false
 		}
-		return false
 	}
-
-	// No fee or subfee found, check parent directories
-	return checkParentFee(auxPath, feeParts)
+	return checkParentFee(composition.Path, composition.Receipts)
 }
-func checkParentFee(auxPath string, feeParts []string) bool {
+
+func checkParentFee(auxPath string, feeParts []Receipt) bool {
 	parentPath := auxPath
 	for {
 		parentPath = filepath.Dir(parentPath)
@@ -1068,12 +1076,8 @@ func checkParentFee(auxPath string, feeParts []string) bool {
 			}
 			// Validate the receipt for the direct fee
 			for _, part := range feeParts {
-				if strings.HasPrefix(part, parentPath+";fee") {
-					receipt := strings.TrimPrefix(part, parentPath+";fee;")
-					// Placeholder for actual receipt validation
-					if validateReceipt(receipt, fee, metaFileData["subfee"], metaFileData["vendor"]) {
-						return true
-					}
+				if part.TXID == fee {
+					return true
 				}
 			}
 			return false
@@ -1081,17 +1085,11 @@ func checkParentFee(auxPath string, feeParts []string) bool {
 		if subfee, ok := metaFileData["subfee"]; ok {
 			// Validate the receipt for the subfee
 			for _, part := range feeParts {
-				if strings.HasPrefix(part, parentPath+";sub") {
-					receipt := strings.TrimPrefix(part, parentPath+";sub;")
-					// Placeholder for actual receipt validation
-					// Check parent directories for a direct fee
-					if validateReceipt(receipt, metaFileData["fee"], subfee, metaFileData["vendor"]) {
-						// Continue to the next parent directory
-						break
-					}
+				if part.TXID == subfee {
+					return true
 				}
 			}
-			return false // Subfee exists but no valid receipt found
+			return false
 		}
 	}
 	return false
@@ -1129,86 +1127,119 @@ func validateReceipt(receipt string, fee, subfee, vendor interface{}) bool {
 	return true
 }
 func readJSONFile(path string) (map[string]interface{}, error) {
-	// Prepend "dbs/main" to the file path
+	// Convert file path to key using the same logic as boom:
+	key := strings.ReplaceAll(path, "/", "\\") // Normalize to backslashes to match storage
+	key = strings.TrimPrefix(key, "dbs\\")     // Remove dbs prefix if present
+	key = strings.TrimSuffix(key, ".json")
 
-	fileContent, err := os.ReadFile(path)
+	log.Printf("Reading from BadgerDB - Key: %s", key)
+
+	var result map[string]interface{}
+	err := dbsDB.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(key))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &result)
+		})
+	})
+
 	if err != nil {
+		log.Printf("Error reading from BadgerDB - Key: %s, Error: %v", key, err)
 		return nil, err
 	}
-	var fileData map[string]interface{}
-	err = json.Unmarshal(fileContent, &fileData)
-	if err != nil {
-		return nil, err
+
+	// Check if the result contains a "reference" property
+	if reference, ok := result["reference"].(string); ok {
+		return readJSONFile(reference)
 	}
 
-	// Check if the fileData contains a "reference" property
-	if reference, ok := fileData["reference"].(string); ok {
-		// Perform the function again on the referenced path
-		refpath := filepath.Join("dbs/main", reference)
-		return readJSONFile(refpath)
-	}
-
-	return fileData, nil
+	return result, nil
 }
 func readJSONDir(dirPath string) (map[string]interface{}, error) {
 	// Extract the last segment of the path
 	lastSegment := filepath.Base(dirPath)
-	metaFileName := "_" + lastSegment + ".json"
-	metaFilePath := filepath.Join(dirPath, metaFileName)
 
-	// Check if the meta file exists
-	_, err := os.Stat(metaFilePath)
-	if os.IsNotExist(err) {
-		log.Printf("Error: Meta file %s not found in directory %s", metaFileName, dirPath)
-		return nil, fmt.Errorf("meta file %s not found", metaFileName)
-	} else if err != nil {
-		log.Printf("Error checking meta file: %v", err)
-		return nil, err
-	}
+	// Convert directory path to key
+	dirKey := strings.ReplaceAll(dirPath, "/", "\\")
+	dirKey = strings.TrimPrefix(dirKey, "dbs\\")
+	metaKey := dirKey + "\\_" + lastSegment
 
-	// Read and parse the meta file
-	metaFileData, err := readJSONFile(metaFilePath)
+	log.Printf("Reading directory from BadgerDB - Key: %s", metaKey)
+
+	// Read meta file
+	var metaFileData map[string]interface{}
+	err := dbsDB.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(metaKey))
+		if err != nil {
+			return err
+		}
+		return item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &metaFileData)
+		})
+	})
+
 	if err != nil {
-		log.Printf("Error reading meta file %s: %v", metaFileName, err)
+		log.Printf("Error reading meta file from BadgerDB - Key: %s, Error: %v", metaKey, err)
 		return nil, err
 	}
 
 	// Check for "compose" property
 	compose, ok := metaFileData["compose"].(bool)
-	if !ok {
-		log.Printf("Error: 'compose' property not found or not a boolean in %s", metaFileName)
-		return nil, fmt.Errorf("'compose' property not found or not a boolean in %s", metaFileName)
-	}
-
-	if !compose {
-		log.Printf("Compose is set to false in %s, skipping directory reading", metaFileName)
+	if !ok || !compose {
+		log.Printf("Compose is not true for %s, skipping directory reading", metaKey)
 		return nil, nil
 	}
 
-	// If we've made it here, compose is true, so we proceed with reading the directory
-	files, err := os.ReadDir(dirPath)
+	dirData := make(map[string]interface{})
+	dirData[lastSegment] = metaFileData
+
+	// List all keys with this prefix
+	prefix := dirKey
+	if !strings.HasSuffix(prefix, "\\") {
+		prefix += "\\"
+	}
+
+	err = dbsDB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = []byte(prefix)
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k := string(item.Key())
+
+			// Skip meta file
+			if strings.HasSuffix(k, "\\_"+lastSegment) {
+				continue
+			}
+
+			err := item.Value(func(v []byte) error {
+				var fileData map[string]interface{}
+				if err := json.Unmarshal(v, &fileData); err != nil {
+					return err
+				}
+
+				key := filepath.Base(k)
+				key = strings.TrimSuffix(key, ".json")
+				dirData[key] = fileData
+				return nil
+			})
+
+			if err != nil {
+				log.Printf("Error reading value for key %s: %v", k, err)
+			}
+		}
+		return nil
+	})
+
 	if err != nil {
+		log.Printf("Error iterating through directory: %v", err)
 		return nil, err
 	}
 
-	dirData := make(map[string]interface{})
-	// Include the meta file in the combined data
-	dirData[lastSegment] = metaFileData
-
-	for _, file := range files {
-		if filepath.Ext(file.Name()) == ".json" && file.Name() != metaFileName {
-			filePath := filepath.Join(dirPath, file.Name())
-			fileData, err := readJSONFile(filePath)
-			if err != nil {
-				dirData[file.Name()] = map[string]interface{}{
-					"error": fmt.Sprintf("Error reading file: %v", err),
-				}
-				continue
-			}
-			key := strings.TrimSuffix(file.Name(), ".json")
-			dirData[key] = fileData
-		}
-	}
 	return dirData, nil
 }
 
@@ -1308,51 +1339,74 @@ func atc_com(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	initLogger()
-	logEntry(fmt.Sprintf("ward was activated! %s", time.Now()))
+//// VENDING
 
-	apacheServerURL, err := url.Parse("http://localhost:3301")
-	if err != nil {
-		log.Fatal(err)
+func vendor_check(w http.ResponseWriter, r *http.Request) {
+	// Get waltar token and ID from headers
+	waltarToken := r.Header.Get("Authorization")
+	waltarID := r.Header.Get("X-Waltar-ID")
+
+	// Verify token
+	if !verifyWaltarToken(waltarToken, waltarID) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
-	proxy = httputil.NewSingleHostReverseProxy(apacheServerURL)
 
-	// Start the periodic transaction check
-	startTransactionCheck()
+	// Check if vendor exists in BadgerDB
+	err := db.View(func(txn *badger.Txn) error {
+		key := []byte("vendorIndex:" + waltarID)
+		_, err := txn.Get(key)
+		return err
+	})
 
-	router := http.NewServeMux()
-	router.HandleFunc("/httx_get/", httx_get)
-	//a request for html from a httx cached
-	//router.HandleFunc("/httx_set/", httx_set)
-	//a request to cache a broadcast(?) httx
-	router.HandleFunc("/command/", atc_com)
-	//atc tower simulation for mud style clients
-	router.HandleFunc("/dvrbox/", dvrbox_send)
-	//a request is received for a list of imports
-	router.HandleFunc("/dvrmod/", dvrmod_send)
-	//a request is received for import of module
-	router.HandleFunc("/vending/", vending_send)
-	//a request for a list of contents from department
-	router.HandleFunc("/solicit/", solicit_offer)
-	//a request for an offer to be generated for a program
-	router.HandleFunc("/dbs/", dbs)
-	//a request for dvr items
-	router.HandleFunc("/port/", port)
-	//a request for a JWT token
-	router.HandleFunc("/subscribe", subscribe)
-	//mailing list
-	router.HandleFunc("/", serve)
-	//default to attempting to serve file via route
-	router.HandleFunc("/hypercloud_register/", hypercloud_register)
+	if err == badger.ErrKeyNotFound {
+		http.Error(w, "Vendor not found", http.StatusNotFound)
+		return
+	}
 
-	fmt.Println("ward transponder is active")
-	catalog("ward", "transponder is active")
-	log.Fatal(http.ListenAndServe(":8081", router))
-	defer close(logEntries)
+	w.WriteHeader(http.StatusOK)
+}
+func register_vendor(w http.ResponseWriter, r *http.Request) {
+	waltarToken := r.Header.Get("Authorization")
+	waltarID := r.Header.Get("X-Waltar-ID")
+
+	// Verify token
+	if !verifyWaltarToken(waltarToken, waltarID) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get pubkey from Hypercloud
+	pubkey, err := getPubKeyFromHypercloud(waltarID)
+	if err != nil {
+		http.Error(w, "Failed to get pubkey", http.StatusInternalServerError)
+		return
+	}
+
+	// Create vendor entry
+	vendorData := map[string]interface{}{
+		"hdpub": pubkey,
+		"items": []string{},
+	}
+
+	// Store in BadgerDB
+	err = db.Update(func(txn *badger.Txn) error {
+		data, err := json.Marshal(vendorData)
+		if err != nil {
+			return err
+		}
+		return txn.Set([]byte("vendorIndex:"+waltarID), data)
+	})
+
+	if err != nil {
+		http.Error(w, "Failed to create vendor", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-// /////
+// // HTTX MANAGEMENT
 func startTransactionCheck() {
 	data := loadData()
 	dirDatabase, ok := data["dirDatabase"].(map[string]interface{})
@@ -1565,45 +1619,755 @@ func writeTransactionJSON(filePath, txHash string, txData map[string]interface{}
 	return nil
 }
 
-func hypercloud_register(w http.ResponseWriter, r *http.Request) {
+///WALTAR
+
+func waltar_register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		sendError(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		sendError(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
 
-	var data RegisterData
-	err = json.Unmarshal(body, &data)
+	var data struct {
+		Username        string `json:"username"`
+		Email           string `json:"email"`
+		EmailVisibility bool   `json:"emailVisibility"`
+		Password        string `json:"password"`
+		PasswordConfirm string `json:"passwordConfirm"`
+		Name            string `json:"name"`
+		Signature       string `json:"signature"`
+	}
+
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+		sendError(w, "Error parsing request body", http.StatusBadRequest)
+		return
+	}
+
+	// Create the message that was signed
+	messageObj := struct {
+		PublicKey string `json:"publicKey"`
+		Timestamp string `json:"timestamp"`
+	}{
+		PublicKey: data.Username,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	messageBytes, err := json.Marshal(messageObj)
 	if err != nil {
-		http.Error(w, "Error parsing request body", http.StatusBadRequest)
+		sendError(w, "Error creating message", http.StatusInternalServerError)
 		return
 	}
 
-	// Placeholder check (e.g., validate data)
-	if data.Password != data.PasswordConfirm {
-		http.Error(w, "Passwords do not match", http.StatusBadRequest)
-		return
-	}
+	log.Printf("Message to verify: %s", string(messageBytes))
+	log.Printf("Received signature: %s", data.Signature)
+	log.Printf("Public key: %s", data.Username)
 
-	// Send data to PocketBase server
+	// Forward to Hypercloud using the stored body
 	pbURL := "https://hypercloud.pockethost.io/api/collections/users/records"
-	jsonData, err := json.Marshal(data)
+	resp, err := http.Post(pbURL, "application/json", bytes.NewReader(bodyBytes))
 	if err != nil {
-		http.Error(w, "Error preparing data for PocketBase", http.StatusInternalServerError)
+		sendError(w, "Error forwarding to Hypercloud", http.StatusInternalServerError)
 		return
 	}
+	defer resp.Body.Close()
 
-	resp, err := http.Post(pbURL, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil || resp.StatusCode != http.StatusOK {
-		http.Error(w, "Error sending data to PocketBase", http.StatusInternalServerError)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		sendError(w, fmt.Sprintf("Hypercloud error: %s", string(body)), resp.StatusCode)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "User registered successfully")
+}
+func sendError(w http.ResponseWriter, message string, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
+func waltar_login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		sendError(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Read request body
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error reading request body: %v", err)
+		sendError(w, "Error reading request body", http.StatusBadRequest)
+		return
+	}
+
+	// Parse request data
+	var loginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := json.Unmarshal(bodyBytes, &loginRequest); err != nil {
+		log.Printf("Error parsing request JSON: %v", err)
+		sendError(w, "Error parsing request body", http.StatusBadRequest)
+		return
+	}
+
+	// Create Hypercloud request
+	pbRequest := map[string]string{
+		"identity": loginRequest.Email,
+		"password": loginRequest.Password,
+	}
+
+	pbBody, err := json.Marshal(pbRequest)
+	if err != nil {
+		log.Printf("Error creating Hypercloud request body: %v", err)
+		sendError(w, "Error creating request", http.StatusInternalServerError)
+		return
+	}
+
+	// Make request to Hypercloud
+	pbURL := "https://hypercloud.pockethost.io/api/collections/users/auth-with-password"
+	pbReq, err := http.NewRequest("POST", pbURL, bytes.NewReader(pbBody))
+	if err != nil {
+		log.Printf("Error creating Hypercloud request: %v", err)
+		sendError(w, "Error creating request", http.StatusInternalServerError)
+		return
+	}
+	pbReq.Header.Set("Content-Type", "application/json")
+
+	// Execute request
+	client := &http.Client{}
+	pbResp, err := client.Do(pbReq)
+	if err != nil {
+		log.Printf("Error making Hypercloud request: %v", err)
+		sendError(w, "Error connecting to Hypercloud", http.StatusInternalServerError)
+		return
+	}
+	defer pbResp.Body.Close()
+
+	// Read Hypercloud response
+	pbRespBody, err := ioutil.ReadAll(pbResp.Body)
+	if err != nil {
+		log.Printf("Error reading Hypercloud response: %v", err)
+		sendError(w, "Error reading Hypercloud response", http.StatusInternalServerError)
+		return
+	}
+
+	// If Hypercloud request failed, forward the error
+	if pbResp.StatusCode != http.StatusOK {
+		log.Printf("Hypercloud error response: %s", string(pbRespBody))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(pbResp.StatusCode)
+		w.Write(pbRespBody)
+		return
+	}
+
+	// Parse Hypercloud response to extract necessary data
+	var pbResponse struct {
+		Token  string `json:"token"`
+		Record struct {
+			ID       string `json:"id"`
+			Username string `json:"username"`
+			Email    string `json:"email"`
+		} `json:"record"`
+	}
+
+	if err := json.Unmarshal(pbRespBody, &pbResponse); err != nil {
+		log.Printf("Error parsing Hypercloud response: %v", err)
+		sendError(w, "Error processing authentication response", http.StatusInternalServerError)
+		return
+	}
+
+	// Create our response with the necessary data
+	response := map[string]interface{}{
+		"token":    pbResponse.Token,
+		"id":       pbResponse.Record.ID,
+		"username": pbResponse.Record.Username,
+		"email":    pbResponse.Record.Email,
+	}
+
+	// Send response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Error encoding response: %v", err)
+		sendError(w, "Error creating response", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Login successful for user: %s (ID: %s)", pbResponse.Record.Username, pbResponse.Record.ID)
+}
+func verifyWaltarToken(token string, id string) bool {
+	// Remove "Bearer " prefix if present
+	token = strings.TrimPrefix(token, "Bearer ")
+
+	// Make request to Hypercloud to verify token
+	url := fmt.Sprintf("https://hypercloud.pockethost.io/api/collections/users/records/%s", id)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Printf("Error creating request: %v", err)
+		return false
+	}
+
+	// Add token to request
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error making request: %v", err)
+		return false
+	}
+	defer resp.Body.Close()
+
+	// If response is 200, token is valid
+	return resp.StatusCode == 200
+}
+func getPubKeyFromHypercloud(id string) (string, error) {
+	url := fmt.Sprintf("https://xomud.pockethost.io/api/collections/users/records/%s", id)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user data: %v", err)
+	}
+	defer resp.Body.Close()
+
+	var userData struct {
+		Username string `json:"username"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&userData); err != nil {
+		return "", fmt.Errorf("failed to decode user data: %v", err)
+	}
+
+	if userData.Username == "" {
+		return "", fmt.Errorf("no public key found for user")
+	}
+
+	return userData.Username, nil
+}
+
+// New structs for request parsing
+type Receipt struct {
+	Type string // "fee" or "sub"
+	TXID string
+}
+
+type CompositionPath struct {
+	Path     string
+	Art      string
+	Receipts []Receipt
+}
+
+func parseCompositionString(s string) (CompositionPath, error) {
+	params, err := url.ParseQuery(s)
+	if err != nil {
+		return CompositionPath{}, err
+	}
+
+	composition := CompositionPath{
+		Path: params.Get("path"),
+		Art:  params.Get("art"),
+	}
+
+	// Parse receipts
+	for key, values := range params {
+		if strings.HasPrefix(key, "r") && len(values) > 0 {
+			parts := strings.Split(values[0], ":")
+			if len(parts) == 2 {
+				composition.Receipts = append(composition.Receipts, Receipt{
+					Type: parts[0],
+					TXID: parts[1],
+				})
+			}
+		}
+	}
+
+	return composition, nil
+}
+
+func saveData(key string, value interface{}) error {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
+	return db.Update(func(txn *badger.Txn) error {
+		return txn.Set([]byte(key), data)
+	})
+}
+
+func startTerminalInput() {
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		if scanner.Scan() {
+			input := scanner.Text()
+			handleTerminalCommand(input)
+		}
+	}
+}
+
+func handleTerminalCommand(cmd string) {
+	// Split the command to handle arguments
+	parts := strings.Fields(cmd)
+	if len(parts) == 0 {
+		return
+	}
+
+	switch strings.ToLower(parts[0]) {
+	case "status":
+		fmt.Printf("\nStatus: good!\n")
+		fmt.Printf("Active since: %s\n", time.Now().Format(time.RFC3339))
+		fmt.Printf("Database status: %s\n", getDatabaseStatus())
+		fmt.Printf("Active connections: %d\n", getActiveConnections())
+		fmt.Printf("Memory usage: %s\n\n", getMemoryUsage())
+	case "help":
+		fmt.Printf("\nAvailable commands:\n")
+		fmt.Printf("- status: Show server status and diagnostics\n")
+		fmt.Printf("- help: Show this help message\n")
+		fmt.Printf("- boom: Migrate dbs json to badger (dbs/main -> dbsDB)\n")
+		fmt.Printf("- unboom: Export badger contents to dbs json files (dbsDB -> dbs/main)\n")
+		fmt.Printf("- vendorlist: Display all vendor keys\n")
+		fmt.Printf("- dbsdel <path>: Delete an item from dbsDB (e.g., 'dbsdel testkit/dumb')\n")
+		fmt.Printf("  Options: -f (file) or -d (directory)\n\n")
+		fmt.Printf("- permaboom: Delete and rebuild the entire dbs database from scratch\n")
+		fmt.Printf("  WARNING: This will delete all existing data in the database!\n\n")
+	case "boom":
+		performMigration()
+	case "unboom":
+		performReverseOperation()
+	case "vendorlist":
+		displayVendorList()
+	case "dbsdel":
+		if len(parts) < 3 {
+			fmt.Printf("\nError: Please specify -f (file) or -d (directory) and a path\n")
+			fmt.Printf("Example: 'dbsdel -f testkit/dumb' for a file\n")
+			fmt.Printf("Example: 'dbsdel -d testkit/dumb' for a directory\n\n")
+			return
+		}
+		flag := parts[1]
+		path := parts[2]
+
+		switch flag {
+		case "-f":
+			deleteDBSFile(path)
+		case "-d":
+			deleteDBSDirectory(path)
+		default:
+			fmt.Printf("\nError: Invalid flag. Use -f for file or -d for directory\n\n")
+		}
+	case "permaboom":
+		fmt.Printf("\nWARNING: This will delete the entire dbs database and rebuild it from scratch.")
+		fmt.Printf("\nAre you sure you want to continue? (yes/no): ")
+
+		scanner := bufio.NewScanner(os.Stdin)
+		if scanner.Scan() {
+			response := strings.ToLower(strings.TrimSpace(scanner.Text()))
+			if response == "yes" {
+				performPermaboom()
+			} else {
+				fmt.Printf("\nPermaboom cancelled.\n\n")
+			}
+		}
+	default:
+		fmt.Printf("\nUnknown command. Type 'help' for available commands.\n\n")
+	}
+}
+
+func deleteDBSFile(path string) {
+	fmt.Printf("\nAttempting to delete file: %s\n", path)
+
+	err := dbsDB.Update(func(txn *badger.Txn) error {
+		return txn.Delete([]byte(path))
+	})
+
+	if err == badger.ErrKeyNotFound {
+		fmt.Printf("Error: File '%s' not found in database\n\n", path)
+		return
+	}
+
+	if err != nil {
+		fmt.Printf("Error deleting file: %v\n\n", err)
+		return
+	}
+
+	fmt.Printf("Successfully deleted file: %s\n\n", path)
+}
+
+func deleteDBSDirectory(path string) {
+	fmt.Printf("\nAttempting to delete directory: %s/\n", path)
+
+	deleteCount := 0
+	err := dbsDB.Update(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = []byte(path + "/")
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		// Collect keys to delete
+		var keysToDelete []string
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			key := string(item.Key())
+			keysToDelete = append(keysToDelete, key)
+		}
+
+		// Delete all collected keys
+		for _, key := range keysToDelete {
+			fmt.Printf("Deleting: %s\n", key)
+			if err := txn.Delete([]byte(key)); err != nil {
+				return err
+			}
+			deleteCount++
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("Error during directory deletion: %v\n\n", err)
+		return
+	}
+
+	if deleteCount == 0 {
+		fmt.Printf("No entries found in directory: %s/\n\n", path)
+		return
+	}
+
+	fmt.Printf("\nSuccessfully deleted %d entries from directory: %s/\n\n", deleteCount, path)
+}
+
+func displayVendorList() {
+	fmt.Println("\nFetching vendor list...")
+
+	data := loadData()
+	vendorIndex, ok := data["vendorIndex"].(map[string]interface{})
+	if !ok {
+		fmt.Println("Error: Could not access vendor_index")
+		return
+	}
+
+	fmt.Println("\nVendor List:")
+	fmt.Println("------------")
+	count := 0
+	for key := range vendorIndex {
+		count++
+		fmt.Printf("%d. %s\n", count, key)
+	}
+	fmt.Printf("\nTotal vendors: %d\n\n", count)
+}
+
+// Helper functions for diagnostics
+func getDatabaseStatus() string {
+	if db == nil || dbsDB == nil {
+		return "Offline"
+	}
+	return "Online"
+}
+func getActiveConnections() int {
+	// This is a placeholder - implement actual connection tracking if needed
+	return 0
+}
+func getMemoryUsage() string {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return fmt.Sprintf("Alloc=%v MiB, Sys=%v MiB", m.Alloc/1024/1024, m.Sys/1024/1024)
+}
+func performMigration() {
+	fmt.Println("\nStarting migration from dbs directory...")
+	count := 0
+	overwritten := 0
+	start := time.Now()
+
+	// Walk through the dbs directory
+	err := filepath.Walk("dbs", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Printf("Error accessing path %q: %v\n", path, err)
+			return err
+		}
+
+		// Skip the root dbs directory itself
+		if path == "dbs" {
+			return nil
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Only process .json files
+		if !strings.HasSuffix(strings.ToLower(path), ".json") {
+			return nil
+		}
+
+		// Read the file
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			log.Printf("Error reading file %s: %v\n", path, err)
+			return nil
+		}
+
+		// Verify it's valid JSON
+		var jsonData interface{}
+		if err := json.Unmarshal(data, &jsonData); err != nil {
+			log.Printf("Error parsing JSON from file %s: %v\n", path, err)
+			return nil
+		}
+
+		// Get the relative path from the dbs directory
+		relPath, err := filepath.Rel("dbs", path)
+		if err != nil {
+			log.Printf("Error getting relative path for %s: %v\n", path, err)
+			return nil
+		}
+
+		// Remove .json extension to create the key
+		key := strings.TrimSuffix(relPath, ".json")
+
+		// Check if key already exists
+		exists := false
+		dbsDB.View(func(txn *badger.Txn) error {
+			_, err := txn.Get([]byte(key))
+			if err == nil {
+				exists = true
+			}
+			return nil
+		})
+
+		// Debug output
+		fmt.Printf("Processing: %s\n", path)
+		fmt.Printf("→ Key: %s", key)
+		if exists {
+			fmt.Printf(" (overwriting existing entry)")
+			overwritten++
+		}
+		fmt.Println()
+
+		// Store in BadgerDB
+		err = dbsDB.Update(func(txn *badger.Txn) error {
+			return txn.Set([]byte(key), data)
+		})
+
+		if err != nil {
+			log.Printf("Error storing in BadgerDB - Key: %s, Error: %v\n", key, err)
+			return nil
+		}
+
+		count++
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("\nError during migration: %v\n", err)
+		return
+	}
+
+	duration := time.Since(start)
+	fmt.Printf("\nMigration completed:\n")
+	fmt.Printf("Files processed: %d\n", count)
+	fmt.Printf("Entries overwritten: %d\n", overwritten)
+	fmt.Printf("Time taken: %v\n\n", duration)
+
+	// Verify migration
+	fmt.Println("Database contents after migration:")
+	fmt.Println("----------------------------------")
+	dbsDB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			k := string(item.Key())
+			fmt.Printf("Key: %s\n", k)
+		}
+		return nil
+	})
+}
+func performReverseOperation() {
+	fmt.Println("\nStarting export from BadgerDB...")
+	count := 0
+	start := time.Now()
+
+	err := dbsDB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			key := string(item.Key())
+
+			err := item.Value(func(v []byte) error {
+				// Construct the file path in the root directory
+				filePath := key + ".json"
+				dirPath := filepath.Dir(filePath)
+
+				// Debug output
+				fmt.Printf("Exporting key: %s\n", key)
+				fmt.Printf("→ To: %s\n", filePath)
+
+				// Ensure the directory structure exists
+				if err := os.MkdirAll(dirPath, 0755); err != nil {
+					return fmt.Errorf("error creating directory %s: %v", dirPath, err)
+				}
+
+				// Verify and format JSON
+				var jsonData interface{}
+				if err := json.Unmarshal(v, &jsonData); err != nil {
+					return fmt.Errorf("invalid JSON data for key %s: %v", key, err)
+				}
+
+				prettyJSON, err := json.MarshalIndent(jsonData, "", "  ")
+				if err != nil {
+					return fmt.Errorf("error formatting JSON for key %s: %v", key, err)
+				}
+
+				// Write the file
+				if err := ioutil.WriteFile(filePath, prettyJSON, 0644); err != nil {
+					return fmt.Errorf("error writing file %s: %v", filePath, err)
+				}
+
+				count++
+				return nil
+			})
+
+			if err != nil {
+				fmt.Printf("Error processing key %s: %v\n", key, err)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("\nError during export: %v\n", err)
+		return
+	}
+
+	duration := time.Since(start)
+	fmt.Printf("\nExport completed:\n")
+	fmt.Printf("Files exported: %d\n", count)
+	fmt.Printf("Time taken: %v\n\n", duration)
+
+	// Verify file system
+	fmt.Println("File system contents after export:")
+	fmt.Println("----------------------------------")
+	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && strings.HasSuffix(path, ".json") {
+			fmt.Printf("File: %s\n", path)
+		}
+		return nil
+	})
+}
+
+func performPermaboom() {
+	fmt.Printf("\nStarting permaboom operation...\n")
+
+	// Close the existing database connection
+	if err := dbsDB.Close(); err != nil {
+		fmt.Printf("Error closing database: %v\n", err)
+		return
+	}
+
+	// Delete the database directory
+	if err := os.RemoveAll("dbs_data"); err != nil {
+		fmt.Printf("Error deleting database directory: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Database deleted successfully.\n")
+
+	// Reopen the database with fresh options
+	opts := badger.DefaultOptions("dbs_data").WithLogger(nil)
+	var err error
+	dbsDB, err = badger.Open(opts)
+	if err != nil {
+		fmt.Printf("Error reopening database: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Database reopened successfully.\n")
+	fmt.Printf("Starting fresh migration...\n\n")
+
+	// Perform the migration
+	performMigration()
+
+	fmt.Printf("\nPermaboom completed successfully!\n\n")
+}
+
+//////////////
+
+func main() {
+	// Initialize BadgerDB
+	opts := badger.DefaultOptions("ward_data").WithLogger(nil)
+	var err error
+	db, err = badger.Open(opts)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+	defer db.Close()
+
+	// Initialize BadgerDB for DBS
+	opts = badger.DefaultOptions("dbs_data").WithLogger(nil)
+	dbsDB, err = badger.Open(opts)
+	if err != nil {
+		log.Fatalf("Failed to open DBS database: %v", err)
+	}
+	defer dbsDB.Close()
+
+	initLogger()
+	logEntry(fmt.Sprintf("ward was activated! %s", time.Now()))
+
+	apacheServerURL, err := url.Parse("http://localhost:3301")
+	if err != nil {
+		log.Fatal(err)
+	}
+	proxy = httputil.NewSingleHostReverseProxy(apacheServerURL)
+
+	// Start the periodic transaction check
+	startTransactionCheck()
+
+	// Start terminal input in a separate goroutine
+	go startTerminalInput()
+
+	router := http.NewServeMux()
+	router.HandleFunc("/httx_get/", httx_get)
+	//a request for html from a httx cached
+	//router.HandleFunc("/httx_set/", httx_set)
+	//a request to cache a broadcast(?) httx
+	router.HandleFunc("/command/", atc_com)
+	//atc tower simulation for mud style clients
+	router.HandleFunc("/dvrbox/", dvrbox_send)
+	//DEPRICATED
+	router.HandleFunc("/dvrmod/", dvrmod_send)
+	//DEPRECATED
+	router.HandleFunc("/vending/", vending_send)
+	//DEPRECATED
+	router.HandleFunc("/solicit/", solicit_offer)
+	//a request for an offer to be generated for a program
+	router.HandleFunc("/dbs/", dbs)
+	//a request for dvr items
+	router.HandleFunc("/port/", port)
+	//a request for a JWT token
+	router.HandleFunc("/subscribe", subscribe)
+	//mailing list
+	router.HandleFunc("/", serve)
+	//default to attempting to serve file via route
+	router.HandleFunc("/waltar_register/", waltar_register)
+	router.HandleFunc("/waltar_login/", waltar_login)
+	//WALTAR
+	router.HandleFunc("/vendor_check", vendor_check)
+	router.HandleFunc("/register_vendor", register_vendor)
+	//VENDING
+
+	fmt.Println("ward transponder is active")
+	fmt.Println("Type 'help' for available commands")
+	catalog("ward", "transponder is active")
+	log.Fatal(http.ListenAndServe(":8081", router))
+	defer close(logEntries)
 }

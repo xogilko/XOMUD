@@ -1,15 +1,17 @@
 export function activate_module(lain) {
     lain.rom.drag_init = () => {
         const initializedElements = new Set();
+        let highestZIndex = 1;
 
-        // Function to handle the dragging
         const draggin = (e) => {
             const element = e.target;
             if (element.closest('button')) return;
             if (element.closest('.dragged_content')) return;
+            if (element.hasAttribute('data-maximized')) return;
             e.preventDefault();
 
-            // Determine if the event is touch or mouse and set coordinates accordingly
+            element.style.zIndex = ++highestZIndex;
+
             const isTouchEvent = e.type.includes('touch');
             const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
             const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
@@ -17,20 +19,29 @@ export function activate_module(lain) {
             const rect = element.getBoundingClientRect();
             const offsetX = clientX - rect.left;
             const offsetY = clientY - rect.top;
-            const leftInPx = rect.left + window.scrollX;
-            const topInPx = rect.top + window.scrollY;
-            element.style.position = 'absolute';
-            element.style.left = leftInPx + 'px';
-            element.style.top = topInPx + 'px';
-            document.body.append(element);
+
+            let translateX = 0, translateY = 0;
+
+            const transform = window.getComputedStyle(element).transform;
+            if (transform !== 'none') {
+                const matrixValues = transform.match(/matrix.*\((.+)\)/);
+                if (matrixValues) {
+                    const values = matrixValues[1].split(', ');
+                    translateX = parseFloat(values[4]);
+                    translateY = parseFloat(values[5]);
+                }
+            }
 
             const dragMove = (moveEvent) => {
                 const moveClientX = isTouchEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
                 const moveClientY = isTouchEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
-                const newLeft = moveClientX - offsetX;
-                const newTop = moveClientY - offsetY;
-                element.style.left = newLeft + 'px';
-                element.style.top = newTop + 'px';
+                
+                const newX = moveClientX - offsetX;
+                const newY = moveClientY - offsetY;
+
+                const deltaX = newX - rect.left;
+                const deltaY = newY - rect.top;
+                element.style.transform = `translate(${translateX + deltaX}px, ${translateY + deltaY}px)`;
             };
 
             const dragEnd = () => {
@@ -47,38 +58,65 @@ export function activate_module(lain) {
         };
 
         const addDragEventListener = (element) => {
+            const draggedContent = element.querySelector('.dragged_content');
+            if (draggedContent) {
+                const resizeObserver = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            const style = draggedContent.style;
+                            if (style.width || style.height) {
+                                element.setAttribute('data-manually-resized', 'true');
+                            }
+                        }
+                    });
+                });
+
+                resizeObserver.observe(draggedContent, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+
+                if (element.style.width) {
+                    draggedContent.style.width = element.style.width;
+                    element.setAttribute('data-manually-resized', 'true');
+                }
+                if (element.style.height) {
+                    draggedContent.style.height = element.style.height;
+                    element.setAttribute('data-manually-resized', 'true');
+                }
+
+                element.style.removeProperty('width');
+                element.style.removeProperty('height');
+            }
+
             element.addEventListener('mousedown', draggin);
             element.addEventListener('touchstart', draggin);
             if (!initializedElements.has(element)) {
                 initializedElements.add(element);
             }
             element.style.position = 'absolute';
-                element.style.left = '12px';
-                element.style.top = '12px';
+            element.style.transform = 'translate(12px, 12px)';
         };
 
-        // Event delegation for drag events
         document.body.addEventListener('mousedown', (e) => {
-            if (e.target.matches('.draggable') && !initializedElements.has(e.target)) {
+            if (e.target.matches('x-testkit-draggable') && !initializedElements.has(e.target)) {
                 addDragEventListener(e.target);
                 draggin(e);
             }
         });
 
         document.body.addEventListener('touchstart', (e) => {
-            if (e.target.matches('.draggable') && !initializedElements.has(e.target)) {
+            if (e.target.matches('x-testkit-draggable') && !initializedElements.has(e.target)) {
                 addDragEventListener(e.target);
                 draggin(e);
             }
         });
 
-        // Mutation observer to handle dynamic elements
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1 && node.classList.contains('draggable') && !initializedElements.has(node)) {
+                    if (node.nodeType === 1 && node.nodeName === 'X-TESTKIT-DRAGGABLE' && !initializedElements.has(node)) {
                         addDragEventListener(node);
-                        // Manually trigger the draggin function to bring the element to the front
                         const simMouseDown = new MouseEvent('mousedown', {
                             view: window,
                             bubbles: true,
@@ -102,8 +140,7 @@ export function activate_module(lain) {
 
         observer.observe(document.body, { childList: true, subtree: true });
 
-        // Initialize existing draggable elements
-        const draggableElements = document.querySelectorAll('.draggable');
+        const draggableElements = document.querySelectorAll('x-testkit-draggable');
         draggableElements.forEach(element => {
             addDragEventListener(element);
         });

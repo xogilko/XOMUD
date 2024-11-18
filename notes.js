@@ -1,5 +1,36 @@
 /*  42164 */
 
+/**
+ *      shop
+ *      categories
+ *      publish onchain forward msg to 
+ *      
+ *      server generates address for interaction
+ *      the vender user constructs a tx with the listing info
+ *      broadcast and send to server which indexes the listing
+ *      give login token and other metadata
+ *      server constructs a list for filtering listings
+ *      server tells client options for filters
+ *      serve list
+ * 
+ */
+/** november 4
+ * 
+ *  working on offline mode
+ *  x    receipt syntax -> query parameters
+ *  x    having /dbs return composition index in meta
+ *  >    gonna use this to filter /dbs call msg (add versioning)
+ * 
+ * 
+ * 
+ */
+
+/* october 30
+
+    waltar- register_ -> validate sig check (prevent dups?)
+    walter- login_ -> forward login token (unnecessary?)
+
+*/
 /* october 22
 
 

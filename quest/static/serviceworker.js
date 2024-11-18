@@ -156,34 +156,36 @@ let keychain_data = null;
 let privkey_data = null;
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'KEYCHAIN_START') {  
-        //navi reveals secure login origin
+        console.log('(sw) Keychain start received, storing sessionId:', event.data.data);
         keychain_data = event.data.data;
     }
 });
 
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'KEYCHAIN_STOP') {
-        //secure login reveals privkey given origin
+        console.log('(sw) Keychain stop received, storing encrypted key');
         if (keychain_data){
             privkey_data = event.data.data;
             event.ports[0].postMessage(keychain_data);
-            keychain_data=null;
+            keychain_data = null;
         }
         else {
-            console.log('keychain origin lost')
+            console.log('(sw) keychain origin lost');
         }
     }
 });
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'KEYCHAIN_INIT') {
-        //ask for privkey
+        console.log('(sw) Keychain init received, checking for stored key');
         if (privkey_data){
+            console.log('(sw) Found stored key, sending back');
             event.ports[0].postMessage(privkey_data);
             keychain_data = null;
             privkey_data = null;
         }
         else {
-            console.log('privkey lost')
+            console.log('(sw) No stored key found');
+            event.ports[0].postMessage(null);
         }
     }
 });

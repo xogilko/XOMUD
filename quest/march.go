@@ -71,7 +71,7 @@ var serviceURLs = []string{ //:>>> server map
 func seed(w http.ResponseWriter, r *http.Request) {
 
 	rootmap := []map[string]interface{}{
-		{"xomud_img": template.HTML(`<center><img src="https://xomud.quest/static/resources/hypert.gif" alt="star"><br>`)},
+		{"xomud_img": template.HTML(`<center><img src="https://xomud.quest/static/resources/kartogfx.gif" alt="star"><br>`)},
 		{"xomud_text": template.HTML(`<p>HYPERIMETRIK KARTOGFX<br><a href="https://xomud.quest/">xomud.quest</a></p></center>`)},
 	}
 
@@ -88,7 +88,7 @@ func enableCORS(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, hx-current-url, hx-request, hx-target, httx")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 
 		// Log headers for debugging
 		log.Printf("Response Headers: %v", w.Header())

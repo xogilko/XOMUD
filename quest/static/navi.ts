@@ -24,9 +24,13 @@ interface S {
         }
     };
 }
-const alice = (() => { 
+
+const alice = Object.freeze((() => { 
     const lain: S = {
-        profile: { 'sign': 'xo' },
+        profile: { 
+            'sign': 'xo',
+            'miho': ['protocol', 'navi']
+        },
         portal: '',
         chan: '',
         domset: 0,
@@ -35,19 +39,90 @@ const alice = (() => {
         rom: {},
         dvr: {}
     };
-    lain.profile['miho'] = ['protocol', 'navi'];
+
+    const getCaller = () => {
+        try {
+            const stack = new Error().stack || '';
+            let debugInfo = '=== Stack Analysis ===\n';
+            debugInfo += 'Full stack trace:\n' + stack + '\n\n';
+            
+            // Initial page load check
+            if (stack.includes('HTMLDocument.<anonymous>') && document.readyState !== 'complete') {
+                debugInfo += 'Found initial page load event\n';
+                console.log(debugInfo);
+                alert(debugInfo);
+
+                return 'protocol';
+            }
+    
+            // Check for eval contexts from navi
+            if (stack.includes('eval at initInterpreter') && stack.includes('navi.js')) {
+                debugInfo += 'Found navi interpreter context\n';
+                console.log(debugInfo);
+                alert(debugInfo);
+                return 'navi';
+            }
+    
+            const callerPatterns = [
+                /(\w+)<@/,                    // Firefox format
+                /(\w+)@/,                     // Safari format
+                /at\s+(\w+)\s+\(/,           // Chrome/Edge format
+                /at\s+(\w+)</,               // Another variant
+                /at\s+(\w+)(?=\s|$)/,        // More general 'at' format
+                /at\s+Object\.(\w+)\s+\(/,   // Object method format
+                /at\s+HTMLDocument\.(\w+)\s+\(/  // Event listener format
+            ];
+    
+            const stackLines = stack.split('\n').slice(1);
+            debugInfo += 'Checking lines:\n' + stackLines.join('\n') + '\n\n';
+    
+            for (const line of stackLines) {
+                debugInfo += 'Checking line: ' + line + '\n';
+                for (const pattern of callerPatterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        debugInfo += `Pattern match: ${pattern} -> ${match[1]}\n`;
+                        if (lain.profile['miho'].includes(match[1])) {
+                            debugInfo += `Found trusted caller: ${match[1]}\n`;
+                            console.log(debugInfo);
+                            alert(debugInfo);
+                            return match[1];
+                        }
+                    }
+                }
+            }
+            
+            debugInfo += 'Could not identify caller\n';
+            console.log(debugInfo);
+            alert(debugInfo);
+        } catch (e) {
+            console.log('Stack trace parsing failed: ' + e);
+            alert('Stack trace parsing failed: ' + e);
+        }
+        return null;
+    };
+
     const yasuo = () => {
-        //normally, yasuo checks the stack to carefully guard lain, but not todae
-        return true;
+        const caller = getCaller();
+        if (!caller) {
+            console.warn('Could not identify caller');
+            return false;
+        }
+
+        const isAuthorized = lain.profile['miho'].includes(caller);
+        
+        if (!isAuthorized) {
+            console.warn(`Unauthorized access attempt from ${caller}`);
+        }
+        
+        return isAuthorized;
     };
 
     return (inputLain?: S | string, email?: string) => {
         if (yasuo()) {
             if (typeof inputLain === 'object') {
-                // If inputLain is an object, assign it to lain
                 Object.assign(lain, inputLain);
             } else if (typeof inputLain === 'string') {
-                // If inputLain is a string, treat it as an email
                 email = inputLain;
             }
             
@@ -58,9 +133,15 @@ const alice = (() => {
             return email ? { success: false } : null;
         }
     };
-})();
-const navi = function(lain: S, ...rest: string[]) {
-    console.log("✩ navi called ✩", arguments);   
+})());
+const navi = Object.freeze(Object.defineProperty(
+    function navi(lain: S, ...rest: string[]) {
+    console.log("✩ navi called ✩", arguments);
+    lain = lain || alice() as S;
+    if (!lain) {
+        console.error('cant find lain!');
+        return { success: false };
+    }
     const eiri = (lain: S, input: S['dvr'][string], ...rest: string[]) => {
         const initInterpreter = (interpreter: S['dvr'][string]) => {
             try {
@@ -142,7 +223,6 @@ const navi = function(lain: S, ...rest: string[]) {
             if (!rest.includes('_ignore')) {
                 console.log('Branch 1.1: rest does not include "_ignore"');
                 lain.proc.push(rest);
-                console.log('sus comparison', lain, alice())
             } else {
                 console.log('Branch 1.2: rest includes "_ignore"');
             }
@@ -151,11 +231,21 @@ const navi = function(lain: S, ...rest: string[]) {
     catch(error){
         console.log('navi error: ', error)
     }
-    return { lain };
-};
-const protocol = async function () {
+    return { success: true, };
+},
+'_identity',
+{value: 'navi'}
+));
+const protocol = Object.freeze(Object.defineProperty(
+    async function protocol() {
+    Object.defineProperty(Error, 'prepareStackTrace', {
+        configurable: false,
+        writable: false,
+        value: (Error as any).prepareStackTrace
+    });
     console.log('"da wings of application state"')
     let lain = alice() as S;
+    console.log('we got alice', lain)
     const meta = Array.from(document.getElementsByTagName('meta')).reduce((acc, tag) => {
         Array.from(tag.attributes).forEach(attr => {
             acc[attr.name] = attr.value;
@@ -167,7 +257,7 @@ const protocol = async function () {
         return;
     }
     async function onboard() {
-        console.log(lain,"client requests init ✩");
+        console.log("client requests init ✩");
         lain.portal = meta['portal'];
         lain.profile['starboard'] = [];
         const hahahahaha = {
@@ -195,8 +285,7 @@ const protocol = async function () {
         return new Promise<void>((resolve) => {
             const messageChannel = new MessageChannel();
             messageChannel.port1.onmessage = function (event) {
-                if (event.data.data) {    
-                    console.log('navi bootstrap parsing:', lain, event.data);
+                if (event.data.data) {
                     Object.assign(lain, JSON.parse(event.data.data));
                     alice(lain);
                 } else {
@@ -247,7 +336,10 @@ const protocol = async function () {
     } catch (error) {
         console.error('Error in preflight:', error);
     }
-};
+},
+'_identity',
+{value: 'protocol'}
+));
 const chisa = (lain: S): void => {
     function series() {
         Object.values(lain.dvr).forEach(value => {
@@ -262,50 +354,93 @@ const chisa = (lain: S): void => {
     }
     if (!lain.profile['airplane-mode']) {
         let cc = [];
+
+        // New interfaces for type safety
+        interface Receipt {
+            type: 'fee' | 'sub';
+            txid: string | { fee: string; subfee: string };
+        }
+
+        interface CompositionPath {
+            path: string;
+            art?: string;
+            receipts: Receipt[];
+        }
+
         function collect(aux: string): string {
-            let receipts = [];
-            let hasDirectFee = false;            
-            let receipt = lain.dvr[aux]?.receipt?.fee;
-            if (receipt) {
-                receipts.push(`${aux};fee;${receipt}`);
-                hasDirectFee = true;
-            } else {
-                receipt = lain.dvr[aux]?.receipt?.subfee;
-                if (receipt) {
-                    receipts.push(`${aux};sub;${receipt}`);
+            const composition: CompositionPath = {
+                path: aux,
+                receipts: []
+            };
+
+            // Check for direct fee or subfee
+            const auxItem = lain.dvr[aux];
+            if (auxItem?.receipt) {
+                if (auxItem.receipt.fee) {
+                    composition.receipts.push({
+                        type: 'fee',
+                        txid: auxItem.receipt.fee
+                    });
+                } else if (auxItem.receipt.subfee) {
+                    composition.receipts.push({
+                        type: 'sub',
+                        txid: auxItem.receipt.subfee
+                    });
+                    
+                    // Check parent directories for fees
                     let parentAux = aux;
                     while (parentAux) {
                         parentAux = parentAux.split('/').slice(0, -1).join('/');
-                        let parentReceipt = lain.dvr[parentAux]?.receipt?.fee;
-                        if (parentReceipt) {
-                            receipts.push(`${parentAux};fee;${parentReceipt}`);
-                            hasDirectFee = true;
+                        const parentItem = lain.dvr[parentAux];
+                        
+                        if (parentItem?.receipt?.fee) {
+                            composition.receipts.push({
+                                type: 'fee',
+                                txid: parentItem.receipt.fee
+                            });
                             break;
-                        } else {
-                            parentReceipt = lain.dvr[parentAux]?.receipt?.subfee;
-                            if (parentReceipt) {
-                                receipts.push(`${parentAux};sub;${parentReceipt}`);
-                            } else {
-                                break;
-                            }
+                        } else if (parentItem?.receipt?.subfee) {
+                            composition.receipts.push({
+                                type: 'sub',
+                                txid: parentItem.receipt.subfee
+                            });
                         }
                     }
                 }
             }
-            const aux_meta = Object.values(lain.dvr).find(item => item.aux === aux && item.kind === "meta");
-            if (aux_meta) {
+
+            // Check for art-specific receipts
+            const aux_meta = Object.values(lain.dvr).find(
+                item => item.aux === aux && item.kind === "meta"
+            );
+            
+            if (aux_meta?.registry) {
                 aux_meta.registry.forEach(art => {
-                    let artReceipt = lain.dvr[`${aux}/${art}`]?.receipt?.subfee;
-                    if (artReceipt) {
-                        receipts.push(`${aux}:&:${art};sub;${artReceipt}`);
+                    const artItem = lain.dvr[`${aux}/${art}`];
+                    if (artItem?.receipt?.subfee) {
+                        composition.art = art;
+                        composition.receipts.push({
+                            type: 'sub',
+                            txid: artItem.receipt.subfee
+                        });
                     }
                 });
             }
 
-            if (!hasDirectFee) {
-                receipts.push(`${aux}`);
+            // Convert to query string
+            const params = new URLSearchParams();
+            params.set('path', composition.path);
+            if (composition.art) {
+                params.set('art', composition.art);
             }
-            return receipts.join(';;');
+            composition.receipts.forEach((receipt, index) => {
+                const txidValue = typeof receipt.txid === 'string' 
+                    ? receipt.txid 
+                    : `${receipt.txid.fee}:${receipt.txid.subfee}`;
+                params.set(`r${index}`, `${receipt.type}:${txidValue}`);
+            });
+
+            return params.toString();
         }
 
         lain.profile['starboard'].forEach((aux: string) => {
@@ -340,7 +475,7 @@ const chisa = (lain: S): void => {
                     lain.dvr[key] = value as S['dvr'][string];
                 }
             });
-            console.log("➜✉: art is cast into dvr!", lain);
+            console.log("➜✉: art is cast into dvr!");
         })
             .catch(error => {
             console.error('dvr download error:', error);

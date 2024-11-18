@@ -1,47 +1,80 @@
 export async function activate_module(lain) {
-    // Add Buffer.js script
-    const bufferScript = document.createElement('script');
-    bufferScript.src = 'https://star.xomud.quest/arch/lib/buffer.js';
-    document.head.appendChild(bufferScript);
+    if (typeof window.Buffer === 'undefined') {
+        window.Buffer = {
+            from: function(data, encoding) {
+                if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+                    return new Uint8Array(data);
+                }
+                if (encoding === 'utf8' || encoding === 'utf-8' || !encoding) {
+                    const encoder = new TextEncoder();
+                    return encoder.encode(data);
+                }
+                throw new Error('Unsupported encoding: ' + encoding);
+            },
+            
+            allocUnsafe: function(size) {
+                return new Uint8Array(size);
+            }
+        };
 
-    // Wait for Buffer to be available
-    console.log('Waiting for Buffer.js to load...');
-    while (typeof Buffer === 'undefined') {
-        console.log('Still waiting for Buffer.js...');
-        await new Promise(resolve => setTimeout(resolve, 100));
+        Uint8Array.prototype.copy = function(target, targetStart, sourceStart, sourceEnd) {
+            sourceStart = sourceStart || 0;
+            sourceEnd = sourceEnd || this.length;
+            targetStart = targetStart || 0;
+            
+            const sourceData = this.slice(sourceStart, sourceEnd);
+            target.set(sourceData, targetStart);
+            return sourceData.length;
+        };
     }
-    console.log('Buffer.js loaded successfully!');
 
-    // First add our Message implementation
     const Message = {
         magicBytes: Buffer.from('Bitcoin Signed Message:\n', 'utf8'),
         
         sign: function(message, privateKey) {
             try {
-                // Convert message to Buffer
                 const messageBuffer = Buffer.from(message, 'utf8');
-                console.log('Message buffer:', messageBuffer);
                 
-                // Create combined buffer
                 const combinedLength = this.magicBytes.length + messageBuffer.length;
                 const combined = Buffer.allocUnsafe(combinedLength);
                 
                 this.magicBytes.copy(combined, 0);
                 messageBuffer.copy(combined, this.magicBytes.length);
                 
-                console.log('Combined buffer:', combined);
+                const arrayData = Array.from(combined);
                 
-                // Create hash
-                const hash = bsv.crypto.Hash.sha256(combined);
-                console.log('Created hash:', hash);
+                const bsvBuffer = new bsv.deps.Buffer(arrayData);
+                const hash = bsv.crypto.Hash.sha256(bsvBuffer);
                 
-                // Sign the hash
                 const signature = bsv.crypto.ECDSA.sign(hash, privateKey);
                 return signature.toString();
             } catch (error) {
                 console.error('Error in Message.sign:', error);
                 throw error;
             }
+        }
+    };
+
+    lain.rom.keychain_sig_request = function(message) {
+        if (!mainPrivateKey) {
+            console.error('No private key available');
+            return null;
+        }
+
+        console.log('Received signing request for:', message);
+        
+        if (!confirm('Sign this message?')) {
+            return null;
+        }
+        console.log('User confirmation: true');
+
+        try {
+            const signature = Message.sign(message, mainPrivateKey);
+            console.log('Generated signature:', signature);
+            return signature;
+        } catch (error) {
+            console.error('Signing error:', error);
+            return null;
         }
     };
 
@@ -56,12 +89,11 @@ export async function activate_module(lain) {
     const introtext = document.createElement('div');
     const loginbutton = document.createElement('button');
     let data = null;
-    let currentIndex = 0; // Track the current index for child key generation
-    let mainPrivateKey; // Store the main private key
-    let isChildrenVisible = true; // For child key visibility state
-    let clearableElements = []; // Add this line for tracking elements to clear
+    let currentIndex = 0;
+    let mainPrivateKey;
+    let isChildrenVisible = true;
+    let clearableElements = [];
 
-    // Create a style element for the shadow DOM
     const style = document.createElement('style');
     style.textContent = `
         .fineprint {
@@ -76,7 +108,7 @@ export async function activate_module(lain) {
             border-radius: 5px;
             overflow: hidden;
             margin-top: 10px;
-            height: 10px; /* Make the progress bar more narrow */
+            height: 10px;
         }
         .progress-bar-fill {
             height: 100%;
@@ -101,8 +133,8 @@ export async function activate_module(lain) {
             border-collapse: collapse;
         }
         th, td {
-            border: 1px solid #555; /* Dark grey border */
-            padding: 4px; /* Reduced padding */
+            border: 1px solid #555;
+            padding: 4px;
             position: relative;
         }
         td.balance-cell {
@@ -124,7 +156,6 @@ export async function activate_module(lain) {
 
     const getScriptPubKey = (pubkey) => {
         const pubKeyHash = bsv.crypto.Hash.sha256ripemd160(pubkey.toBuffer()).toString('hex');
-        console.log('pkh:', pubKeyHash);
         return bsv.Script.fromASM(`OP_DUP OP_HASH160 ${pubKeyHash} OP_EQUALVERIFY OP_CHECKSIG`);
     };
 
@@ -134,7 +165,6 @@ export async function activate_module(lain) {
                 .then(response => response.json())
                 .then(data => {
                     if (!data || typeof data !== 'object' || !data.result) {
-                        console.error('Unexpected structure:', data);
                         return [];
                     }
                     return data.result.map(out => ({
@@ -176,9 +206,7 @@ export async function activate_module(lain) {
               .sign(privateKey);
 
             const serializedTx = tx.serialize();
-            console.log('Serialized Transaction:', serializedTx);
 
-            // Broadcast the transaction
             const response = await fetch('https://api.whatsonchain.com/v1/bsv/test/tx/raw', {
                 method: 'POST',
                 headers: {
@@ -188,7 +216,6 @@ export async function activate_module(lain) {
             });
 
             const result = await response.json();
-            console.log('Broadcast result:', result);
             return result;
         } catch (error) {
             console.error('Error in fireTX:', error);
@@ -207,68 +234,134 @@ export async function activate_module(lain) {
     }
 
     function initial() {
-        introtext.innerHTML = "<b>custodial auto-sign 🔑</b><br><i>protected via shadow dom</i><br>";
+        clearElements();
+        
+        const elements = [];
+        
+        introtext.innerHTML = "<b>custodial keychain 🔑</b><br><i>protected via shadow dom</i>";
+        target.secure(introtext);
+        elements.push(introtext);
+        
+        const hr = document.createElement('hr');
+        hr.style.marginTop = '10px';
+        target.secure(hr);
+        elements.push(hr);
+        
+        const modeToggle = document.createElement('div');
+        modeToggle.style.marginTop = '10px';
+        modeToggle.style.marginBottom = '10px';
+        elements.push(modeToggle);
+        
+        const toggleCheckbox = document.createElement('input');
+        toggleCheckbox.type = 'checkbox';
+        toggleCheckbox.id = 'newWindowMode';
+        
+        const toggleLabel = document.createElement('label');
+        toggleLabel.htmlFor = 'newWindowMode';
+        toggleLabel.innerHTML = ' <i>static mode (for autofill)</i>';
+        
+        modeToggle.appendChild(toggleCheckbox);
+        modeToggle.appendChild(toggleLabel);
+        target.secure(modeToggle);
+        
         loginbutton.innerText = 'submit credentials';
+        loginbutton.style.marginTop = '0px';
+        target.secure(loginbutton);
+        elements.push(loginbutton);
+        
         loginbutton.addEventListener('click', function() {
-            UserPhraseInput();
+            if (toggleCheckbox.checked) {
+                handleNewWindowMode();
+            } else {
+                UserPhraseInput();
+            }
         });
         
-        // Setup clearable elements
-        const clearableIntro = setupClearableElement(introtext);
-        const clearableButton = setupClearableElement(loginbutton);
-        
-        target.secure(clearableIntro);
-        target.secure(clearableButton);
+        clearableElements = elements;
+    }
+
+    function handleNewWindowMode() {
+        if (navigator.serviceWorker.controller) {
+            const sessionId = Math.random().toString(36).substring(7);
+            console.log('(keychain) Starting new window mode, sessionId:', sessionId);
+            lain.rom.testkit_corner();
+            navigator.serviceWorker.controller.postMessage({
+                type: 'KEYCHAIN_START',
+                data: sessionId
+            });
+            
+            // Direct redirect instead of new tab
+            window.location.href = 'https://xomud.quest/hypertext/testkit_keychain.php';
+        }
     }
 
     function UserPhraseInput() {
-        clearElements(); // Clear previous elements
+        clearElements();
 
-        privkey_info.innerHTML = `<b><i>Enter your credentials🔑</i></b><br>`;
-        const clearableInfo = setupClearableElement(privkey_info);
-        target.secure(clearableInfo);
+        const elements = [];
 
-        keychain_active.id = 'keychain_active';
-        const keychain_form = document.createElement('form');
-        keychain_form.id = 'keychain_form';
+        const info = document.createElement('div');
+        info.innerHTML = `<b><i>Enter your credentials🔑</i></b><br>`;
+        elements.push(info);
+        target.secure(info);
 
-        const email_input = document.createElement('input');
-        email_input.type = 'text';
-        email_input.id = 'email_input';
-        email_input.name = 'email';
-        email_input.placeholder = 'enter private key';
-        email_input.required = true;
+        const form = document.createElement('form');
+        form.id = 'keychain_form';
+        form.method = 'post';
+        form.setAttribute('autocomplete', 'on');
+        elements.push(form);
 
-        const password_input = document.createElement('input');
-        password_input.type = 'text';
-        password_input.id = 'password_input';
-        password_input.name = 'password';
-        password_input.placeholder = 'enter UTXO address';
-        password_input.required = true;
+        const phrase_input = document.createElement('input');
+        phrase_input.type = 'text';
+        phrase_input.id = 'username_input';
+        phrase_input.name = 'username';
+        phrase_input.placeholder = 'enter encryption phrase';
+        phrase_input.autocomplete = 'username webauthn';
+        phrase_input.required = true;
+
+        const lineBreak = document.createElement('br');
+
+        const privkey_input = document.createElement('input');
+        privkey_input.type = 'password';
+        privkey_input.id = 'password_input';
+        privkey_input.name = 'password';
+        privkey_input.placeholder = 'enter private key';
+        privkey_input.autocomplete = 'current-password';
+        privkey_input.required = true;
+
+        form.appendChild(phrase_input);
+        form.appendChild(lineBreak);
+        form.appendChild(privkey_input);
 
         const submit_button = document.createElement('button');
         submit_button.type = 'submit';
         submit_button.innerText = 'Submit';
+        form.appendChild(submit_button);
 
-        keychain_form.appendChild(email_input);
-        keychain_form.appendChild(password_input);
-        keychain_form.appendChild(submit_button);
-
-        const clearableForm = setupClearableElement(keychain_form);
-
-        keychain_form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', async function(event) {
             event.preventDefault();
-            const email = email_input.value;
-            const password = password_input.value;
-            keySecured(email, password);
+            try {
+                const privateKeyWIF = privkey_input.value;
+                clearElements();
+                await setupKeychainInterface(privateKeyWIF);
+            } catch (error) {
+                console.error('(keychain) Error:', error);
+                const errorMsg = document.createElement('div');
+                errorMsg.style.color = 'red';
+                errorMsg.innerText = 'Invalid private key format';
+                target.secure(errorMsg);
+                initial();
+            }
         });
 
-        target.secure(clearableForm);
+        clearableElements = elements;
+        target.secure(form);
     }
 
-    async function keySecured(email, password) {
+    async function keySecured(encryptedData) {
+        console.log('(keychain) Entering keySecured with data:', encryptedData);
+        
         try {
-            // Clear all existing clearable elements
             while (clearableElements.length > 0) {
                 const element = clearableElements.pop();
                 if (element && element.parentNode) {
@@ -276,162 +369,73 @@ export async function activate_module(lain) {
                 }
             }
 
-            // Create and secure new status elements
-            const statusMessage = document.createElement('div');
-            statusMessage.innerHTML = `<b><i>credentials secured🔑</i></b><br>`;
-            target.secure(statusMessage);
+            console.log('(keychain) Creating decryption UI');
+            const phraseInput = document.createElement('input');
+            phraseInput.type = 'text';
+            phraseInput.placeholder = 'Enter encryption phrase';
+            target.secure(phraseInput);
 
-            const processingMessage = document.createElement('div');
-            processingMessage.innerHTML = `Processing...`;
-            target.secure(processingMessage);
+            const decryptButton = document.createElement('button');
+            decryptButton.innerText = 'Decrypt';
+            target.secure(decryptButton);
 
-            // Set up the signing functionality
-            mainPrivateKey = email;
-            console.log('Set mainPrivateKey to:', mainPrivateKey);
+            decryptButton.addEventListener('click', async () => {
+                console.log('(keychain) Attempting decryption');
+                try {
+                    const enc = new TextEncoder();
+                    const keyMaterial = await window.crypto.subtle.importKey(
+                        'raw',
+                        enc.encode(phraseInput.value),
+                        { name: 'PBKDF2' },
+                        false,
+                        ['deriveKey']
+                    );
 
-            // Set up keychain signature request function
-            lain.rom.keychain_sig_request = async function(thingToSign) {
-                console.log('Received signing request for:', thingToSign);
-                return new Promise((resolve, reject) => {
-                    const userConfirmed = confirm("Do you want to sign this item?");
-                    console.log('User confirmation:', userConfirmed);
+                    const key = await window.crypto.subtle.deriveKey(
+                        {
+                            name: 'PBKDF2',
+                            salt: enc.encode('some_salt'),
+                            iterations: 100000,
+                            hash: 'SHA-256'
+                        },
+                        keyMaterial,
+                        { name: 'AES-GCM', length: 256 },
+                        true,
+                        ['decrypt']
+                    );
+
+                    console.log('(keychain) Key derived, attempting to decrypt');
+                    const decrypted = await window.crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: new Uint8Array(encryptedData.iv)
+                        },
+                        key,
+                        Uint8Array.from(atob(encryptedData.encryptedPrivateKey), c => c.charCodeAt(0))
+                    );
+
+                    const privateKeyWIF = new TextDecoder().decode(decrypted);
+                    console.log('(keychain) Successfully decrypted private key');
+
+                    // Remove decryption UI
+                    phraseInput.remove();
+                    decryptButton.remove();
+
+                    // Setup keychain interface with the decrypted private key
+                    await setupKeychainInterface(privateKeyWIF);
                     
-                    if (userConfirmed) {
-                        try {
-                            if (!mainPrivateKey) {
-                                throw new Error('Private key not set');
-                            }
-                            
-                            console.log('Using mainPrivateKey:', mainPrivateKey);
-                            const signature = Message.sign(thingToSign, mainPrivateKey);
-                            console.log('Generated signature:', signature);
-                            
-                            resolve(signature);
-                        } catch (error) {
-                            console.error('Signing failed:', error);
-                            reject('Signing failed: ' + error.message);
-                        }
-                    } else {
-                        reject('User declined to sign');
-                    }
-                });
-            };
-
-            // Now proceed with UTXO setup
-            mainPrivateKey = new bsv.PrivateKey.fromWIF(email);
-            const pubkey = mainPrivateKey.publicKey;
-            const utxos = await getUTXO(password, pubkey);
-            let totalValue = utxos.reduce((acc, utxo) => acc + utxo.value, 0);
-
-            // Remove processing message after UTXO setup
-            if (processingMessage.parentNode) {
-                processingMessage.parentNode.removeChild(processingMessage);
-            }
-
-            // Create and add the table
-            const table = document.createElement('table');
-            const headerRow = document.createElement('tr');
-            headerRow.innerHTML = `<th></th><th>Address</th><th>UTXO</th>`;
-            table.appendChild(headerRow);
-
-            const mainRow = document.createElement('tr');
-            mainRow.innerHTML = `<td>🔑</td><td><span class="fineprint">${password}</span></td><td class="balance-cell"><div class="balance-inner">???</div></td>`;
-            table.appendChild(mainRow);
-
-            target.secure(table);
-
-            // Create button container for better layout
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.marginTop = '10px';
-            buttonContainer.style.display = 'flex';
-            buttonContainer.style.gap = '10px';
-
-            // Generate child keys button
-            const generateKeysButton = document.createElement('button');
-            generateKeysButton.innerText = 'Generate Child Keys';
-            generateKeysButton.addEventListener('click', function() {
-                generateChildKeys(email, table);
-            });
-
-            // Toggle visibility button
-            const toggleButton = document.createElement('button');
-            toggleButton.innerText = '▲ Hide Children';
-            toggleButton.addEventListener('click', function() {
-                isChildrenVisible = !isChildrenVisible;
-                const childRows = table.querySelectorAll('.child-row');
-                childRows.forEach(row => {
-                    row.style.display = isChildrenVisible ? 'table-row' : 'none';
-                });
-                toggleButton.innerText = isChildrenVisible ? '▲ Hide Children' : '▼ Show Children';
-            });
-
-            buttonContainer.appendChild(generateKeysButton);
-            buttonContainer.appendChild(toggleButton);
-            target.secure(buttonContainer);
-
-            // Add refresh button
-            const refreshButton = document.createElement('button');
-            refreshButton.innerText = 'Refresh UTXO Balances';
-            refreshButton.addEventListener('click', function() {
-                refreshUTXOBalances(table);
-            });
-            target.secure(refreshButton);
-
-            // Add UTXO splitting functionality
-            const satoshiInput = document.createElement('input');
-            satoshiInput.type = 'number';
-            satoshiInput.placeholder = 'Enter satoshis';
-            satoshiInput.style.width = '50px';
-            target.secure(satoshiInput);
-
-            const splitButton = document.createElement('button');
-            splitButton.innerText = 'Split';
-            splitButton.addEventListener('click', function() {
-                const progressBar = document.createElement('div');
-                progressBar.className = 'progress-bar';
-                const progressBarFill = document.createElement('div');
-                progressBarFill.className = 'progress-bar-fill';
-                progressBar.appendChild(progressBarFill);
-                target.secure(progressBar);
-
-                const targetAddresses = Array.from(table.getElementsByTagName('tr'))
-                    .slice(1)
-                    .map(row => row.cells[1].textContent.trim());
-                
-                fireTX(utxos, targetAddresses, satoshiInput.value, password, mainPrivateKey)
-                    .then(result => {
-                        progressBarFill.style.width = '100%';
-                        setTimeout(() => {
-                            progressBar.remove();
-                            const successMessage = document.createElement('div');
-                            successMessage.className = 'success-message';
-                            successMessage.innerHTML = `Split successful! TXID: <span class="fineprint">${result.txid || result}</span>`;
-                            target.secure(successMessage);
-                        }, 500);
-                    })
-                    .catch(error => {
-                        console.error('Error broadcasting transaction:', error);
-                        progressBar.remove();
-                    });
-            });
-            target.secure(splitButton);
-
-            // Add the necessary CSS
-            const additionalStyle = document.createElement('style');
-            additionalStyle.textContent += `
-                .child-row {
-                    transition: all 0.3s ease;
+                } catch (error) {
+                    console.error('Decryption failed:', error);
+                    const errorMsg = document.createElement('div');
+                    errorMsg.style.color = 'red';
+                    errorMsg.innerText = 'Incorrect encryption phrase';
+                    target.secure(errorMsg);
                 }
-                .child-row.hidden {
-                    display: none;
-                }
-            `;
-            target.secure(additionalStyle);
+            });
 
         } catch (error) {
             console.error('Error during processing:', error);
             
-            // Clear existing elements properly
             while (clearableElements.length > 0) {
                 const element = clearableElements.pop();
                 if (element && element.parentNode) {
@@ -450,33 +454,49 @@ export async function activate_module(lain) {
         }
     }
 
-    function generateChildKeys(email, table) {
+    function generateChildKeys(privateKeyWIF, table) {
         let hdPrivateKey;
         try {
-            hdPrivateKey = new bsv.HDPrivateKey.fromString(email);
-        } catch (e) {
-            const privateKey = new bsv.PrivateKey.fromWIF(email);
+            // Try to create HD key from the private key
+            const privateKey = new bsv.PrivateKey.fromWIF(privateKeyWIF);
             const buffer = privateKey.toBuffer();
             const hash = bsv.crypto.Hash.sha256(buffer);
             hdPrivateKey = new bsv.HDPrivateKey.fromSeed(hash, 'testnet');
+        } catch (e) {
+            console.error('Error generating HD key:', e);
+            return;
+        }
+
+        // Create table header if it doesn't exist
+        if (table.rows.length === 0) {
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `
+                <th>Index</th>
+                <th>Address</th>
+                <th>Balance</th>
+            `;
+            table.appendChild(headerRow);
         }
 
         for (let i = currentIndex; i < currentIndex + 5; i++) {
             const childKey = hdPrivateKey.deriveChild(`m/0'/0/${i}`);
             const childPrivateKey = childKey.privateKey;
             const childPublicKey = childPrivateKey.publicKey;
-            const childAddress = new bsv.Address.fromPublicKey(childPublicKey, 'testnet');
+            const childAddress = childPublicKey.toAddress('testnet').toString();
 
             const childRow = document.createElement('tr');
             childRow.className = 'child-row';
-            childRow.style.display = isChildrenVisible ? 'table-row' : 'none'; // Use global state
-            childRow.innerHTML = `<td><b>${i + 1}</b></td><td><span class="fineprint">${childAddress.toString()}</span></td><td class="balance-cell"><div class="balance-inner">???</div></td>`;
+            childRow.style.display = isChildrenVisible ? 'table-row' : 'none';
+            childRow.innerHTML = `
+                <td><b>${i + 1}</b></td>
+                <td><span class="fineprint">${childAddress}</span></td>
+                <td class="balance-cell"><div class="balance-inner">???</div></td>
+            `;
             table.appendChild(childRow);
         }
 
         currentIndex += 5;
 
-        // Add click event listeners to balance cells
         const balanceCells = table.querySelectorAll('.balance-cell');
         balanceCells.forEach(cell => {
             cell.addEventListener('click', async function() {
@@ -484,6 +504,78 @@ export async function activate_module(lain) {
                 await updateBalanceForCell(this, address);
             });
         });
+    }
+
+    async function setupKeychainInterface(privateKeyWIF) {
+        clearElements();
+
+        const table = document.createElement('table');
+        target.secure(table);
+
+        // Create table header
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = `
+            <th>Index</th>
+            <th>Address</th>
+            <th>Balance</th>
+        `;
+        table.appendChild(headerRow);
+
+        // Add main address row with emoji
+        try {
+            const mainPrivateKey = new bsv.PrivateKey.fromWIF(privateKeyWIF);
+            const mainPublicKey = mainPrivateKey.publicKey;
+            const mainAddress = mainPublicKey.toAddress('testnet').toString();
+
+            const mainRow = document.createElement('tr');
+            mainRow.innerHTML = `
+                <td><b>🔑</b></td>
+                <td><span class="fineprint">${mainAddress}</span></td>
+                <td class="balance-cell"><div class="balance-inner">???</div></td>
+            `;
+            table.appendChild(mainRow);
+
+            // Add click listener for main balance
+            const mainBalanceCell = mainRow.querySelector('.balance-cell');
+            mainBalanceCell.addEventListener('click', async function() {
+                await updateBalanceForCell(this, mainAddress);
+            });
+        } catch (error) {
+            console.error('(keychain) Error creating main address:', error);
+        }
+
+        // Add "Load More" button
+        const loadMoreButton = document.createElement('button');
+        loadMoreButton.innerText = 'Load More Keys';
+        loadMoreButton.addEventListener('click', () => generateChildKeys(privateKeyWIF, table));
+        target.secure(loadMoreButton);
+
+        // Add refresh button
+        const refreshButton = document.createElement('button');
+        refreshButton.innerText = 'Refresh Balances';
+        refreshButton.addEventListener('click', () => refreshUTXOBalances(table));
+        target.secure(refreshButton);
+
+        // Add toggle visibility button
+        const toggleButton = document.createElement('button');
+        toggleButton.innerText = isChildrenVisible ? 'Hide Children' : 'Show Children';
+        toggleButton.addEventListener('click', () => {
+            isChildrenVisible = !isChildrenVisible;
+            toggleButton.innerText = isChildrenVisible ? 'Hide Children' : 'Show Children';
+            const rows = table.getElementsByClassName('child-row');
+            for (let row of rows) {
+                row.style.display = isChildrenVisible ? 'table-row' : 'none';
+            }
+        });
+        target.secure(toggleButton);
+
+        // Add buttons container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.marginTop = '10px';
+        buttonContainer.appendChild(loadMoreButton);
+        buttonContainer.appendChild(refreshButton);
+        buttonContainer.appendChild(toggleButton);
+        target.secure(buttonContainer);
     }
 
     async function refreshUTXOBalances(table) {
@@ -495,7 +587,7 @@ export async function activate_module(lain) {
         progressBar.appendChild(progressBarFill);
         target.secure(progressBar);
 
-        for (let i = 1; i < rows.length; i++) { // Skip the header row
+        for (let i = 1; i < rows.length; i++) {
             const addressCell = rows[i].cells[1];
             const balanceCell = rows[i].cells[2];
             const address = addressCell.textContent.trim();
@@ -503,7 +595,6 @@ export async function activate_module(lain) {
             await updateBalanceForCell(balanceCell, address);
             progressBarFill.style.width = `${((i / (rows.length - 1)) * 100).toFixed(2)}%`;
 
-            // Delay for 1.5 seconds between requests
             await new Promise(resolve => setTimeout(resolve, 1500));
         }
 
@@ -530,6 +621,45 @@ export async function activate_module(lain) {
             balanceInner.style.color = 'red';
             balanceInner.style.animation = 'colorTransitionFailure 5s forwards';
         }
+    }
+
+    // Check for stored credentials first
+    if (navigator.serviceWorker.controller) {
+        console.log('(keychain) Module activated, checking service worker for stored credentials');
+        
+        try {
+            const messageChannel = new MessageChannel();
+            const promise = new Promise((resolve) => {
+                messageChannel.port1.onmessage = (event) => {
+                    console.log('(keychain) Received response from service worker:', event.data);
+                    resolve(event.data);
+                };
+                
+                // Add timeout to the promise
+                setTimeout(() => {
+                    console.log('(keychain) Service worker response timed out');
+                    resolve(null);
+                }, 5000);
+            });
+            
+            console.log('(keychain) Sending KEYCHAIN_INIT message to service worker');
+            navigator.serviceWorker.controller.postMessage({
+                type: 'KEYCHAIN_INIT'
+            }, [messageChannel.port2]);
+            
+            const storedCredentials = await promise;
+            if (storedCredentials) {
+                console.log('(keychain) Found stored credentials, proceeding to keySecured');
+                keySecured(storedCredentials);
+                return;
+            } else {
+                console.log('(keychain) No stored credentials found, proceeding to initial setup');
+            }
+        } catch (error) {
+            console.log('(keychain) Error checking service worker:', error);
+        }
+    } else {
+        console.log('(keychain) No service worker controller found');
     }
 
     initial();

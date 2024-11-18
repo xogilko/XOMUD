@@ -9,10 +9,10 @@
             "whatsonchain": {
                 "xo": {
                     "address": "mydyvA3y4TXeVz75ay9ZKxerXxTeGXukzr",
-                    "minute": 15
+                    "minute": 30
                 },
                 "20xx": {
-                    "address": "mydyvA3y4TXeVz75ay9ZKxerXxTeGXukzr",
+                    "address": "mpYEeYn4omiX151bh8m7s8kQD9y2z9aGgG",
                     "minute": 60
                 }
             }
@@ -43,7 +43,7 @@
         },
         "department": {
             "Bob's Shop": {
-                "costly module": {
+                "costly_module": {
                     "desc": "interactive sound",
                     "vendor": "Bob",
                     "index": "/mod/example_cost.js",
@@ -187,6 +187,11 @@
                     "fee": 0,
                     "vendor": null,
                     "duration": null
+                },        
+                "/spotter.js": {
+                    "fee": 0,
+                    "vendor": null,
+                    "duration": null
                 },
                 "/indexeddb.js": {
                     "fee": 0,
@@ -240,6 +245,21 @@
                 "fee": 0,
                 "vendor": null,
                 "duration": null
+            },
+            "/message.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/buffer.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
+            },
+            "/pocketbase.umd.js": {
+                "fee": 0,
+                "vendor": null,
+                "duration": null
             }
         }
     },
@@ -251,7 +271,7 @@
         }
     },
     "command": {
-        "help": "/quest/ command list:<br>help - this! <br>status - report uri portal and domain",
+        "help": "/arch/ command list:<br>help - this! <br>status - report uri portal and domain",
         "status": "current channel: <b><span id='atc_temp_channel'></span></b> with aux: <b><span id='atc_temp_aux'></span></b> via portal: <b><span id='atc_temp_portal'></span></b></li>"
     },
     "script": {
