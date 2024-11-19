@@ -26,6 +26,10 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
+
+	// New imports for PDS
+
+	"github.com/bluesky-social/indigo/xrpc"
 )
 
 var proxy *httputil.ReverseProxy
@@ -39,6 +43,11 @@ type RegisterData struct {
 	Password        string `json:"password"`
 	PasswordConfirm string `json:"passwordConfirm"`
 	Name            string `json:"name"`
+}
+
+// Add PDS specific types
+type HealthResponse struct {
+	Version string `json:"version"`
 }
 
 func vending_send(w http.ResponseWriter, r *http.Request) {
@@ -2368,6 +2377,48 @@ func main() {
 	fmt.Println("ward transponder is active")
 	fmt.Println("Type 'help' for available commands")
 	catalog("ward", "transponder is active")
+
+	// New PDS routes
+	router.HandleFunc("/xrpc/_health", pdsHealth)
+	router.HandleFunc("/tls-check", pdsTLSCheck)
+
 	log.Fatal(http.ListenAndServe(":8081", router))
 	defer close(logEntries)
+}
+
+// PDS health check endpoint
+func pdsHealth(w http.ResponseWriter, r *http.Request) {
+	resp := HealthResponse{Version: "0.0.1"}
+	json.NewEncoder(w).Encode(resp)
+}
+
+// PDS TLS check endpoint
+func pdsTLSCheck(w http.ResponseWriter, r *http.Request) {
+	domain := r.URL.Query().Get("domain")
+	if domain == "" {
+		http.Error(w, `{"error":"InvalidRequest","message":"bad or missing domain query param"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Create XRPC client for domain check
+	client := &xrpc.Client{
+		Host: "https://" + domain,
+	}
+
+	// Attempt to connect to domain
+	req, err := http.NewRequest("GET", client.Host+"/xrpc/_health", nil)
+	if err != nil {
+		http.Error(w, `{"error":"InvalidRequest","message":"failed to create request"}`, http.StatusBadRequest)
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, `{"error":"NotFound","message":"handle not found for this domain"}`, http.StatusNotFound)
+		return
+	}
+	defer resp.Body.Close()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"success":true}`))
 }
